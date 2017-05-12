@@ -59,27 +59,25 @@ void OS_SysTickStartup(void)
     RCC_ClocksTypeDef RCC_Clocks;
     
     RCC_GetClocksFreq(&RCC_Clocks);  
-    //SysTick->CTRL &= ~(SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk);    /* 关闭中断和定时器 */
-    //SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);
     ST_IRQ_ConfigIrqPriority(SysTick_IRQn, IRQ_PRIOTITY_SYSTICK);               /* 配置中断优先级 */
     ST_IRQ_InstallIrqHandler(SysTick_IRQn, (IRQ_SERVICE_FUNC)SysTickHandler);
     tick = ((RCC_Clocks.SYSCLK_Frequency / 1000) * PERTICK);
     SysTick_Config(tick);  
     
-    
-    //SysTick->LOAD  = ((SystemCoreClock / (8 * 1000)) * PERTICK)- 1;            /* set reload register */
-    //SysTick->VAL   = 0;                                                        /* Load the SysTick Counter Value */
-    //SysTick->CTRL |= (SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk);     /* Enable SysTick IRQ and SysTick Timer */
-  
-#if 0
-	 SysTick_CounterCmd(SysTick_Counter_Disable);         /* Disable SysTick Counter    */
-	 SysTick_CounterCmd(SysTick_Counter_Clear);           /* Clear SysTick Counter      */
-	 SysTick_SetReload(20 * 9000);                        /* 10ms with input clock equal to 9MHz (HCLK/8, default) */
-	 ST_IRQ_InstallIrqHandler(IRQ_ID_SYSTICK, (IRQ_SERVICE_FUNC)SystickIntProc, IRQ_PRIOTITY_SYSTICK, TRUE);
-	 SysTick_ITConfig(ENABLE);                            /* Enable SysTick interrupt   */
-	 SysTick_CounterCmd(SysTick_Counter_Enable);          /* Enable the SysTick Counter */
-#endif
 }
+
+/*******************************************************************
+* 函数名称:  OS_GetSysTick
+* 函数描述:  获得系统tick
+* 参数:      无
+* 返回:      tick
+********************************************************************/
+INT32U OS_GetSysTick(INT32U * count)
+{
+    count[0] = g_systicks;
+    return g_systicks;
+}
+
 
 /*************END OF FILE****/
 
