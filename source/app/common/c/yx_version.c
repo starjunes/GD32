@@ -30,18 +30,14 @@
 ********************************************************************************
 */
 
-typedef struct {
-    char *info;
-} VER_CODE_INFO_T;
-
-
 /*
 ********************************************************************************
 * 定义模块变量
 ********************************************************************************
 */
 static char s_version[MAX_VERSION_LEN];
-VER_CODE_INFO_T const g_code_time = {__DATE__" "__TIME__};
+CODE_INFO_T const g_code_info = {YX_VERSION_STR};
+CODE_INFO_T const g_code_time = {__DATE__" "__TIME__};
 
 
 
@@ -60,7 +56,7 @@ char *YX_GetVersion(void)
     APP_HEAD_T *p_head;
     CODE_INFO_T *pinfo;
  
-    YX_STRCPY(s_version, YX_VERSION_STR);
+    YX_STRCPY(s_version, g_code_info.version);
 
     p_head = (APP_HEAD_T *)(FLASH_BOOT_HEAD_BASE);                             /* 头信息 */
     memcpy(&entry_info, p_head->entry, sizeof(entry_info));

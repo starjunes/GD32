@@ -15,6 +15,9 @@
 
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
+
 #include "os_type.h"
 #include "os_struct.h"
 

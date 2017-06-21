@@ -74,7 +74,7 @@ static __inline __asm void s888(void)
 
 #endif
 
-void DAL_GPIO_ClearWatchdog(void);
-#define ClearWatchdog()       DAL_GPIO_ClearWatchdog()
+void HAL_WDG_ClearWdg(void);
+#define ClearWatchdog()       HAL_WDG_ClearWdg()
 
 #endif

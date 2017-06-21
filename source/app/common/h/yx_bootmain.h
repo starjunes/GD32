@@ -45,15 +45,6 @@ typedef struct {
 } CODE_INFO_T;
 
 
-#ifdef GLOBALS_BOOTMAIN
-CODE_INFO_T const g_code_info = {YX_VERSION_STR};
-
-#else
-extern CODE_INFO_T const g_code_info;
-#endif
-
-
-
 /*******************************************************************
 ** 函数名:     YX_EraseFlagFlashRegion
 ** 函数描述:   擦除固件升级标志FLASH区

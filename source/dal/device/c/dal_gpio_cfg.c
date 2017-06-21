@@ -24,7 +24,7 @@
 * 定义GPIO
 ********************************************************************************
 */
-#define PIN_WATCHDOG         GPIO_PIN_A14        /* 看门狗清狗 */
+#define PIN_WATCHDOG         GPIO_PIN_MAX        /* 看门狗清狗 */
 #define PIN_MMIPOWER         GPIO_PIN_B4         /* MMI电源控制 */
 #define PIN_MMIRESET         GPIO_PIN_A0         /* MMI复位控制 */
 #define PIN_POWERSAVE        GPIO_PIN_A12        /* 外围电路省电功能控制 */

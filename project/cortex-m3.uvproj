@@ -874,6 +874,11 @@
               <FileType>1</FileType>
               <FilePath>..\source\hal\driver\c\hal_ic_drv.c</FilePath>
             </File>
+            <File>
+              <FileName>hal_wdg_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\hal\driver\c\hal_wdg_drv.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
