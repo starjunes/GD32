@@ -105,17 +105,17 @@ void USERGPCDE_IRQHandler(INT32U CStatus, INT32U DStatus, INT32U EStatus)
 
 #endif
 
-
 /*******************************************************************
-** 函数名称: ST_GPIO_SetPin
+** 函数名称: ST_GPIO_SetPinEx
 ** 函数描述: 初始化管脚状态
 ** 参数:     [in] id:        GPIO统一编号,GPIO_PIN_E
 **           [in] direction: 方向,GPIO_DIR_E
 **           [in] mode:      上下拉,GPIO_MODE_E
+             [in] speed       io口速度
 **           [in] level:     高低电平,TRUE-高电平，FALSE-低电平
 ** 返回:     成功返回TRUE，失败返回FALSE
 ********************************************************************/
-void ST_GPIO_SetPin(INT8U id, INT8U direction, INT8U mode, INT8U level)
+void ST_GPIO_SetPinEx(INT8U id, INT8U direction, INT8U mode,INT8U speed, INT8U level)
 {
     const GPIO_REG_T *pinfo;
     const GPIO_CLASS_T *pclass;
@@ -162,13 +162,37 @@ void ST_GPIO_SetPin(INT8U id, INT8U direction, INT8U mode, INT8U level)
        
     }
 
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    switch (speed) {
+        case GPIO_SPEED_LOW:
+            GPIO_InitStructure.GPIO_Speed = speed + 1;
+            break;
+        case GPIO_SPEED_MEDI:
+        case GPIO_SPEED_FAST:
+        case GPIO_SPEED_HIGH:
+            GPIO_InitStructure.GPIO_Speed = speed;
+            break;
+    }
     
     GPIO_Init((GPIO_TypeDef *)pclass->gpio_base, &GPIO_InitStructure);
     
     if (direction == GPIO_DIR_OUT) {                                           /* 输出电平 */
         ST_GPIO_WritePin(id, level);
     }
+}
+
+
+/*******************************************************************
+** 函数名称: ST_GPIO_SetPin
+** 函数描述: 初始化管脚状态
+** 参数:     [in] id:        GPIO统一编号,GPIO_PIN_E
+**           [in] direction: 方向,GPIO_DIR_E
+**           [in] mode:      上下拉,GPIO_MODE_E
+**           [in] level:     高低电平,TRUE-高电平，FALSE-低电平
+** 返回:     成功返回TRUE，失败返回FALSE
+********************************************************************/
+void ST_GPIO_SetPin(INT8U id, INT8U direction, INT8U mode, INT8U level)
+{
+    ST_GPIO_SetPinEx(id, direction, mode, GPIO_SPEED_HIGH, level);
 }
 
 /*******************************************************************
