@@ -21,12 +21,12 @@
 * 定义配置参数
 ********************************************************************************
 */
-#define BASETIME_               40              /* 基准采样时间为100ms,要跟PERIOD_SAMPLE对应 */
+#define BASETIME_               10              /* 基准采样时间为100ms,要跟PERIOD_SAMPLE对应 */
 #define MAX_INPUT               20               /* IO数目 */
 #define MAX_USER                4                /* 一个IO的注册用户数 */
 
 
-#define PERIOD_SAMPLE           _TICK, 4
+#define PERIOD_SAMPLE           _TICK, 1
 
 /*
 ********************************************************************************

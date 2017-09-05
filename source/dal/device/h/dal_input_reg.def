@@ -53,10 +53,10 @@ BEGIN_INPUT_DEF(PE_TYPE_NULL, DAL_INPUT_SetFilterPara)
     INPUT_DEF(PE_TYPE_NULL, IPT_FLAMP,    GPIO_PIN_B14, 2000,    200,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 远光灯 */
     INPUT_DEF(PE_TYPE_NULL, IPT_NLAMP,    GPIO_PIN_B5,  2000,    200,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 近光灯 */
     
-    INPUT_DEF(PE_TYPE_NULL, IPT_KEYACK,   GPIO_PIN_C0,  80,     40,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 确认键 */
-    INPUT_DEF(PE_TYPE_NULL, IPT_KEYUP,    GPIO_PIN_C1,  80,     40,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 向上键 */
-    INPUT_DEF(PE_TYPE_NULL, IPT_KEYDOWN,  GPIO_PIN_C2,  80,     40,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 向下键 */
-    INPUT_DEF(PE_TYPE_NULL, IPT_KEYNAK,   GPIO_PIN_C3,  80,     40,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 取消键 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_KEYACK,   GPIO_PIN_C0,  80,     10,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 确认键 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_KEYUP,    GPIO_PIN_C1,  80,     10,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 向上键 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_KEYDOWN,  GPIO_PIN_C2,  80,     10,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 向下键 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_KEYNAK,   GPIO_PIN_C3,  80,     10,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 取消键 */
     
     INPUT_DEF(PE_TYPE_NULL, IPT_ICDECT,   GPIO_PIN_C9,  1000,   1000,  DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)    /* IC卡插入检测 */
 END_INPUT_DEF(PE_TYPE_NULL)
