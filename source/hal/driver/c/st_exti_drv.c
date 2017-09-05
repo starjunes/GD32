@@ -25,8 +25,25 @@
 * 定义配置参数
 ********************************************************************************
 */
-
-
+typedef enum{
+    EXTI_SOURCE_LINE0,
+    EXTI_SOURCE_LINE1,
+    EXTI_SOURCE_LINE2,
+    EXTI_SOURCE_LINE3,
+    EXTI_SOURCE_LINE4,
+    EXTI_SOURCE_LINE5,
+    EXTI_SOURCE_LINE6,
+    EXTI_SOURCE_LINE7,
+    EXTI_SOURCE_LINE8,
+    EXTI_SOURCE_LINE9,
+    EXTI_SOURCE_LINE10,
+    EXTI_SOURCE_LINE11,
+    EXTI_SOURCE_LINE12,
+    EXTI_SOURCE_LINE13,
+    EXTI_SOURCE_LINE14,
+    EXTI_SOURCE_LINE15,
+    MAX_EXTI_LINE
+} EXTI_SOURCE_LINE_E;
 
 /*
 ********************************************************************************
@@ -42,7 +59,7 @@ typedef struct {
 * 定义模块变量
 ********************************************************************************
 */
-static DCB_T s_exti;
+static DCB_T s_exti[MAX_EXTI_LINE];
 
 /*******************************************************************
 ** 函数名称: EXTI_GetPinNumByBit
@@ -166,15 +183,27 @@ static void EXTI_IrqConfig(const GPIO_REG_T *pinfo, const GPIO_CLASS_T *pclass, 
     INT32S irq_id;
     IRQ_SERVICE_FUNC irqhandler;
     
-    if (pinfo->pin == GPIO_Pin_1) {
+    if (pinfo->pin == GPIO_Pin_0) {
         irq_id = EXTI0_IRQn;
         irqhandler = (IRQ_SERVICE_FUNC)EXTI0_IrqHandle;
-    } else if (pinfo->pin == GPIO_Pin_2) {
+    } else if (pinfo->pin == GPIO_Pin_1) {
         irq_id = EXTI1_IRQn;
         irqhandler = (IRQ_SERVICE_FUNC)EXTI1_IrqHandle;
+    }else if (pinfo->pin == GPIO_Pin_2) {
+        irq_id = EXTI2_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)EXTI2_IrqHandle;
     } else if (pinfo->pin == GPIO_Pin_3) {
         irq_id = EXTI3_IRQn;
         irqhandler = (IRQ_SERVICE_FUNC)EXTI3_IrqHandle;
+    } else if (pinfo->pin == GPIO_Pin_4) {
+        irq_id = EXTI4_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)EXTI4_IrqHandle;
+    } else if (pinfo->pin >= GPIO_Pin_10) {
+        irq_id = EXTI15_10_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)EXTI15_10_IrqHandle;
+    } else if (pinfo->pin >= GPIO_Pin_5) {
+        irq_id = EXTI9_5_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)EXTI9_5_IrqHandle;
     } else {
         return;
     }
@@ -209,6 +238,7 @@ void ST_EXTI_InitDrv(void)
 ********************************************************************/
 BOOLEAN ST_EXTI_OpenExtiFunction(INT8U pinid, INT8U trig, void (*callback)(void))
 {
+    INT8U pin_source;
     const GPIO_REG_T *pinfo;
     const GPIO_CLASS_T *pclass;
     
@@ -219,8 +249,13 @@ BOOLEAN ST_EXTI_OpenExtiFunction(INT8U pinid, INT8U trig, void (*callback)(void)
     
     pinfo = ST_GPIO_GetCfgTblInfo(pinid);
     pclass = DAL_GPIO_GetRegClassInfo(pinfo->port);
+    pin_source = EXTI_GetPinNumByBit(pinfo);
     
-    s_exti.callback = callback;
+    if(pin_source >= MAX_EXTI_LINE) {
+        return FALSE;
+    }
+    
+    s_exti[pin_source].callback = callback;
     
     /* Enable AFIO clock */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE); 
@@ -247,6 +282,8 @@ BOOLEAN ST_EXTI_OpenExtiFunction(INT8U pinid, INT8U trig, void (*callback)(void)
 ********************************************************************/
 BOOLEAN ST_EXTI_CloseExtiFunction(INT8U pinid)
 {
+    INT8U pin_source;
+    EXTI_InitTypeDef     exti_initstructure;
     const GPIO_REG_T *pinfo;
     const GPIO_CLASS_T *pclass;
     
@@ -256,10 +293,18 @@ BOOLEAN ST_EXTI_CloseExtiFunction(INT8U pinid)
     
     pinfo = ST_GPIO_GetCfgTblInfo(pinid);
     pclass = DAL_GPIO_GetRegClassInfo(pinfo->port);
+    pin_source = EXTI_GetPinNumByBit(pinfo);
     
-    EXTI_DeInit();
+    if(pin_source >= MAX_EXTI_LINE) {
+        return FALSE;
+    }
+
+    exti_initstructure.EXTI_Line = pinfo->pin;
+    exti_initstructure.EXTI_LineCmd = DISABLE;
+    EXTI_Init(&exti_initstructure);
+    //EXTI_DeInit();
     EXTI_IrqConfig(pinfo, pclass, false);
-    s_exti.callback = 0;
+    s_exti[pin_source].callback = 0;
     return true;
 }
 
@@ -274,6 +319,10 @@ __attribute__ ((section ("IRQ_HANDLE"))) void EXTI0_IrqHandle(void)
 {
     if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
         EXTI_ClearITPendingBit(EXTI_Line0);
+
+        if (s_exti[EXTI_SOURCE_LINE0].callback != 0) {
+            s_exti[EXTI_SOURCE_LINE0].callback();
+        }
     }
 }
 
@@ -287,6 +336,10 @@ __attribute__ ((section ("IRQ_HANDLE"))) void EXTI1_IrqHandle(void)
 {
     if (EXTI_GetITStatus(EXTI_Line1) != RESET) {
         EXTI_ClearITPendingBit(EXTI_Line1);
+
+        if (s_exti[EXTI_SOURCE_LINE1].callback != 0) {
+            s_exti[EXTI_SOURCE_LINE1].callback();
+        }
     }
 }
 
@@ -301,6 +354,10 @@ __attribute__ ((section ("IRQ_HANDLE"))) void EXTI2_IrqHandle(void)
 {
     if (EXTI_GetITStatus(EXTI_Line2) != RESET) {
         EXTI_ClearITPendingBit(EXTI_Line2);
+
+        if (s_exti[EXTI_SOURCE_LINE2].callback != 0) {
+            s_exti[EXTI_SOURCE_LINE2].callback();
+        }
     }
     
 }
@@ -318,11 +375,76 @@ __attribute__ ((section ("IRQ_HANDLE"))) void EXTI3_IrqHandle(void)
     if (EXTI_GetITStatus(EXTI_Line3) != RESET) {
         EXTI_ClearITPendingBit(EXTI_Line3);
         
-        if (s_exti.callback != 0) {
-            s_exti.callback();
+        if (s_exti[EXTI_SOURCE_LINE3].callback != 0) {
+            s_exti[EXTI_SOURCE_LINE3].callback();
         }
     }
 }
+
+/*******************************************************************
+** 函数名称: EXTI4_IrqHandle
+** 函数描述: 中断服务程序
+** 参数:     无
+** 返回:     无
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI4_IrqHandle(void)
+{
+
+    
+    if (EXTI_GetITStatus(EXTI_Line4) != RESET) {
+        EXTI_ClearITPendingBit(EXTI_Line4);
+        
+        if (s_exti[EXTI_SOURCE_LINE4].callback != 0) {
+            s_exti[EXTI_SOURCE_LINE4].callback();
+        }
+    }
+}
+
+
+/*******************************************************************
+** 函数名称: EXTI9_5_IrqHandle
+** 函数描述: 中断服务程序
+** 参数:     无
+** 返回:     无
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI9_5_IrqHandle(void)
+{
+    INT32U i;
+
+    for(i = EXTI_SOURCE_LINE5; i <= EXTI_SOURCE_LINE9; i++) {
+        if (EXTI_GetITStatus((1 << i)) != RESET) {
+            EXTI_ClearITPendingBit((1 << i));
+            
+            if (s_exti[i].callback != 0) {
+                s_exti[i].callback();
+            }
+        }
+    }
+}
+
+
+/*******************************************************************
+** 函数名称: EXTI15_10_IrqHandle
+** 函数描述: 中断服务程序
+** 参数:     无
+** 返回:     无
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI15_10_IrqHandle(void)
+{
+    INT32U i;
+
+    for(i = EXTI_SOURCE_LINE10; i <= EXTI_SOURCE_LINE15; i++) {
+        if (EXTI_GetITStatus((1 << i)) != RESET) {
+            EXTI_ClearITPendingBit((1 << i));
+            
+            if (s_exti[i].callback != 0) {
+                s_exti[i].callback();
+            }
+        }
+    }
+}
+
+
 
 #if 0
 
