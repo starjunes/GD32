@@ -15,7 +15,7 @@
 #define YX_HEAPMEM_H         1
 
 
-#define SIZE_HEAP_MEM        (4 * 1024)         /* 内存池大小 */
+#define SIZE_HEAP_MEM        (8 * 1024)         /* 内存池大小 */
 
 
 typedef struct memquery_t {
