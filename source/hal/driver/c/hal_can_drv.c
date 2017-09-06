@@ -278,6 +278,7 @@ static void STM32_CAN_PinsConfig(const CAN_REG_T *pinfo, INT8U onoff)
         GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->pin_rx));
     }
 
+    #if 0
     switch(pinfo->can_base) {
         case CAN1_BASE:
             GPIO_PinRemapConfig(GPIO_Remap1_CAN1 , ENABLE);
@@ -286,6 +287,7 @@ static void STM32_CAN_PinsConfig(const CAN_REG_T *pinfo, INT8U onoff)
             //GPIO_PinRemapConfig(GPIO_Remap_CAN2, ENABLE);
             break;
     }
+    #endif
 
 }
 
