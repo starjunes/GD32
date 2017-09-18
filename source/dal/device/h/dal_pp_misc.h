@@ -47,7 +47,7 @@ typedef enum {
 
 /* 通讯参数 */
 #define IP_GROUP_NUM         1
-#define MAX_DOMAINNAME_LEN   24
+#define MAX_DOMAINNAME_LEN   31
 
 typedef struct {
     INT8U  isvalid;                              /* 该组参数是否有效 */
@@ -79,7 +79,7 @@ typedef struct {
 typedef struct {
 	INT8U tellen;                                /* 号码长度 */
 	INT8U tel[15];                               /* 号码 */
-} TEL_T;
+} TEL_T, SMSTEL_T;
 
 /* 车辆信息 */
 #define MAX_VIN_LEN          17                  /* 车辆识别代码最大长度 */
@@ -148,12 +148,24 @@ typedef struct {
 /* GPS位置信息数据 */
 typedef struct {
     SYSTIME_T systime;       /* 系统时间 */
-    INT8U flag;              /* 状态字, 表示经纬度方向等。Bit0-经度方向，0-为东经，1-为西经;Bit1-纬度方向，0-为北纬，1-为南纬*/
+    INT8U flag;              /* 状态字, 表示经纬度方向等。Bit0-经度方向，0-为东经，1-为西经;Bit1-纬度方向，0-为北纬，1-为南纬, bit2-表示定位有效性, bit3-表示上传定位标志 */
     INT8U longitude[4];      /* 经度,度+分+小数分 */
     INT8U latitude[4];       /* 纬度,度+分+小数分 */
     INT16S altitude;         /* 高程:单位:米 */
     INT32U odometer;         /* 里程:单位:米 */
 } GPS_DATA_T;
+
+/* 设备ID */
+typedef struct {
+    INT8U idlen;             /* 设备ID长度 */
+    INT8U id[32];            /* 设备ID */
+} DEVICE_ID_T;
+
+/* 短信命令密码 */
+#define LEN_PASSWORD         6
+typedef struct {
+    INT8U password[LEN_PASSWORD];
+} SMS_PASSWORD_T;
 
     
 /*
@@ -172,7 +184,7 @@ static GPRS_PARA_T              i_gprspara            =
                                 false, "", 0*/
                                };
 
-
+static SMS_PASSWORD_T           i_sms_password = {{'1', '2', '3', '4', '5', '6'}};
 
 
 

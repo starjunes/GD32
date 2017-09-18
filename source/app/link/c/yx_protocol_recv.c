@@ -224,14 +224,64 @@ static void HdlMsg_DN_CMD_POSMONITOR(PROTOCOL_COM_T *attrib, PROTOCOL_HEAD_T *he
         YX_SLEEP_Wakeup(lifecycle, WAKEUP_EVENT_SERVER);
     }
 
-    YX_PROTOCOL_SendCommonAck(head, attrib, ACK_SUCCESS);
+    YX_PROTOCOL_SendCommonAck(head, attrib, ACK_FAIL);
 }
+
+/*******************************************************************
+** 函数名:      HdlMsg_DN_CMD_SETPARA
+** 函数描述:    MSG_8103 参数设置接口
+** 参数:        [in]  NULL                  
+** 返回:        NULL
+********************************************************************/
+static void HdlMsg_DN_CMD_SETPARA(PROTOCOL_COM_T *attrib, PROTOCOL_HEAD_T *head, INT8U *data, INT16U datalen)
+{
+    YX_SLEEP_Wakeup(20, WAKEUP_EVENT_SERVER);
+    YX_PROTOCOL_SendCommonAck(head, attrib, ACK_FAIL);
+}
+
+
+/*******************************************************************
+** 函数名:      HdlMsg_DN_CMD_CONTROLDEV
+** 函数描述:    MSG_8105 终端控制
+** 参数:        [in]  NULL                  
+** 返回:        NULL
+********************************************************************/
+static void HdlMsg_DN_CMD_CONTROLDEV(PROTOCOL_COM_T *attrib, PROTOCOL_HEAD_T *head, INT8U *data, INT16U datalen)
+{
+    switch (data[0])
+    {
+    case 0x01:                                                                 /* 无线升级 */
+        YX_SLEEP_Wakeup(40, WAKEUP_EVENT_SERVER);
+        break;
+    case 0x02:                                                                 /* 控制终端连接指定服务器 */
+        YX_SLEEP_Wakeup(20, WAKEUP_EVENT_SERVER);
+        break;
+    case 0x03:                                                                 /* 终端关机 */
+        break;
+    case 0x04:                                                                 /* 终端复位 */
+        YX_PROTOCOL_SendCommonAck(head, attrib, ACK_SUCCESS);
+        return;  
+    case 0x05:                                                                 /* 恢复出厂设置 */
+        YX_SLEEP_Wakeup(20, WAKEUP_EVENT_SERVER);
+        break;
+    case 0x06:                                                                 /* 关闭数据通信 */
+        break;
+    case 0x07:                                                                 /* 终端所有无线通信 */
+        break;
+    default:
+        break;
+    }
+    YX_PROTOCOL_SendCommonAck(head, attrib, ACK_FAIL);
+}
+    
 
 static FUNCENTRY_PROTOCOL_T const s_functionentry[] = {
      DN_ACK_REG,                    HdlMsg_DN_ACK_REG         /* 终端注册应答 */
     ,DN_ACK_COMMON,                 HdlMsg_DN_ACK_COMMON      /* 通用应答 */
     ,DN_CMD_POSQRY,                 HdlMsg_DN_CMD_POSQRY      /* 位置信息查询 */
     ,DN_CMD_POSMONITOR,             HdlMsg_DN_CMD_POSMONITOR  /* 位置跟踪 */
+    ,DN_CMD_SETPARA,                HdlMsg_DN_CMD_SETPARA     /* 设置参数 */
+    ,DN_CMD_CONTROLDEV,             HdlMsg_DN_CMD_CONTROLDEV  /* 终端控制 */
 };
 
 /*******************************************************************

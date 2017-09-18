@@ -15,6 +15,7 @@
 #include "yx_dym_drv.h"
 #include "st_rtc_drv.h"
 #include "dal_pp_drv.h"
+#include "dal_hit_drv.h"
 #include "yx_debug.h"
 
 #if EN_MMI > 0
@@ -118,6 +119,7 @@ static void HdlMsg_DN_PE_ACK_LINK_REQ(INT8U cmd, INT8U *data, INT16U datalen)
         YX_MMI_ListAck(UP_PE_CMD_LINK_REQ, _SUCCESS);
         SendBeatCommand();
         YX_MMI_SendRealClock();
+        YX_MMI_SendGsensorInfo(DAL_HIT_GetGsensorStatus());                    /* 上报重力传感器状态 */
         //YX_MMI_SendIccardInfo();
     }
 }

@@ -22,7 +22,7 @@
 * define config parameters
 ********************************************************************************
 */
-
+#define MAX_NONETWORK        60
 
 /*
 ********************************************************************************
@@ -31,6 +31,7 @@
 */
 typedef struct {
     INT8U creg;
+    INT8U ct_nonetwork;
 } DCB_T;
 
 
@@ -78,12 +79,20 @@ static void AppTmrProc(void *index)
     
     ADP_NET_GetNetworkState(&simcard, &creg, &cgreg, &rssi, &ber);
     if (creg == NETWORK_STATE_HOME || creg == NETWORK_STATE_ROAMING) {
+        s_dcb.ct_nonetwork = 0;
         if (!s_dcb.creg) {
             s_dcb.creg = TRUE;
             DAL_OUTPUT_StartPermentFlash(OPT_LEDRED, 2, 20);
             DAL_OUTPUT_StartPermentFlash(OPT_LEDGREEN, 2, 20);
         }
     } else {
+        if (rssi > 5) {
+            if (++s_dcb.ct_nonetwork >= MAX_NONETWORK) {                       /* 超过时间未搜索到网络,则复位模块 */
+                s_dcb.ct_nonetwork = 0;
+                AT_POWER_PowerReset();
+            }
+        }
+        
         if (s_dcb.creg) {
             s_dcb.creg = FALSE;
             DAL_OUTPUT_StartPermentFlash(OPT_LEDRED, 2, 50);

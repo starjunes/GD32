@@ -18,6 +18,7 @@
 #include "at_recv.h"
 #include "at_send.h"
 #include "at_urc_phone.h"
+#include "at_q_phone.h"
 
 
 #if EN_AT > 0
@@ -70,6 +71,7 @@ static INT8U Handler_NOCARRIER(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U s
 */
 static INT8U Handler_RING(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
 {
+    AT_Q_SendHangupCmd(0);
 	return AT_SUCCESS;
 }
 

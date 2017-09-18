@@ -37,6 +37,7 @@ extern AT_CMD_PARA_T const g_sms_senddata_para;
 extern AT_CMD_PARA_T const g_sms_delete_para;
 extern AT_CMD_PARA_T const g_sms_list_para;
 extern AT_CMD_PARA_T const g_sms_read_para;
+extern AT_CMD_PARA_T const g_sms_cpms_para;
 
 
 
@@ -59,5 +60,6 @@ INT8U   AT_CMD_SendSm(INT8U *dptr, INT32U maxlen, INT8U pdulen);
 INT8U   AT_CMD_DeleteSm(INT8U *dptr, INT32U maxlen, INT8U index);
 INT8U   AT_CMD_ReadSm(INT8U *dptr, INT32U maxlen, INT8U index);
 INT8U   AT_CMD_ListSm(INT8U *dptr, INT32U maxlen);
+INT8U   AT_CMD_SelectSmStorage(INT8U *dptr, INT32U maxlen);
 
 #endif

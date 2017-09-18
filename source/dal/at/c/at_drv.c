@@ -15,6 +15,7 @@
 #include "yx_misc.h"
 #include "dal_input_drv.h"
 #include "at_drv.h"
+#include "yx_sm_cmd.h"
 
 #if EN_AT > 0
 
@@ -37,6 +38,48 @@
 ********************************************************************************
 */
 
+
+/*******************************************************************
+** 函数名:     Callback_RecvSmIndex
+** 函数描述:   接收到短信
+** 参数:       [in] sm: 短信内容
+** 返回:       无
+********************************************************************/
+static void Callback_RecvSmIndex(INT16U index)
+{
+    AT_Q_ReadSmByIndex(index, 0);
+}
+
+/*******************************************************************
+** 函数名:     Callback_RecvsSm
+** 函数描述:   接收到短信
+** 参数:       [in] sm: 短信内容
+** 返回:       无
+********************************************************************/
+static void Callback_RecvsSm(SM_T *sm)
+{
+    #if DEBUG_AT > 0
+    printf_com("<receive short message>\r\n");
+    printf_com("time is: ");
+    printf_hex(&sm->date.year, 6);
+    printf_com("\r\n");
+    printf_com("sms  is(%d): ", sm->scalen);
+    printf_raw(sm->sca, sm->scalen);
+    printf_com("\r\n");
+    printf_com("tel  is(%d): ", sm->oalen);
+    printf_raw(sm->oa, sm->oalen);
+    printf_com("\r\n"); 
+    
+    printf_com("data is(%d): ", sm->udlen);
+    printf_raw(sm->ud, sm->udlen);
+    printf_com(">\r\n");
+    printf_com("hex is(%d): ", sm->udlen);
+    printf_hex(sm->ud, sm->udlen);
+    printf_com(">\r\n");
+    #endif
+    
+    YX_DetectSmsCmd(sm);
+}
 
 /*******************************************************************
 ** 函数名:     AT_DRV_Open
@@ -82,6 +125,8 @@ void AT_DRV_Close(void)
 ********************************************************************/
 void AT_DRV_Init(void)
 {
+    AT_SMS_CALLBACK_T callback;
+    
     AT_POWER_Init();
     AT_COM_Init();
     AT_SEND_Init();
@@ -105,6 +150,10 @@ void AT_DRV_Init(void)
     //AT_OTHER_Init();
     AT_GPRS_InitDrv();
     AT_SOCKET_InitDrv();
+    
+    callback.callback_recvsmindex = Callback_RecvSmIndex;
+    callback.callback_recvsm = Callback_RecvsSm;
+    AT_URC_RegistSmsHandler(&callback);
 }
 
 #endif

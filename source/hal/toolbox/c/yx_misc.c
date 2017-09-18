@@ -357,9 +357,9 @@ INT8U YX_DecToAscii(INT8U *dptr, INT32U data, INT8U reflen)
 /*******************************************************************
 ** 函数名:     YX_HexToBcd
 ** 函数描述:   HEX转换为BCD
-** 参数:       [out] sptr:   待转换数据指针
+** 参数:       [in]  sptr:   待转换数据指针
 **             [in]  slen:   待转换数据最大长度
-**             [in]  dptr:   转换后数据
+**             [out] dptr:   转换后数据
 **             [in]  maxlen: 数据缓存最大长度
 ** 返回:       无
 ********************************************************************/
@@ -374,6 +374,32 @@ void YX_HexToBcd(INT8U *sptr, INT32U slen, INT8U *dptr, INT32U maxlen)
     for (i = 0; i < slen; i++) {
         dptr[i] = (sptr[i] / 10) * 16 + (sptr[i] % 10);
     }
+}
+
+/*******************************************************************
+** 函数名:     YX_AsciiToHex
+** 函数描述:   ASCII转换为HEX,如"1122"->0x11 0x22
+** 参数:       [out] dptr:   转换后数据
+**             [in]  maxlen: 转换后数据缓存最大长度
+**             [in]  sptr:   待转换数据指针
+**             [in]  slen:   待转换数据长度,必须为偶数
+** 返回:       返回转后长度,失败返回0
+********************************************************************/
+INT32U YX_AsciiToHex(INT8U *dptr, INT32U maxlen, INT8U *sptr, INT32U slen)
+{
+    INT32U i;
+    INT8U dtemp, stemp;
+    
+    if (slen % 2) {
+        return 0;
+    }
+    slen /= 2;
+    for (i = 0; i < slen; i++) {
+        stemp   = YX_CharToHex(*sptr++);
+        dtemp   = stemp << 4;
+        *dptr++ = YX_CharToHex(*sptr++) | dtemp;
+    }
+    return slen;
 }
 
 /*******************************************************************
@@ -747,23 +773,27 @@ char *YX_ConvertIpStringToHex(INT32U *ip_long, INT8U *sbits, char *ip_string)
 ** 参数:       [in] ip:  hex格式ip地址
 ** 返回:       成功返回string格式IP地址,以"\0"为结束符
 ********************************************************************/
-static char s_ipstring[20];
+static INT8U s_ipstring[20];
 char *YX_ConvertIpHexToString(INT32U ip)
 {
-    INT8U i, ch, temp;
+    INT8U byte1, byte2, byte3, byte4, iplen;
     
-    YX_STRCPY(s_ipstring, "000.000.000.000");
+    byte1 = ip >> 24;
+    byte2 = ip >> 16;
+    byte3 = ip >> 8;
+    byte4 = ip;
     
-    for (i = 0; i < 4; i++) {
-        ch = ip >> ((4 - i - 1) * 8);
-        temp = ch / 100;
-        s_ipstring[i * 4] = temp + 0x30;
-        temp = (ch / 10) % 10;
-        s_ipstring[i * 4 + 1] = temp + 0x30;
-        temp = ch % 10;
-        s_ipstring[i * 4 + 2] = temp + 0x30;
-    }
-    return s_ipstring;
+    iplen = 0;
+    iplen += YX_DecToAscii(&s_ipstring[iplen], byte1, 0);
+    s_ipstring[iplen++] = '.';
+    iplen += YX_DecToAscii(&s_ipstring[iplen], byte2, 0);
+    s_ipstring[iplen++] = '.';
+    iplen += YX_DecToAscii(&s_ipstring[iplen], byte3, 0);
+    s_ipstring[iplen++] = '.';
+    iplen += YX_DecToAscii(&s_ipstring[iplen], byte4, 0);
+    s_ipstring[iplen++] = '\0';
+    
+    return (char *)s_ipstring;
 }
 
 /***************************************************************
@@ -781,7 +811,166 @@ INT32U YX_ConvertLatitudeOrLongitude(INT8U *sptr)
     return (sptr[0]*1000000L + (sptr[1]*1000000L + sptr[2]*10000L + sptr[3]*100L) / 60);
 }
 
-//#endif
+INT8U YX_SemiOctetToChar(INT8U sbyte)
+{
+    sbyte &= 0x0F;
+    switch(sbyte)
+    {
+        case 0x0A:
+            return '*';
+        case 0x0B:
+            return '#';
+        case 0x0C:
+            return 'a';
+        case 0x0D:
+            return 'b';
+        case 0x0E:
+            return 'c';
+        case 0x0F:
+            return 0;
+        default:
+            return (sbyte + '0');
+    }
+}
+
+INT8U YX_CharToSemiOctet(INT8U schar)
+{
+    if (schar >= '0' && schar <= '9') return (schar - '0');
+    switch(schar)
+    {
+        case '*':
+            return 0x0A;
+        case '#':
+            return 0x0B;
+        case 'a':
+            return 0x0C;
+        case 'b':
+            return 0x0D;
+        case 'c':
+            return 0x0E;
+        default:
+            return 0x0F;
+    }
+}
+
+INT16U YX_Bit7ToOctet(INT8U *dptr, INT8U *sptr, INT16U len)
+{
+    INT8U  j, pos, stemp, dtemp;
+    INT16U rlen;
+    INT8U mask[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+    
+    pos   = 0;
+    rlen  = 0;
+    dtemp = 0;
+    for (; len > 0; len--) {
+        stemp = *sptr++;
+        for (j = 0; j <= 6; j++) {
+            if (stemp & mask[j]) dtemp |= mask[pos];
+            pos++;
+            if (pos == 8) {
+               *dptr++ = dtemp;
+               pos   = 0;
+               dtemp = 0;
+               rlen++;
+            }
+        }
+    }
+    if (pos != 0) {
+        *dptr = dtemp;
+        rlen++;
+    }
+    return rlen;
+}
+
+INT16U YX_OctetToBit7(INT8U *dptr, INT8U *sptr, INT16U len, INT8U leftbit)
+{
+    INT8U  j, pos, stemp, dtemp;
+    INT16U rlen;
+    INT8U mask[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+    
+    pos   = 0;
+    rlen  = 0;
+    dtemp = 0;
+    for (; len > 0; len--) {
+        stemp = *sptr++;
+        for (j = (8 - leftbit); j <= 7; j++) {
+            if (stemp & mask[j]) dtemp |= mask[pos];
+            pos++;
+            if (pos == 7) {
+                *dptr++ = dtemp;
+                pos   = 0;
+                dtemp = 0;
+                rlen++;
+                if (len == 1 && j != 0) break;
+            }
+        }
+        leftbit = 8;
+    }
+    return rlen;
+}
+
+INT16U YX_SemiOctetToAscii(INT8U *dptr, INT8U *sptr, INT16U len)
+{
+    INT16U rlen;
+    INT8U  stemp, temp;
+    
+    rlen = 0;
+    for (; len > 0; len--) {
+        stemp = *sptr++;
+        if ((temp = YX_SemiOctetToChar(stemp)) == 0) break;
+        else {
+            *dptr++ = temp;
+            rlen++;
+            stemp >>= 4;
+            if ((temp = YX_SemiOctetToChar(stemp)) == 0) break;
+            else {
+                *dptr++ = temp;
+                rlen++;
+            }
+        }
+    }
+    return rlen;
+}
+
+void YX_SemiOctetToHex(INT8U *dptr, INT8U *sptr, INT16U len)
+{
+    INT8U stemp, temp;
+    
+    for (; len > 0; len--) {
+        stemp   = *sptr++;
+        temp    = stemp >> 4;
+        stemp  &= 0x0F;
+        *dptr++ = stemp*10 + temp;
+    }
+}
+
+INT16U YX_AsciiToSemiOctet(INT8U *dptr, INT8U *sptr, INT16U len)
+{
+    INT16U  rlen;
+    INT8U   stemp, dtemp = 0;
+    BOOLEAN isodd;
+    
+    rlen   = 0;
+    isodd  = TRUE;
+    for (; len > 0; len--) {
+        stemp = *sptr++;
+        if ((stemp = YX_CharToSemiOctet(stemp)) == 0x0F) break;
+        if (isodd) {
+            isodd = FALSE;
+            dtemp = stemp;
+        } else {
+            isodd   = TRUE;
+            stemp <<= 4;
+            *dptr++ = dtemp | stemp;
+            rlen++;
+        }
+    }
+    if (!isodd) {
+        *dptr = dtemp | 0xF0;
+        rlen++;
+    }
+    return rlen;
+}
 
 
 

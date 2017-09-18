@@ -142,6 +142,7 @@ AT_CMD_PARA_T const g_sms_senddata_para   = { 0,               45,  1,  1,  Hand
 AT_CMD_PARA_T const g_sms_delete_para     = { 0,               10,  1,  1,  Handler_Common      };
 AT_CMD_PARA_T const g_sms_list_para       = { 0,               15,  1,  1,  Handler_Common      };
 AT_CMD_PARA_T const g_sms_read_para       = { 0,                5,  1,  1,  Handler_Common      };
+AT_CMD_PARA_T const g_sms_cpms_para       = { 0,                5,  1,  2,  Handler_Common      };
 
 
 /*
@@ -328,6 +329,19 @@ INT8U AT_CMD_ListSm(INT8U *dptr, INT32U maxlen)
     
     YX_MEMCPY(dptr, maxlen, str_CMGL, sizeof(str_CMGL) - 1);
     return sizeof(str_CMGL) - 1;
+}
+
+/*
+********************************************************************************
+* AT+CMGL    select Message storage
+********************************************************************************
+*/
+INT8U AT_CMD_SelectSmStorage(INT8U *dptr, INT32U maxlen)
+{
+    char const str_text[] = {"AT+CPMS=\"SM\",\"SM\",\"SM\"\r"};
+    
+    YX_MEMCPY(dptr, maxlen, str_text, sizeof(str_text) - 1);
+    return sizeof(str_text) - 1;
 }
 
 

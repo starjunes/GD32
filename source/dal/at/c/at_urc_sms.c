@@ -17,7 +17,9 @@
 #include "at_com.h"
 #include "at_recv.h"
 #include "at_send.h"
+#include "at_core.h"
 #include "at_pdu.h"
+#include "at_pdu_cdma.h"
 #include "at_urc_sms.h"
 
 #if EN_AT > 0
@@ -48,13 +50,19 @@ typedef struct {
 static RCB_T s_rcb;
 
 
-/*
-********************************************************************************
-* HANDLER: 短消息内容
-********************************************************************************
-*/
+
+/*******************************************************************
+** 函数名:     Handler_CMT
+** 函数描述:   解析短消息内容
+** 参数:       [in] ct_recv: 接收AT指令的序号
+**             [in] event:   接收处理事件
+**             [in] sptr:    数据指针
+**             [in] slen:    数据长度
+** 返回:       返回处理结果
+********************************************************************/
 static INT8U Handler_CMT(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
 {
+    INT8U result;
     SM_T *sm;
     
     if (event == EVT_RESET) {
@@ -71,7 +79,14 @@ static INT8U Handler_CMT(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
     } else if (ct_recv == 1) {
         sm = (SM_T *)YX_DYM_Alloc(sizeof(SM_T));
         if (sm != 0) {
-            if (ParsePDUData(sm, sptr, slen, s_rcb.pdulen)) {
+            //printf_com("-------(%d)(%d)\r\n", slen, s_rcb.pdulen);
+            if (ADP_NET_GetOperator() == NETWORK_OP_CT) {                      /* 电信CDMA短信解析 */
+                result = AT_SMS_ParseCdmaPduData(sm, sptr, slen - 2);
+            } else {
+                result = AT_SMS_ParsePduData(sm, sptr, slen, s_rcb.pdulen);
+            }
+            
+            if (result) {
                 if (s_rcb.callback_sms.callback_recvsm != 0) {
                     s_rcb.callback_sms.callback_recvsm(sm);
                 }
@@ -89,17 +104,25 @@ static INT8U Handler_CMT(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
     }
 }
 
-/*
-********************************************************************************
-* HANDLER: 短消息索引号通知
-********************************************************************************
-*/
+/*******************************************************************
+** 函数名:     Handler_CMTI
+** 函数描述:   解析短消息索引号
+** 参数:       [in] ct_recv: 接收AT指令的序号
+**             [in] event:   接收处理事件
+**             [in] sptr:    数据指针
+**             [in] slen:    数据长度
+** 返回:       返回处理结果
+********************************************************************/
 static INT8U Handler_CMTI(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
 {
     INT16U index;
     
     index = YX_SearchDigitalString(sptr, slen, ',', 1);
-    if (index != 0xffff) {
+    if (index == 0xFFFF) {
+        index = YX_SearchDigitalString(sptr, slen, '\r', 1);
+    }
+    
+    if (index != 0xFFFF) {
         if (s_rcb.callback_sms.callback_recvsmindex != 0) {
             s_rcb.callback_sms.callback_recvsmindex(index);
         }
@@ -112,11 +135,15 @@ static INT8U Handler_CMTI(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
     return AT_SUCCESS;
 }
 
-/*
-********************************************************************************
-* HANDLER: 读取短消息索引号
-********************************************************************************
-*/
+/*******************************************************************
+** 函数名:     Handler_CMGL
+** 函数描述:   解析读取短消息索引号
+** 参数:       [in] ct_recv: 接收AT指令的序号
+**             [in] event:   接收处理事件
+**             [in] sptr:    数据指针
+**             [in] slen:    数据长度
+** 返回:       返回处理结果
+********************************************************************/
 static INT8U Handler_CMGL(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
 {
     INT16U index;
@@ -147,6 +174,7 @@ static INT8U Handler_CMGL(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
 */
 static URC_HDL_TBL_T const s_hdl_tbl[] = {
                    {"SMS DONE",             2,   true,   0}
+                  //,{"+CPMS:",               2,   true,   0}
                   ,{"+CMGS:",               2,   true,   0}
                   ,{"+CMT:",                4,   true,   Handler_CMT}
                   ,{"+CMTI:",               2,   true,   Handler_CMTI}

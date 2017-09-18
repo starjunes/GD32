@@ -105,10 +105,11 @@ AT_CMD_PARA_T const g_phone_setsidetone_para  = { 0,                4,  1,  1,  
 */
 INT8U AT_CMD_Hangup(INT8U *dptr, INT32U maxlen)
 {
-    char const str_ATH[] = {"ATH\r"};
+    //char const str_ATH[] = {"ATH\r"};
+    char const str_CHUP[] = {"AT+CHUP\r"};
     
-    YX_MEMCPY(dptr, maxlen, str_ATH, sizeof(str_ATH) - 1);
-    return sizeof(str_ATH) - 1;
+    YX_MEMCPY(dptr, maxlen, str_CHUP, sizeof(str_CHUP) - 1);
+    return sizeof(str_CHUP) - 1;
 }
 
 /*

@@ -139,7 +139,8 @@ static void Callback_Recv(INT8U contexid, INT8S sock, INT8U *sptr, INT32U slen)
 void YX_JT_GetPositionInfo(STREAM_T *wstrm)
 {
     INT8U weekday;
-    INT32U subsecond;
+    INT32U subsecond, status;
+    INT8U simcard, creg, cgreg, rssi, ber;
     GPS_DATA_T gpsdata;
     SYSTIME_T systime;
     
@@ -150,7 +151,25 @@ void YX_JT_GetPositionInfo(STREAM_T *wstrm)
     } else {
         YX_WriteLONG_Strm(wstrm, 0);                                           /* 报警标志 */
     }
-    YX_WriteLONG_Strm(wstrm, 0);                                               /* 状态 */
+    
+    status = 0;
+    if ((gpsdata.flag & 0x08) != 0) {                                          /* 上传定位标志 */
+        status |= 0x00000002;
+    }
+    if ((gpsdata.flag & 0x01) != 0) {                                          /* 经纬度方向 */
+        status |= 0x00000008;
+    }
+    if ((gpsdata.flag & 0x02) != 0) {
+        status |= 0x00000004;
+    }
+    if ((gpsdata.flag & 0x10) != 0) {                                          /* 定位模式 */
+        status |= 0x00040000;
+    }
+    if ((gpsdata.flag & 0x20) != 0) {
+        status |= 0x00080000;
+    }
+    
+    YX_WriteLONG_Strm(wstrm, status);                                          /* 状态 */
     YX_WriteLONG_Strm(wstrm, YX_ConvertLatitudeOrLongitude(gpsdata.latitude)); /* 纬度 */
     YX_WriteLONG_Strm(wstrm, YX_ConvertLatitudeOrLongitude(gpsdata.longitude));/* 经度 */
     YX_WriteHWORD_Strm(wstrm, gpsdata.altitude);                               /* 高程 */
@@ -172,6 +191,16 @@ void YX_JT_GetPositionInfo(STREAM_T *wstrm)
     YX_WriteBYTE_Strm(wstrm, TAG_IO_STAT);                                     /* 扩展状态,睡眠 */
     YX_WriteBYTE_Strm(wstrm, 2);
     YX_WriteHWORD_Strm(wstrm, 0x0001);
+    
+    ADP_NET_GetNetworkState(&simcard, &creg, &cgreg, &rssi, &ber);
+    YX_WriteBYTE_Strm(wstrm, TAG_GSMSIGNAL);                                   /* 网络信号 */
+    YX_WriteBYTE_Strm(wstrm, 1);
+    YX_WriteBYTE_Strm(wstrm, rssi);
+#if 0
+    YX_WriteBYTE_Strm(wstrm, TAG_GNSSNUM);                                     /* 定位卫星数 */
+    YX_WriteBYTE_Strm(wstrm, 1);
+    YX_WriteBYTE_Strm(wstrm, 12);
+#endif
 }
 
 /*******************************************************************
@@ -212,11 +241,17 @@ BOOLEAN YX_JTT_SendAutoReptData(INT8U com)
 ********************************************************************/
 static void ScanTmrProc(void *pdata)
 {
+    AUTOREPT_PARA_T autopara;
+    
+    DAL_PP_ReadParaByID(PP_ID_AUTOREPT, (INT8U *)&autopara, sizeof(autopara));
+    
     if (YX_JTT1_LinkCanCom()) {
+        OS_StartTmr(s_scantmr, _SECOND, autopara.period);
         YX_JTT_SendAutoReptData(SOCKET_CH_0);
     }
     
     if (YX_JTT2_LinkCanCom()) {
+        OS_StartTmr(s_scantmr, _SECOND, autopara.period);
         YX_JTT_SendAutoReptData(SOCKET_CH_1);
     }
 }
@@ -245,12 +280,14 @@ void YX_JT_InitLinkMan(void)
 {
     GPRS_CALLBACK_T callback_gprs;
     SOCKET_CALLBACK_T callback_socket;
-    AUTOREPT_PARA_T autopara;
     
     YX_MEMSET(&s_mcb, 0, sizeof(s_mcb));
     
     YX_JTT1_InitLink();
     YX_JTT2_InitLink();
+    
+    s_scantmr  = OS_CreateTmr(TSK_ID_APP, (void *)0, ScanTmrProc);
+    OS_StartTmr(s_scantmr, _SECOND, 1);
     
     /* 注册GPRS事件处理器 */
     callback_gprs.callback_network_actived   = Callback_Actived;
@@ -263,10 +300,6 @@ void YX_JT_InitLinkMan(void)
     callback_socket.callback_socket_recv    = Callback_Recv;
     callback_socket.callback_socket_send    = 0;
     AT_SOCKET_RegistHandler(&callback_socket);
-    
-    DAL_PP_ReadParaByID(PP_ID_AUTOREPT, (INT8U *)&autopara, sizeof(autopara));
-    s_scantmr  = OS_CreateTmr(TSK_ID_APP, (void *)0, ScanTmrProc);
-    OS_StartTmr(s_scantmr, _SECOND, autopara.period);
     
     DAL_PP_RegParaChangeInformer(PP_ID_AUTOREPT, InformAutoReptParaChange);
 }

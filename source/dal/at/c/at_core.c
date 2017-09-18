@@ -65,6 +65,7 @@ typedef enum {
     FLAG_CSMS,
     FLAG_CMGF,
     FLAG_CNMI,
+    FLAG_CPMS,
     //FLAG_COLP,
     FLAG_CLIP,
     FLAG_CLCC,
@@ -569,6 +570,37 @@ static void InitProc_CNMI(void)
     AT_SEND_SendCmd(&g_sms_setcnmi_para, YX_GetStrmStartPtr(wstrm), len, Informer_CNMI);
 }
 
+/*******************************************************************
+** 函数名:     InitProc_CPMS
+** 函数描述:   设置新短信存储方式
+** 参数:       无
+** 返回:       无
+********************************************************************/
+static void Informer_CPMS(INT8U result)
+{
+    if (result == AT_SUCCESS) {
+        s_dcb.ct_try = 0;
+        s_dcb.flag &= (~(1 << FLAG_CPMS));
+    } else {
+        if (++s_dcb.ct_try > MAX_TRY) {
+            s_dcb.ct_try = 0;
+            //ResetGSM();
+            s_dcb.flag &= (~(1 << FLAG_CPMS));
+        }
+        s_dcb.ct_wait = MAX_WAIT;
+    }
+}
+
+static void InitProc_CPMS(void)
+{
+    INT32U len;
+    STREAM_T *wstrm;
+    
+    wstrm = YX_STREAM_GetBufferStream();
+    len = AT_CMD_SelectSmStorage(YX_GetStrmStartPtr(wstrm), YX_GetStrmMaxLen(wstrm));
+    AT_SEND_SendCmd(&g_sms_cpms_para, YX_GetStrmStartPtr(wstrm), len, Informer_CPMS);
+}
+
 #if 0
 /*******************************************************************
 ** 函数名:     InitProc_COLP
@@ -905,7 +937,7 @@ static void Informer_QCSQ(INT8U result)
 {
     if (result == AT_SUCCESS) {
         s_dcb.csq = ATCmdAck.ackbuf[0];
-        if (s_dcb.csq > 31) {
+        if (s_dcb.csq == 99) {
             s_dcb.csq = 0;
         }
         
@@ -1159,6 +1191,12 @@ static void Proc_init(void)
         return;
     }
     
+    /* 设置短信存储方式 */
+    if ((s_dcb.flag & (1 << FLAG_CPMS)) != 0) {
+        InitProc_CPMS();
+        return;
+    }
+    
     if ((s_dcb.flag & (1 << FLAG_CSMS)) != 0) {
         InitProc_CSMS();
         return;
@@ -1173,6 +1211,7 @@ static void Proc_init(void)
         InitProc_CNMI();
         return;
     }
+    
 #if 0
     if ((s_dcb.flag & (1 << FLAG_COLP)) != 0) {
         InitProc_COLP();
@@ -1590,7 +1629,7 @@ BOOLEAN ADP_NET_GetNetworkState(INT8U *simcard, INT8U *creg, INT8U *cgreg, INT8U
 ** 函数名:     ADP_NET_GetOperator
 ** 函数描述:   获取网络运营商
 ** 参数:       无
-** 返回:       运营商id,见NETWORK_OP_E
+** 返回:       运营商id,见 NETWORK_OP_E
 ********************************************************************/
 INT8U ADP_NET_GetOperator(void)
 {

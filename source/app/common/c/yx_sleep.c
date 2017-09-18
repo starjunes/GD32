@@ -325,6 +325,8 @@ static void GetPara(void)
     
     if ((s_dcb.flag & (1 << PARA_AUTOREPT)) != 0) {                            /* 主动上报参数 */
         YX_MMI_QueryCommonPara(PARA_DATA_GPS, 0);
+        YX_MMI_QueryCommonPara(PARA_DEVICEID, 0);
+        YX_MMI_QueryCommonPara(PARA_SMSPSW, 0);
         YX_MMI_QueryCommonPara(PARA_AUTOREPT, Callback_GetAutoReptPara);
         return;
     }
@@ -387,7 +389,7 @@ static void SleepTmrProc(void *pdata)
         if (DAL_INPUT_ReadFilterStatus(IPT_POWDECT)) {                         /* 主电源断电 */
             OS_StartTmr(s_sleeptmr, PERIOD_DELAY);
         } else if (sleeppara.onoff) {                                          /* 开启省电功能或者主电源断电 */
-            if (s_dcb.waketime > sleeppara.delay) {
+            if (s_dcb.waketime != 0) {
                 OS_StartTmr(s_sleeptmr, _MINUTE, s_dcb.waketime);
             } else if (sleeppara.delay == 0) {
                 OS_StartTmr(s_sleeptmr, PERIOD_DELAY);
@@ -481,6 +483,7 @@ static void SignalChangeInformer_ACC(INT8U port, INT8U mode)
             #endif
             
             s_dcb.wakeupevent = WAKEUP_EVENT_ACC;
+            s_dcb.waketime    = 0;
             Wakeup();
         } else {
             #if DEBUG_SYS > 0
@@ -531,6 +534,7 @@ static void SignalChangeInformer_POWDECT(INT8U port, INT8U mode)
             #endif
             
             s_dcb.wakeupevent = WAKEUP_EVENT_ACC;
+            s_dcb.waketime    = 0;
             Wakeup();
         } else {
             #if DEBUG_SYS > 0

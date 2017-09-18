@@ -423,6 +423,11 @@
               <FileType>1</FileType>
               <FilePath>..\source\app\common\c\yx_bootmain.c</FilePath>
             </File>
+            <File>
+              <FileName>yx_sm_cmd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\app\common\c\yx_sm_cmd.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -444,21 +449,6 @@
               <FilePath>..\source\app\link\c\yx_jt1_tlink.c</FilePath>
             </File>
             <File>
-              <FileName>yx_jt_linkman.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\app\link\c\yx_jt_linkman.c</FilePath>
-            </File>
-            <File>
-              <FileName>yx_protocol_send.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\app\link\c\yx_protocol_send.c</FilePath>
-            </File>
-            <File>
-              <FileName>yx_protocol_recv.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\app\link\c\yx_protocol_recv.c</FilePath>
-            </File>
-            <File>
               <FileName>yx_jt2_tsend.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\app\link\c\yx_jt2_tsend.c</FilePath>
@@ -472,6 +462,21 @@
               <FileName>yx_jt2_trecv.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\app\link\c\yx_jt2_trecv.c</FilePath>
+            </File>
+            <File>
+              <FileName>yx_jt_linkman.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\app\link\c\yx_jt_linkman.c</FilePath>
+            </File>
+            <File>
+              <FileName>yx_protocol_send.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\app\link\c\yx_protocol_send.c</FilePath>
+            </File>
+            <File>
+              <FileName>yx_protocol_recv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\app\link\c\yx_protocol_recv.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -637,6 +642,11 @@
               <FileName>at_pdu.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\dal\at\c\at_pdu.c</FilePath>
+            </File>
+            <File>
+              <FileName>at_pdu_cdma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\dal\at\c\at_pdu_cdma.c</FilePath>
             </File>
             <File>
               <FileName>at_power.c</FileName>

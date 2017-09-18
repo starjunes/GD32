@@ -41,7 +41,7 @@
 #define PP_ADDR_MAIN         0x0000              /* 主存储区起始地址 */
 #define PP_ADDR_BACK         0x0080              /* 备份存储区起始地址 */
 
-#define PP_MAX_LEN           512                 /* 存储区最大长度 */
+#define PP_MAX_LEN           1024                 /* 存储区最大长度 */
 
 /*
 ********************************************************************************
@@ -248,13 +248,15 @@ static BOOLEAN FlushRamToFile(INT8U cls)
         if ((s_dcb.pp[id].attrib & CL_) == CL_) {
             OS_ASSERT((s_dcb.pp[id].valid != VALID_), RETURN_FALSE);
             OS_ASSERT((phead->chksum[0] == 0 && phead->chksum[1] == 0), RETURN_FALSE);
-             
+            
+            s_dcb.pp[id].attrib &= (~CL_);
             result = HAL_SFLASH_Write(PP_ADDR_MAIN + offset, pclass->memptr + offset, s_dcb.pp[id].space);
             OS_ASSERT((result != 0), RETURN_FALSE);
         } else if ((s_dcb.pp[id].attrib & WF_) == WF_) {
             OS_ASSERT((s_dcb.pp[id].valid == VALID_), RETURN_FALSE);
             OS_ASSERT(CheckParaValid((INT8U *)phead, s_dcb.pp[id].space), RETURN_FALSE);
-                
+            
+            s_dcb.pp[id].attrib &= (~WF_);
             result = HAL_SFLASH_Write(PP_ADDR_MAIN + offset, pclass->memptr + offset, s_dcb.pp[id].space);
             OS_ASSERT((result != 0), RETURN_FALSE);
         }
@@ -474,6 +476,7 @@ BOOLEAN DAL_PP_ClearParaByID(INT8U id)
     YX_MEMSET(((INT8U *)phead), 0, s_dcb.pp[id].space - 1);
     s_dcb.pp[id].valid   = 0;
     s_dcb.pp[id].attrib |= CL_;
+    s_dcb.pp[id].attrib &= (~WF_);
     
     s_dcb.cls[pclass->type].ct_delay = 0;
     OS_PostMsg(TSK_ID_DAL, MSG_DAL_PP_CHANGE, id, PP_REASON_STORE);
@@ -582,6 +585,7 @@ BOOLEAN DAL_PP_StoreParaByID(INT8U id, INT8U *sptr, INT16U slen)
     
     s_dcb.pp[id].valid   = VALID_;
     s_dcb.pp[id].attrib |= WF_;
+    s_dcb.pp[id].attrib &= (~CL_);
     
     //if (pclass->type != PP_TYPE_DELAY) {
         s_dcb.cls[pclass->type].ct_delay = 0;

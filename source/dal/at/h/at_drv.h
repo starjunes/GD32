@@ -40,6 +40,7 @@
 #include "at_gprs_drv.h"
 #include "at_socket_drv.h"
 #include "at_pdu.h"
+#include "at_pdu_cdma.h"
 
 
 

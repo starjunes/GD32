@@ -354,7 +354,7 @@ BOOLEAN YX_MMI_QueryCommonPara(INT8U type, void(*fp)(INT8U result))
     wstrm = YX_STREAM_GetBufferStream();
     YX_WriteBYTE_Strm(wstrm, 0x01);                                        /* 参数个数 */
     YX_WriteBYTE_Strm(wstrm, type);
-    return YX_MMI_ListSend(UP_PE_CMD_GET_PARA, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm), 3, 3, fp);
+    return YX_MMI_ListSend(UP_PE_CMD_SLAVE_GET_PARA, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm), 3, 3, fp);
 }
 
 #endif

@@ -78,6 +78,10 @@ static void SampleTmrProc(void *pdata)
     rollover = false;
     if (HAL_HIT_GetValueXYZ(&xyz)) {
         if ((s_dcb.status & GSENSOR_EVENT_VALID) == 0) {                       /* 判断重力加速度传感器是否正常 */
+            #if DEBUG_GSENSOR > 0
+            printf_com("<gsensor is valid>\r\n");
+            #endif
+            
             s_dcb.status |= GSENSOR_EVENT_VALID;
             if (s_dcb.handler != 0) {
                 s_dcb.handler(s_dcb.status);

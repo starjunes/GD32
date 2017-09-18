@@ -47,7 +47,7 @@
 #if EN_DEBUG > 0
 #define DEBUG_MMI            0                   /* 调试外设通信 */
 #define DEBUG_ICCARD         1                   /* 调试IC卡刷卡功能 */
-#define DEBUG_PP             0                   /* 调试PP 存储驱动 */
+#define DEBUG_PP             1                   /* 调试PP 存储驱动 */
 #define DEBUG_KEYBOARD       0                   /* 调试按键 */
 #define DEBUG_ADC            0                   /* ADC采样 */
 #define DEBUG_GSENSOR        1                   /* 重力传感器 */

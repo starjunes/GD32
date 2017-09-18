@@ -25,7 +25,7 @@
 */
 
 #define PERIOD_SCAN          _MILTICK, 1
-#define SIZE_AT              64
+#define SIZE_AT              192
 #define _OPEN                0x01
 
 #define MAX_REG              40

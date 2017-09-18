@@ -77,11 +77,11 @@ static BOOLEAN SetMyTelPara(INT8U *sptr, INT32U slen)
 {
     TEL_T mytel;
     
-    DAL_PP_ReadParaByID(PP_ID_MYTEL, (INT8U *)&mytel, sizeof(mytel));
     if (slen > sizeof(mytel.tel)) {
         return false;
     }
     
+    DAL_PP_ReadParaByID(PP_ID_MYTEL, (INT8U *)&mytel, sizeof(mytel));
     mytel.tellen = slen;
     YX_MEMCPY(mytel.tel, sizeof(mytel.tel), sptr, slen);
     
@@ -102,11 +102,11 @@ static BOOLEAN SetAlarmTelPara(INT8U *sptr, INT32U slen)
 {
     TEL_T alarmtel;
     
-    DAL_PP_ReadParaByID(PP_ID_ALARMTEL, (INT8U *)&alarmtel, sizeof(alarmtel));
     if (slen > sizeof(alarmtel.tel)) {
         return false;
     }
     
+    DAL_PP_ReadParaByID(PP_ID_ALARMTEL, (INT8U *)&alarmtel, sizeof(alarmtel));
     alarmtel.tellen = slen;
     YX_MEMCPY(alarmtel.tel, sizeof(alarmtel.tel), sptr, slen);
     if (YX_MEMCMP(DAL_PP_GetParaPtr(PP_ID_ALARMTEL), (INT8U *)&alarmtel, sizeof(alarmtel)) != 0) {
@@ -126,11 +126,11 @@ static BOOLEAN SetSmscTelPara(INT8U *sptr, INT32U slen)
 {
     TEL_T smsctel;
     
-    DAL_PP_ReadParaByID(PP_ID_SMSCTEL, (INT8U *)&smsctel, sizeof(smsctel));
     if (slen > sizeof(smsctel.tel)) {
         return false;
     }
     
+    DAL_PP_ReadParaByID(PP_ID_SMSCTEL, (INT8U *)&smsctel, sizeof(smsctel));
     smsctel.tellen = slen;
     YX_MEMCPY(smsctel.tel, sizeof(smsctel.tel), sptr, slen);
     if (YX_MEMCMP(DAL_PP_GetParaPtr(PP_ID_SMSCTEL), (INT8U *)&smsctel, sizeof(smsctel)) != 0) {
@@ -150,16 +150,16 @@ static BOOLEAN SetSmscTelPara(INT8U *sptr, INT32U slen)
 ********************************************************************/
 static BOOLEAN SetGprsPara(INT8U *sptr, INT32U slen, INT8U severno, INT8U id)
 {
-    INT8U apnlen, usernamelen, passwordlen, iplen;
+    INT8U apnlen, usernamelen, passwordlen, iplen, sbits;
+    INT32U ip_long;
     STREAM_T rstrm;
     GPRS_PARA_T gprspara;
     
-    if (id >= IP_GROUP_NUM) {
+    if (id >= IP_GROUP_NUM || slen == 0) {
         return false;
     }
     
     YX_InitStrm(&rstrm, sptr, slen);
-    
     if (severno == 0) {
         DAL_PP_ReadParaByID(PP_ID_GPRSPARA1, (INT8U *)&gprspara, sizeof(gprspara));
     } else {
@@ -203,12 +203,19 @@ static BOOLEAN SetGprsPara(INT8U *sptr, INT32U slen, INT8U severno, INT8U id)
     }
     YX_ReadDATA_Strm(&rstrm, (INT8U *)gprspara.ippara[id].ip, iplen);
     gprspara.ippara[id].ip[iplen] = '\0';
+    if (YX_ConvertIpStringToHex(&ip_long, &sbits, gprspara.ippara[id].ip) == 0) {
+        YX_STRCPY(gprspara.ippara[id].ip, YX_ConvertIpHexToString(ip_long));
+    }
     gprspara.ippara[id].port = YX_ReadHWORD_Strm(&rstrm);                      /* 端口号 */
     
     if (severno == 0) {
-        DAL_PP_StoreParaByID(PP_ID_GPRSPARA1, (INT8U *)&gprspara, sizeof(gprspara));
+        if (YX_MEMCMP(DAL_PP_GetParaPtr(PP_ID_GPRSPARA1), (INT8U *)&gprspara, sizeof(gprspara)) != 0) {
+            DAL_PP_StoreParaByID(PP_ID_GPRSPARA1, (INT8U *)&gprspara, sizeof(gprspara));
+        }
     } else {
-        DAL_PP_StoreParaByID(PP_ID_GPRSPARA2, (INT8U *)&gprspara, sizeof(gprspara));
+        if (YX_MEMCMP(DAL_PP_GetParaPtr(PP_ID_GPRSPARA2), (INT8U *)&gprspara, sizeof(gprspara)) != 0) {
+            DAL_PP_StoreParaByID(PP_ID_GPRSPARA2, (INT8U *)&gprspara, sizeof(gprspara));
+        }
     }
     return true;
 
@@ -241,7 +248,7 @@ static BOOLEAN SetGprsAttribPara(INT8U *sptr, INT32U slen, INT8U severno, INT8U 
     STREAM_T rstrm;
     GPRS_PARA_T gprspara;
     
-    if (id >= IP_GROUP_NUM) {
+    if (id >= IP_GROUP_NUM || slen == 0) {
         return false;
     }
     
@@ -330,6 +337,9 @@ static BOOLEAN SetLinkPara(INT8U *sptr, INT32U slen, INT8U severno, INT8U id)
     LINK_PARA_T linkpara;
     STREAM_T rstrm;
     
+    if (slen == 0) {
+        return false;
+    }
     YX_InitStrm(&rstrm, sptr, slen);
     
     if (severno == 0) {
@@ -367,8 +377,10 @@ static BOOLEAN SetVehicheProvincePara(INT8U *sptr, INT32U slen)
     VEHICLE_INFO_T vehiche;
     STREAM_T rstrm;
     
+    if (slen == 0) {
+        return false;
+    }
     YX_InitStrm(&rstrm, sptr, slen);
-    
     DAL_PP_ReadParaByID(PP_ID_VEHICHE, (INT8U *)&vehiche, sizeof(vehiche));
     
     YX_ReadDATA_Strm(&rstrm, vehiche.province, 2);                             /* 省域ID */
@@ -415,6 +427,9 @@ static BOOLEAN SetVehicheColourPara(INT8U *sptr, INT32U slen)
 {
     VEHICLE_INFO_T vehiche;
     
+    if (slen == 0) {
+        return false;
+    }
     DAL_PP_ReadParaByID(PP_ID_VEHICHE, (INT8U *)&vehiche, sizeof(vehiche));
     vehiche.colour = sptr[0];
     if (YX_MEMCMP(DAL_PP_GetParaPtr(PP_ID_VEHICHE), (INT8U *)&vehiche, sizeof(vehiche)) != 0) {
@@ -460,8 +475,10 @@ static BOOLEAN SetDeviceInfoPara(INT8U *sptr, INT32U slen)
     DEVICE_INFO_T device;
     STREAM_T rstrm;
     
+    if (slen == 0) {
+        return false;
+    }
     YX_InitStrm(&rstrm, sptr, slen);
-    
     DAL_PP_ReadParaByID(PP_ID_DEVICE, (INT8U *)&device, sizeof(device));
     
     idlen = YX_ReadBYTE_Strm(&rstrm);                         /* 终端ID长度 */
@@ -509,6 +526,9 @@ static BOOLEAN SetSleepPara(INT8U *sptr, INT32U slen)
     SLEEP_PARA_T sleeppara;
     STREAM_T rstrm;
     
+    if (slen == 0) {
+        return false;
+    }
     YX_InitStrm(&rstrm, sptr, slen);
     
     DAL_PP_ReadParaByID(PP_ID_SLEEP, (INT8U *)&sleeppara, sizeof(sleeppara));
@@ -542,6 +562,30 @@ static BOOLEAN SetAutoReptPara(INT8U *sptr, INT32U slen)
 }
 
 /*******************************************************************
+** 函数名:     SetDeviceIdPara
+** 函数描述:   设置设备ID
+** 参数:       [in] sptr:    数据指针
+**             [in] slen:    数据长度
+** 返回:       成功返回TRUE；失败返回FALSE
+********************************************************************/
+static BOOLEAN SetDeviceIdPara(INT8U *sptr, INT32U slen)
+{
+    DEVICE_ID_T deviceid;
+    
+    if (slen > sizeof(deviceid.id) || slen == 0) {
+        return FALSE;
+    }
+    
+    DAL_PP_ReadParaByID(PP_ID_DEVICEID, (INT8U *)&deviceid, sizeof(deviceid));
+    deviceid.idlen = slen;
+    YX_MEMCPY(deviceid.id, slen, sptr, slen);
+    if (YX_MEMCMP(DAL_PP_GetParaPtr(PP_ID_DEVICEID), (INT8U *)&deviceid, sizeof(deviceid)) != 0) {
+        DAL_PP_StoreParaByID(PP_ID_DEVICEID, (INT8U *)&deviceid, sizeof(deviceid));
+    }
+    return true;
+}
+
+/*******************************************************************
 ** 函数名:     SetGpsData
 ** 函数描述:   设置GPS数据
 ** 参数:       [in] sptr:    数据指针
@@ -556,6 +600,9 @@ static BOOLEAN SetGpsData(INT8U *sptr, INT32U slen)
     SYSTIME_T systime;
     STREAM_T rstrm;
     
+    if (slen == 0) {
+        return FALSE;
+    }
     YX_InitStrm(&rstrm, sptr, slen);
     
     DAL_PP_ReadParaByID(PP_ID_GPSDATA, (INT8U *)&gpsdata, sizeof(gpsdata));
@@ -580,127 +627,211 @@ static BOOLEAN SetGpsData(INT8U *sptr, INT32U slen)
 }
 
 /*******************************************************************
-** 函数名:     HdlMsg_DN_PE_ACK_GET_PARA
+** 函数名:     SetSmsPassword
+** 函数描述:   设置短信命令密码
+** 参数:       [in] sptr:    数据指针
+**             [in] slen:    数据长度
+** 返回:       成功返回TRUE；失败返回FALSE
+********************************************************************/
+static BOOLEAN SetSmsPassword(INT8U *sptr, INT32U slen)
+{
+    SMS_PASSWORD_T password;
+
+    if (slen != LEN_PASSWORD) {
+        return FALSE;
+    }
+    
+    DAL_PP_ReadParaByID(PP_ID_SMSPSW, (INT8U *)&password, sizeof(password));
+    YX_MEMCPY(password.password, slen, sptr, slen);
+    if (YX_MEMCMP(DAL_PP_GetParaPtr(PP_ID_SMSPSW), (INT8U *)&password, sizeof(password)) != 0) {
+        DAL_PP_StoreParaByID(PP_ID_SMSPSW, (INT8U *)&password, sizeof(password));
+    }
+    return true;
+}
+
+/*******************************************************************
+** 函数名:     PaserCommonData
+** 函数描述:   解析通用参数
+** 参数:       [in] wstrm:   数据流组帧
+**             [in] sptr:    数据指针
+**             [in] slen:    数据长度
+** 返回:       成功返回TRUE；失败返回FALSE
+********************************************************************/
+static void PaserCommonData(STREAM_T *wstrm, INT8U *sptr, INT32U slen)
+{
+    INT8U i, paranum, paratype, paralen, result;
+    STREAM_T rstrm;
+    
+    YX_InitStrm(&rstrm, sptr, slen);
+    paranum = YX_ReadBYTE_Strm(&rstrm);                                        /* 参数个数 */
+    YX_WriteBYTE_Strm(wstrm, paranum);
+    for (i = 0; i < paranum; i++) {
+        paratype = YX_ReadBYTE_Strm(&rstrm);                                   /* 参数类型 */
+        paralen  = YX_ReadBYTE_Strm(&rstrm);                                   /* 参数长度 */
+        YX_WriteBYTE_Strm(wstrm, paratype);
+        if (paralen > YX_GetStrmLeftLen(&rstrm)) {
+            YX_WriteBYTE_Strm(wstrm, PE_NAK_MMI);
+            break;
+        }
+        
+        switch (paratype)
+        {
+        case PARA_MYTEL:                                                       /* 本机号码 */
+            result = SetMyTelPara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_SMSC:                                                        /* 短信服务中心号码 */
+            result = SetSmscTelPara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_ALARMTEL:                                                    /* 报警号码 */
+            result = SetAlarmTelPara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_SERVER1_MAIN:                                                /* 第一服务器通信参数（主） */
+            result = SetGprsPara(YX_GetStrmPtr(&rstrm), paralen, 0, 0);
+            break;
+        case PARA_SERVER1_BACK:                                                /* 第一服务器通信参数（副） */
+            result = SetGprsPara(YX_GetStrmPtr(&rstrm), paralen, 0, 1);
+            break;
+        case PARA_SERVER1_ATTRIB:                                              /* 第一服务器通信属性 */
+            result = SetGprsAttribPara(YX_GetStrmPtr(&rstrm), paralen, 0, 0);
+            break;
+        case PARA_SERVER1_AUTHCODE:                                            /* 第一服务器鉴权码 */
+            result = SetAuthcodePara(YX_GetStrmPtr(&rstrm), paralen, 0, 0);
+            break;
+        case PARA_SERVER1_LINK:                                                /* 第一服务器链路维护参数 */
+            result = SetLinkPara(YX_GetStrmPtr(&rstrm), paralen, 0, 0);
+            break;
+        case PARA_SERVER2_MAIN:                                                /* 第二服务器通信参数（主） */
+            result = SetGprsPara(YX_GetStrmPtr(&rstrm), paralen, 1, 0);
+            break;
+        case PARA_SERVER2_BACK:                                                /* 第二服务器通信参数（副） */
+            result = SetGprsPara(YX_GetStrmPtr(&rstrm), paralen, 1, 1);
+            break;
+        case PARA_SERVER2_ATTRIB:                                              /* 第二服务器通信属性 */
+            result = SetGprsAttribPara(YX_GetStrmPtr(&rstrm), paralen, 1, 0);
+            break;
+        case PARA_SERVER2_AUTHCODE:                                            /* 第二服务器鉴权码 */
+            result = SetAuthcodePara(YX_GetStrmPtr(&rstrm), paralen, 1, 0);
+            break;
+        case PARA_SERVER2_LINK:                                                /* 第二服务器链路维护参数 */
+            result = SetLinkPara(YX_GetStrmPtr(&rstrm), paralen, 1, 0);
+            break;
+        case PARA_VEHICHE_PROVINCE:                                            /* 车辆归属地 */
+            result = SetVehicheProvincePara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_VEHICHE_CODE:                                                /* 车牌号 */
+            result = SetVehicheCodePara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_VEHICHE_COLOUR:                                              /* 车辆颜色 */
+            result = SetVehicheColourPara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_VEHICHE_BRAND:                                               /* 车辆分类 */
+            result = true;
+            break;
+        case PARA_VEHICHE_VIN:                                                 /* 车辆VIN */
+            result = SetVehicheVinPara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_DEVICEINFO:                                                  /* 设备信息 */
+            result = SetDeviceInfoPara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_SLEEP:                                                       /* 省电参数 */
+            result = SetSleepPara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_AUTOREPT:                                                    /* 主动上报参数 */
+            result = SetAutoReptPara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_DEVICEID:                                                    /* 设备ID */
+            result = SetDeviceIdPara(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_SMSPSW:                                                      /* 短信命令密码 */
+            result = SetSmsPassword(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        case PARA_DATA_GPS:                                                    /* GPS数据 */
+            result = SetGpsData(YX_GetStrmPtr(&rstrm), paralen);
+            break;
+        default:
+            result = false;
+            break;
+        }
+        
+        YX_MovStrmPtr(&rstrm, paralen);
+        if (result) {
+            YX_WriteBYTE_Strm(wstrm, PE_ACK_MMI);
+        } else {
+            YX_WriteBYTE_Strm(wstrm, PE_NAK_MMI);
+        }
+    }
+}
+
+/*******************************************************************
+** 函数名:     HdlMsg_DN_PE_ACK_SLAVE_GET_PARA
 ** 函数描述:   从机查询通用参数请求应答
 ** 参数:       [in] cmd:     命令编码
 **             [in] data:    数据指针
 **             [in] datalen: 数据长度
 ** 返回:       无
 ********************************************************************/
-static void HdlMsg_DN_PE_ACK_GET_PARA(INT8U cmd, INT8U *data, INT16U datalen)
+static void HdlMsg_DN_PE_ACK_SLAVE_GET_PARA(INT8U cmd, INT8U *data, INT16U datalen)
 {
-    INT8U i, paranum, paratype, paralen;
+    STREAM_T *wstrm;
+    
+    wstrm = YX_STREAM_GetBufferStream();
+    PaserCommonData(wstrm, data, datalen);
+    YX_MMI_ListAck(UP_PE_CMD_SLAVE_GET_PARA, _SUCCESS);
+}
+
+/*******************************************************************
+** 函数名:     HdlMsg_DN_PE_CMD_HOST_SET_PARA
+** 函数描述:   主机设置通用参数
+** 参数:       [in] cmd:     命令编码
+**             [in] data:    数据指针
+**             [in] datalen: 数据长度
+** 返回:       无
+********************************************************************/
+static void HdlMsg_DN_PE_CMD_HOST_SET_PARA(INT8U cmd, INT8U *data, INT16U datalen)
+{
+    STREAM_T *wstrm;
+    
+    wstrm = YX_STREAM_GetBufferStream();
+    PaserCommonData(wstrm, data, datalen);
+    YX_MMI_ListSend(UP_PE_ACK_HOST_SET_PARA, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm), 0, 0, 0);
+}
+
+/*******************************************************************
+** 函数名:     HdlMsg_DN_PE_CMD_HOST_GET_PARA
+** 函数描述:   主机查询通用参数
+** 参数:       [in] cmd:     命令编码
+**             [in] data:    数据指针
+**             [in] datalen: 数据长度
+** 返回:       无
+********************************************************************/
+static void HdlMsg_DN_PE_CMD_HOST_GET_PARA(INT8U cmd, INT8U *data, INT16U datalen)
+{
+    INT8U i, paranum, paratype;
     STREAM_T rstrm;
+    STREAM_T *wstrm;
+    DEVICE_ID_T deviceid;
     
+    wstrm = YX_STREAM_GetBufferStream();
     YX_InitStrm(&rstrm, data, datalen);
-    
     paranum = YX_ReadBYTE_Strm(&rstrm);                                        /* 参数个数 */
+    YX_WriteBYTE_Strm(wstrm, paranum);
     for (i = 0; i < paranum; i++) {
         paratype = YX_ReadBYTE_Strm(&rstrm);                                   /* 参数类型 */
-        paralen  = YX_ReadBYTE_Strm(&rstrm);                                   /* 参数长度 */
-        if (paralen > YX_GetStrmLeftLen(&rstrm)) {
-            break;
-        }
-        if (paralen == 0) {
-            continue;
-        }
-        
-        switch (paratype)
+        YX_WriteBYTE_Strm(wstrm, paratype);
+        switch (paratype) 
         {
-        case PARA_MYTEL:                                                       /* 本机号码 */
-            SetMyTelPara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SMSC:                                                        /* 短信服务中心号码 */
-            SetSmscTelPara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_ALARMTEL:                                                    /* 报警号码 */
-            SetAlarmTelPara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER1_MAIN:                                                /* 第一服务器通信参数（主） */
-            SetGprsPara(YX_GetStrmPtr(&rstrm), paralen, 0, 0);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER1_BACK:                                                /* 第一服务器通信参数（副） */
-            SetGprsPara(YX_GetStrmPtr(&rstrm), paralen, 0, 1);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER1_ATTRIB:                                              /* 第一服务器通信属性 */
-            SetGprsAttribPara(YX_GetStrmPtr(&rstrm), paralen, 0, 0);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER1_AUTHCODE:                                            /* 第一服务器鉴权码 */
-            SetAuthcodePara(YX_GetStrmPtr(&rstrm), paralen, 0, 0);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER1_LINK:                                                /* 第一服务器链路维护参数 */
-            SetLinkPara(YX_GetStrmPtr(&rstrm), paralen, 0, 0);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER2_MAIN:                                                /* 第二服务器通信参数（主） */
-            SetGprsPara(YX_GetStrmPtr(&rstrm), paralen, 1, 0);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER2_BACK:                                                /* 第二服务器通信参数（副） */
-            SetGprsPara(YX_GetStrmPtr(&rstrm), paralen, 1, 1);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER2_ATTRIB:                                              /* 第二服务器通信属性 */
-            SetGprsAttribPara(YX_GetStrmPtr(&rstrm), paralen, 1, 0);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER2_AUTHCODE:                                            /* 第二服务器鉴权码 */
-            SetAuthcodePara(YX_GetStrmPtr(&rstrm), paralen, 1, 0);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SERVER2_LINK:                                                /* 第二服务器链路维护参数 */
-            SetLinkPara(YX_GetStrmPtr(&rstrm), paralen, 1, 0);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_VEHICHE_PROVINCE:                                            /* 车辆归属地 */
-            SetVehicheProvincePara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_VEHICHE_CODE:                                                /* 车牌号 */
-            SetVehicheCodePara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_VEHICHE_COLOUR:                                              /* 车辆颜色 */
-            SetVehicheColourPara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_VEHICHE_BRAND:                                               /* 车辆分类 */
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_VEHICHE_VIN:                                                 /* 车辆VIN */
-            SetVehicheVinPara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_DEVICEINFO:                                                  /* 设备信息 */
-            SetDeviceInfoPara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_SLEEP:                                                       /* 省电参数 */
-            SetSleepPara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_AUTOREPT:                                                    /* 主动上报参数 */
-            SetAutoReptPara(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
-            break;
-        case PARA_DATA_GPS:                                                    /* GPS数据 */
-            SetGpsData(YX_GetStrmPtr(&rstrm), paralen);
-            YX_MovStrmPtr(&rstrm, paralen);
+        case PARA_DEVICEID:                                                    /* 设备ID */
+            DAL_PP_ReadParaByID(PP_ID_DEVICEID, (INT8U *)&deviceid, sizeof(deviceid));
+            YX_WriteBYTE_Strm(wstrm, deviceid.idlen);
+            YX_WriteDATA_Strm(wstrm, deviceid.id, deviceid.idlen);
             break;
         default:
-            YX_MovStrmPtr(&rstrm, paralen);
+            YX_WriteBYTE_Strm(wstrm, 0);
             break;
         }
     }
     
-    YX_MMI_ListAck(UP_PE_CMD_GET_PARA, _SUCCESS);
+    YX_MMI_ListSend(UP_PE_ACK_HOST_GET_PARA, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm), 0, 0, 0);
 }
 
 /*******************************************************************
@@ -1039,7 +1170,9 @@ static void HdlMsg_DN_PE_ACK_CAN_BUS_STATUS_REPORT(INT8U cmd, INT8U *data, INT16
 
 
 static FUNCENTRY_MMI_T s_functionentry[] = {
-     {DN_PE_ACK_GET_PARA,                    HdlMsg_DN_PE_ACK_GET_PARA}                 /* 从机查询通用参数请求应答 */
+     {DN_PE_ACK_SLAVE_GET_PARA,              HdlMsg_DN_PE_ACK_SLAVE_GET_PARA}           /* 从机查询通用参数请求应答 */
+    ,{DN_PE_CMD_HOST_SET_PARA,               HdlMsg_DN_PE_CMD_HOST_SET_PARA}            /* 主机设置通用参数 */
+    ,{DN_PE_CMD_HOST_GET_PARA,               HdlMsg_DN_PE_CMD_HOST_GET_PARA}            /* 主机查询通用参数 */
     ,{DN_PE_CMD_CTL_FUNCTION,                HdlMsg_DN_PE_CMD_CTL_FUNCTION}             /* 功能控制 */
 #if EN_ICCARD > 0
     ,{DN_PE_ACK_REPORT_ICCARD_DATA,          HdlMsg_DN_PE_ACK_REPORT_ICCARD_DATA}       /* 主动上报IC卡原始数据应答 */

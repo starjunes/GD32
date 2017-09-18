@@ -309,7 +309,8 @@ static void STM32_CAN_IrqConfig(const CAN_REG_T *pinfo)
     ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_CAN);
     ST_IRQ_ConfigIrqEnable(irq_id, true);                                       /* 打开中断 */
     
-    flag = CAN_IT_FF0 | CAN_IT_FF1;// | CAN_IT_BOF | CAN_IT_ERR;
+    //flag = CAN_IT_FF0 | CAN_IT_FF1;// | CAN_IT_BOF | CAN_IT_ERR;
+    flag = CAN_IT_FMP0 | CAN_IT_FMP1;
     CAN_ITConfig((CAN_TypeDef *)pinfo->can_base, flag, ENABLE);                 /* Enable Interrupt */
 }
 
@@ -962,6 +963,71 @@ __attribute__ ((section ("IRQ_HANDLE"))) void CAN1_IrqHandle(void)
     const CAN_REG_T *pinfo;
     
     com = CAN_COM_0;
+#if 1
+    if (CAN_GetFlagStatus(CAN, CAN_FLAG_FMP0) != RESET) {                       /* FIFO0数据接收中断 */
+        CAN_ClearITPendingBit(CAN, CAN_FLAG_FMP0);                               /* Clears the CAN1 interrupt pending bit */
+        
+        for (i = 0; i < 1; i++) {
+            CAN_Receive(CAN, CAN_FIFO0, &rxmessage);
+            
+            if (rxmessage.IDE == CAN_ID_STD) {
+                recvdata.idtype = CAN_ID_TYPE_STD;
+                recvdata.id     = rxmessage.StdId;
+            } else {
+                recvdata.idtype = CAN_ID_TYPE_EXT;
+                recvdata.id     = rxmessage.ExtId;
+            }
+            
+            if (rxmessage.RTR == CAN_RTR_DATA) {
+                recvdata.datatype = CAN_RTR_TYPE_DATA;
+            } else {
+                recvdata.datatype = CAN_RTR_TYPE_REMOTE;
+            }
+            
+            recvdata.index = rxmessage.FMI;
+            recvdata.dlc   = rxmessage.DLC;
+            
+            for (j = 0; j < rxmessage.DLC; j++) {
+                recvdata.data[j] = rxmessage.Data[j];
+            }
+            
+            WriteLoopData_INT(&s_can[com].recvloop, &recvdata);
+            //printf_com("CAN1_IrqHandle(%x)(%d)(%d)\r\n", recvdata.id, recvdata.idtype, recvdata.datatype);
+        }
+    }
+    
+    if (CAN_GetFlagStatus(CAN, CAN_FLAG_FMP1) != RESET) {                       /* FIFO1数据接收中断 */
+        CAN_ClearITPendingBit(CAN, CAN_FLAG_FMP1);                              /* Clears the CAN1 interrupt pending bit */
+        
+        for (i = 0; i < 1; i++) {
+            CAN_Receive(CAN, CAN_FIFO1, &rxmessage);
+            
+            if (rxmessage.IDE == CAN_ID_STD) {
+                recvdata.idtype = CAN_ID_TYPE_STD;
+                recvdata.id     = rxmessage.StdId;
+            } else {
+                recvdata.idtype = CAN_ID_TYPE_EXT;
+                recvdata.id     = rxmessage.ExtId;
+            }
+            
+            if (rxmessage.RTR == CAN_RTR_DATA) {
+                recvdata.datatype = CAN_RTR_TYPE_DATA;
+            } else {
+                recvdata.datatype = CAN_RTR_TYPE_REMOTE;
+            }
+            
+            recvdata.index = rxmessage.FMI;
+            recvdata.dlc   = rxmessage.DLC;
+            
+            for (j = 0; j < rxmessage.DLC; j++) {
+                recvdata.data[j] = rxmessage.Data[j];
+            }
+            
+            WriteLoopData_INT(&s_can[com].recvloop, &recvdata);
+        }
+    }
+#else
+    
     if (CAN_GetFlagStatus(CAN, CAN_FLAG_FF0) != RESET) {                       /* FIFO0数据接收中断 */
         CAN_ClearITPendingBit(CAN, CAN_IT_FF0);                                /* Clears the CAN1 interrupt pending bit */
         
@@ -1024,6 +1090,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void CAN1_IrqHandle(void)
             WriteLoopData_INT(&s_can[com].recvloop, &recvdata);
         }
     }
+#endif
     
     if (CAN_GetITStatus(CAN, CAN_IT_TME) != RESET) {                           /* 数据发送中断 */
         CAN_ClearITPendingBit(CAN, CAN_IT_TME);                                /* Clears the CAN1 interrupt pending bit */

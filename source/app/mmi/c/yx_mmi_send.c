@@ -259,8 +259,9 @@ BOOLEAN YX_MMI_ListSend(INT16U type, INT8U *ptr, INT16U len, INT8U ct_send, INT1
         cell->sptr[2] = PE_TYPE_DEF;                                           /* 外设类型 */
         
         if ((type > UP_PE_CMD_CAN_TRANS_DATA && type < UP_PE_CMD_CAN_TRANS_DATA + 0x10) ||
-            type == UP_PE_CMD_GET_PARA || type == UP_PE_CMD_REPORT_ICCARD_DATA || 
-            type == UP_PE_ACK_WRITE_ICCARD || type == UP_PE_ACK_CTL_FUNCTION) {
+            type == UP_PE_CMD_SLAVE_GET_PARA || type == UP_PE_ACK_HOST_SET_PARA || type == UP_PE_ACK_HOST_GET_PARA ||
+            type == UP_PE_CMD_REPORT_ICCARD_DATA || type == UP_PE_ACK_WRITE_ICCARD || 
+            type == UP_PE_ACK_CTL_FUNCTION) {
             cell->slen++;
             cell->sptr[3] = UP_PE_CMD_CAN_TRANS_DATA;
             cell->sptr[4] = type;
@@ -310,8 +311,9 @@ BOOLEAN YX_MMI_DirSend(INT16U type, INT8U *ptr, INT16U len)
     memptr[len + 3] = PE_TYPE_DEF;                                               /* 外设类型 */
     
     if ((type > UP_PE_CMD_CAN_TRANS_DATA && type < UP_PE_CMD_CAN_TRANS_DATA + 0x10) ||
-        type == UP_PE_CMD_GET_PARA || type == UP_PE_CMD_REPORT_ICCARD_DATA || 
-        type == UP_PE_ACK_WRITE_ICCARD || type == UP_PE_ACK_CTL_FUNCTION) {
+         type == UP_PE_CMD_SLAVE_GET_PARA || type == UP_PE_ACK_HOST_SET_PARA || type == UP_PE_ACK_HOST_GET_PARA ||
+         type == UP_PE_CMD_REPORT_ICCARD_DATA || type == UP_PE_ACK_WRITE_ICCARD || 
+         type == UP_PE_ACK_CTL_FUNCTION) {
         memptr[len + 4] = UP_PE_CMD_CAN_TRANS_DATA;
         memptr[len + 5] = type;
         

@@ -805,6 +805,7 @@ BOOLEAN YX_MMI_SendKeyValue(KEY_VALUE_T *key)
 ********************************************************************/
 BOOLEAN YX_MMI_SendGsensorInfo(INT8U event)
 {
+    INT8U result;
     STREAM_T *wstrm;
     
     if (!YX_MMI_IsON()) {
@@ -812,7 +813,12 @@ BOOLEAN YX_MMI_SendGsensorInfo(INT8U event)
     }
     wstrm = YX_STREAM_GetBufferStream();
     YX_WriteBYTE_Strm(wstrm, event);
-    return YX_MMI_DirSend(UP_PE_CMD_HITCK_REPORT, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
+    result = YX_MMI_DirSend(UP_PE_CMD_HITCK_REPORT, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
+    if (!result) {
+        result = YX_MMI_ListSend(UP_PE_CMD_HITCK_REPORT, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm), 3, 3, 0);
+    }
+    
+    return result;
 }
 
 #endif /* end of EN_MMI */

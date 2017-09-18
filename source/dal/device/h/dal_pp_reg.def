@@ -38,6 +38,8 @@
  参数1区：不经常改动，重要参数注册到该区 
  ***********************************************************/
 BEGIN_PP_DEF(PP_TYPE_CRITICAL, 2, "ppcri")
+    PP_DEF(PP_TYPE_CRITICAL, PP_ID_DEVICEID,     sizeof(DEVICE_ID_T),           PP_BK,     0)
+    PP_DEF(PP_TYPE_CRITICAL, PP_ID_SMSPSW,       sizeof(SMS_PASSWORD_T),        PP_NBK,    &i_sms_password)
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_MYTEL,        sizeof(TEL_T),                 PP_BK,     0)
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_SMSCTEL,      sizeof(TEL_T),                 PP_BK,     0)
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_ALARMTEL,     sizeof(TEL_T),                 PP_BK,     0)
@@ -53,7 +55,7 @@ BEGIN_PP_DEF(PP_TYPE_CRITICAL, 2, "ppcri")
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_AUTOREPT,     sizeof(AUTOREPT_PARA_T),       PP_NBK,    0)
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_GPSDATA,      sizeof(GPS_DATA_T),            PP_NBK,    0)
     
-    PP_DEF(PP_TYPE_CRITICAL, PP_RESET_,      sizeof(RESET_RECORD_T),        PP_NBK,    0)
+    PP_DEF(PP_TYPE_CRITICAL, PP_RESET_,          sizeof(RESET_RECORD_T),        PP_NBK,    0)
     //PP_DEF(PP_TYPE_CRITICAL, PP_GSENSOR_,    sizeof(GSENSOR_CALIBRATION_T), PP_NBK,    0)
 END_PP_DEF(PP_TYPE_CRITICAL)
 

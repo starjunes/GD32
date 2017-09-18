@@ -18,115 +18,167 @@
 //#include "shell_reg_uni2gb.h"
 //#include "shell_reg_gb2uni.h"
 
+/*
+********************************************************************************
+* 定义模块配置参数
+********************************************************************************
+*/
+#define EN_CHINESE           0
 
-#if 0
-static BOOLEAN ParseUserData(SM_T *desSM, INT8U *orgdata)
+
+/*******************************************************************
+** 函数名:     ParseUserData
+** 函数描述:   解析PDU短信内容数据
+** 参数:       [out] sm:      解析后的短信内容
+**             [in]  orgdata: 待解析PDU短信内容数据
+** 返回:       成功返回TRUE,失败返回FALSE
+********************************************************************/
+static BOOLEAN ParseUserData(SM_T *sm, INT8U *orgdata)
 {
     INT16U temp;
     INT8U  len, udhl, udhl_7, fillbit, leftbit;
 
-    if (desSM->PDUtype & 0x40) {
+    if ((sm->pdutype & 0x40) != 0) {
         udhl = orgdata[1] + 1;
     } else {
         udhl = 0;
     }
     len = orgdata[0];
-    if (udhl > len) return FALSE;
+    if (udhl > len) {
+        return FALSE;
+    }
     
-    switch (desSM->DCS & 0x0c)
+    switch (sm->dcs & 0x0c)
     {
-        case SM_DCS_BIT7:
-            if (len > 160) return FALSE;
-            temp = len * 7;
-            if (temp % 8) {
-                temp /= 8;
-                temp++;
-            } else {
-                temp /= 8;
-            }
-            
-            fillbit = 7 - (udhl * 8) % 7;
-            if (fillbit != 7) {
-                leftbit = 8 - fillbit;
-            } else {
-                leftbit = 8;
-            }
-            udhl_7 = (udhl * 8) / 7;
-            if (leftbit != 8) udhl_7++;
+    case SM_DCS_BIT7:
+        if (len > 160) {
+            return FALSE;
+        }
+        temp = len * 7;
+        if (temp % 8) {
+            temp /= 8;
+            temp++;
+        } else {
+            temp /= 8;
+        }
+        
+        fillbit = 7 - (udhl * 8) % 7;
+        if (fillbit != 7) {
+            leftbit = 8 - fillbit;
+        } else {
+            leftbit = 8;
+        }
+        udhl_7 = (udhl * 8) / 7;
+        if (leftbit != 8) udhl_7++;
 
-            desSM->UDL = len - udhl_7;
-            YX_OctetToBit7(desSM->UD, &orgdata[udhl + 1], temp - udhl, leftbit);
-            return TRUE;
-        case SM_DCS_UCS2:
-            if (len > 140) return FALSE;
-            desSM->UDL = SHELL_UniToGB(desSM->UD, &orgdata[udhl + 1], len - udhl);
-            return TRUE;
-        default:
-            if (len > 140) return FALSE;
-            desSM->UDL = len - udhl;
-            memcpy(desSM->UD, &orgdata[udhl + 1], len - udhl);
-            return TRUE;
+        sm->udlen = len - udhl_7;
+        YX_OctetToBit7(sm->ud, &orgdata[udhl + 1], temp - udhl, leftbit);
+        return TRUE;
+    case SM_DCS_UCS2:
+#if EN_CHINESE > 0
+        if (len > 140) {
+            return FALSE;
+        }
+        sm->udlen = SHELL_UniToGB(sm->ud, &orgdata[udhl + 1], len - udhl);
+        return TRUE;
+#else
+        return FALSE;
+#endif
+    default:
+        if (len > 140) {
+            return FALSE;
+        }
+        sm->udlen = len - udhl;
+        memcpy(sm->ud, &orgdata[udhl + 1], len - udhl);
+        return TRUE;
     }
 }
-#endif
 
-BOOLEAN ParsePDUData(SM_T *desSM, INT8U *orgdata, INT16U orglen, INT16U pdulen)
+/*******************************************************************
+** 函数名:     AT_SMS_ParsePduData
+** 函数描述:   解析PDU数据格式短信
+** 参数:       [out] sm:      解析后的短信内容
+**             [in]  orgdata: 待解析PDU数据
+**             [in]  orgdata: 待解析PDU数据长度
+**             [in]  pdulen:  实际PDU数据长度
+** 返回:       成功返回TRUE,失败返回FALSE
+********************************************************************/
+BOOLEAN AT_SMS_ParsePduData(SM_T *sm, INT8U *orgdata, INT16U orglen, INT16U pdulen)
 {
-#if 0
     INT8U templen;
     INT8U temp, curpos;
     
-    orglen = YX_AsciiToHex(orgdata, orgdata, orglen - 2);          /* 2 = LF, CR */
-    if (orglen == 0) return FALSE;
-    if ((pdulen + orgdata[0] + 1) != orglen) return FALSE;
+    orglen = YX_AsciiToHex(orgdata, orglen, orgdata, orglen - 2);              /* 2 = LF, CR */
+    if (orglen == 0) {
+        return FALSE;
+    }
     
-    if (orgdata[0] >= 11) return FALSE;
+    if ((pdulen + orgdata[0] + 1) != orglen) {
+        return FALSE;
+    }
+    
+    if (orgdata[0] >= 11) {
+        return FALSE;
+    }
+    
     if (orgdata[0] == 0) {
-        desSM->SCAL = 0;
+        sm->scalen = 0;
     } else {
         if (orgdata[1] == 0x91) {
             templen       = 1;
-            desSM->SCA[0] = '+';
+            sm->sca[0] = '+';
         } else {
             templen       = 0;
         }
-        desSM->SCAL = templen + YX_SemiOctetToAscii(&desSM->SCA[templen], &orgdata[2], orgdata[0] - 1);
+        sm->scalen = templen + YX_SemiOctetToAscii(&sm->sca[templen], &orgdata[2], orgdata[0] - 1);
     }
     curpos = orgdata[0] + 1;
-    desSM->PDUtype = orgdata[curpos++];
+    sm->pdutype = orgdata[curpos++];
     
     temp = orgdata[curpos];
-    if (temp >= 22) return FALSE;
-    if (temp % 2) temp++;
+    if (temp >= 22) {
+        return FALSE;
+    }
+    if (temp % 2) {
+        temp++;
+    }
     temp /= 2;
     if (temp == 0) {
-        desSM->OAL = 0;
+        sm->oalen = 0;
     } else {
         if (orgdata[curpos + 1] == 0x91) {
             templen      = 1;
-            desSM->OA[0] = '+';
+            sm->oa[0] = '+';
         } else {
             templen      = 0;
         }
-        desSM->OAL = templen + YX_SemiOctetToAscii(&desSM->OA[templen], &orgdata[curpos + 2], temp);
+        sm->oalen = templen + YX_SemiOctetToAscii(&sm->oa[templen], &orgdata[curpos + 2], temp);
     }
     curpos += (temp + 2);
     
-    desSM->PID = orgdata[curpos++];
-    desSM->DCS = orgdata[curpos++];
+    sm->pid = orgdata[curpos++];
+    sm->dcs = orgdata[curpos++];
     
-    YX_SemiOctetToAscii(desSM->SCTS, &orgdata[curpos], 6);
-    YX_SemiOctetToHex(&desSM->timezone, &orgdata[curpos + 6], 1);
+    YX_SemiOctetToHex(&sm->date.year, &orgdata[curpos], 6);                    /* 解析短信时间 */
+    YX_SemiOctetToHex(&sm->timezone, &orgdata[curpos + 6], 1);                 /* 解析短信时间戳 */
     curpos += 7;
     
-    return ParseUserData(desSM, &orgdata[curpos]);
-#endif
-
-    return 0;
+    return ParseUserData(sm, &orgdata[curpos]);
 }
 
-
-INT16U AssemblePDUData(INT8U DCS, INT8U *telptr, INT8U tellen, INT8U *dataptr, INT32U datalen, INT8U *dptr, INT32U dlen)
+/*******************************************************************
+** 函数名:     AT_SMS_AssemblePduData
+** 函数描述:   按照pdu格式要求对待发送的短消息进行组帧
+** 参数:       [in]  dcs:     短消息编码格式
+**             [in]  telptr:  接收方手机号码
+**             [in]  tellen:  接收方手机号码长度
+**             [in]  dataptr: 短消息内容缓冲区
+**             [in]  datalen: 短消息内容长度
+**             [out] dptr:    返回存放组帧后的pdu格式数据的缓冲区
+**             [in]  dlen:    缓冲区最大长度
+** 返回:       成功返回组帧后长度,失败返回0
+********************************************************************/
+INT16U AT_SMS_AssemblePduData(INT8U dcs, INT8U *telptr, INT8U tellen, INT8U *dataptr, INT32U datalen, INT8U *dptr, INT32U dlen)
 {
 #if 0
     INT8U *tmpptr;
@@ -142,7 +194,7 @@ INT16U AssemblePDUData(INT8U DCS, INT8U *telptr, INT8U tellen, INT8U *dataptr, I
     
     YX_InitStrm(&wstrm, tmpptr, tmplen);                 /* initialize stream */
     
-    YX_WriteBYTE_Strm(&wstrm, 0x0);                      /* write SCA */
+    YX_WriteBYTE_Strm(&wstrm, 0x0);                      /* write sca */
     YX_WriteBYTE_Strm(&wstrm, 0x11);                     /* write PDU-type */
     YX_WriteBYTE_Strm(&wstrm, 0x0);                      /* write MR */
     
@@ -168,13 +220,13 @@ INT16U AssemblePDUData(INT8U DCS, INT8U *telptr, INT8U tellen, INT8U *dataptr, I
         }
     }
     
-    YX_WriteBYTE_Strm(&wstrm, 0x0);                      /* write PID */
-    YX_WriteBYTE_Strm(&wstrm, DCS);                      /* write DCS */
+    YX_WriteBYTE_Strm(&wstrm, 0x0);                      /* write pid */
+    YX_WriteBYTE_Strm(&wstrm, dcs);                      /* write dcs */
     YX_WriteBYTE_Strm(&wstrm, 143);                      /* write VP = 12 hours */
     tmp = YX_GetStrmPtr(&wstrm);                         /* record current position */
-    YX_WriteBYTE_Strm(&wstrm, datalen);                  /* write UDL */
+    YX_WriteBYTE_Strm(&wstrm, datalen);                  /* write udlen */
     
-    switch (DCS)
+    switch (dcs)
     {
     /* default alphabet (7 bit data coding in the user data) */
     case SM_DCS_BIT7:
@@ -209,7 +261,7 @@ INT16U AssemblePDUData(INT8U DCS, INT8U *telptr, INT8U tellen, INT8U *dataptr, I
     }
     
     len = YX_HexToAscii(dptr, tmpptr, YX_GetStrmLen(&wstrm));
-    dptr[len++] = 0x1A;                         /* write CTRL+Z */
+    dptr[len++] = 0x1A;                                                        /* write CTRL+Z */
     
     YX_DYM_Free(tmpptr);
 	return len;

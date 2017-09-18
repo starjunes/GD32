@@ -201,6 +201,17 @@ INT8U YX_DecToAscii(INT8U *dptr, INT32U data, INT8U reflen);
 void YX_HexToBcd(INT8U *sptr, INT32U slen, INT8U *dptr, INT32U maxlen);
 
 /*******************************************************************
+** 函数名:     YX_AsciiToHex
+** 函数描述:   ASCII转换为HEX,如"1122"->0x11 0x22
+** 参数:       [out] dptr:   转换后数据
+**             [in]  maxlen: 转换后数据缓存最大长度
+**             [in]  sptr:   待转换数据指针
+**             [in]  slen:   待转换数据长度,必须为偶数
+** 返回:       返回转后长度,失败返回0
+********************************************************************/
+INT32U YX_AsciiToHex(INT8U *dptr, INT32U maxlen, INT8U *sptr, INT32U slen);
+
+/*******************************************************************
 ** 函数名:     YX_DeassembleByRules
 ** 函数描述:   标准外设数据解码
 ** 参数:       [out] dptr:   目的数据指针
@@ -274,6 +285,12 @@ char *YX_ConvertIpHexToString(INT32U ip);
 ***************************************************************/
 INT32U YX_ConvertLatitudeOrLongitude(INT8U *sptr);
 
+
+INT16U YX_Bit7ToOctet(INT8U *dptr, INT8U *sptr, INT16U len);
+INT16U YX_OctetToBit7(INT8U *dptr, INT8U *sptr, INT16U len, INT8U leftbit);
+INT16U YX_SemiOctetToAscii(INT8U *dptr, INT8U *sptr, INT16U len);
+void YX_SemiOctetToHex(INT8U *dptr, INT8U *sptr, INT16U len);
+INT16U YX_AsciiToSemiOctet(INT8U *dptr, INT8U *sptr, INT16U len);
 
 //#endif
 

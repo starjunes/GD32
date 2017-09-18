@@ -45,8 +45,8 @@ typedef struct {
     INT8U   sendhead;
     BOOLEAN echo;                                  /* 回显状态 */
     INT8U   status;                                /* 命令状态 */
-    INT8U   overtime;                              /* 超时时间 */
-    INT8U   ct_wait;                               /* 等待发送时间 */
+    INT16U  overtime;                              /* 超时时间 */
+    INT16U  ct_wait;                               /* 等待发送时间 */
     INT8U   nsEC;                                  /* 发送结束符个数 */
     INT8U   naEC;                                  /* 应答结束符个数 */
     INT8U   nrEC;                                  /* 当前接收结束符个数 */

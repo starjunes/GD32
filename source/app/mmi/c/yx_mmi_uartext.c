@@ -55,7 +55,8 @@ static INT8U s_scantmr;
 ********************************************************************/
 static void HdlMsg_DN_PE_CMD_SET_UART_PARA(INT8U cmd, INT8U *data, INT16U datalen)
 {
-    INT8U port, baud, databit, stopbit, checkbit;
+    INT8U port, databit, stopbit, checkbit;
+    INT32U baud;
     UART_CFG_T cfg;
     STREAM_T rstrm;
     STREAM_T *wstrm;

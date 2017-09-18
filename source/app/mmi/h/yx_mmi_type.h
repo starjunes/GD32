@@ -84,14 +84,17 @@ typedef enum {
     DN_PE_CMD_READ_REALCLOCK            = 0x45,                /* 读取实时时钟 (DOWN) */
     UP_PE_ACK_READ_REALCLOCK            = 0x45,                /* 读取实时时钟应答 (UP) */
     
-    DN_PE_CMD_SET_PARA                  = 0x46,                /* 设置通用参数 (DOWN) */
-    UP_PE_ACK_SET_PARA                  = 0x46,                /* 设置通用参数应答 (UP) */
+    DN_PE_CMD_HOST_SET_PARA             = 0x46,                /* 设置通用参数 (DOWN) */
+    UP_PE_ACK_HOST_SET_PARA             = 0x46,                /* 设置通用参数应答 (UP) */
     
-    UP_PE_CMD_GET_PARA                  = 0x47,                /* 从机查询通用参数 */
-    DN_PE_ACK_GET_PARA                  = 0x47,                /* 从机查询通用参数应答 */
+    UP_PE_CMD_SLAVE_GET_PARA            = 0x47,                /* 从机查询通用参数 */
+    DN_PE_ACK_SLAVE_GET_PARA            = 0x47,                /* 从机查询通用参数应答 */
     
     DN_PE_CMD_CTL_FUNCTION              = 0x48,                /* 功能控制 */
     UP_PE_ACK_CTL_FUNCTION              = 0x48,                /* 功能控制应答 */
+    
+    DN_PE_CMD_HOST_GET_PARA             = 0x49,                /* 主机查询通用参数 */
+    UP_PE_ACK_HOST_GET_PARA             = 0x49,                /* 主机查询通用参数应答 */
     
     /* 行驶记录仪业务协议 */
     DN_PE_CMD_GET_ICCARD_INFO           = 0x61,                /* 读卡请求(DOWN) */
@@ -305,6 +308,8 @@ typedef enum {
     PARA_DEVICEINFO       = 0x13,                /* 设备信息 */
     PARA_SLEEP            = 0x14,                /* 省电参数 */
     PARA_AUTOREPT         = 0x15,                /* 主动上报参数 */
+    PARA_DEVICEID         = 0x16,                /* 设备ID */
+    PARA_SMSPSW           = 0x17,                /* 短信命令密码 */
     PARA_BASE_END,
     
     /* 数据类 */
