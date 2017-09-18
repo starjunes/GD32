@@ -1,0 +1,7 @@
+*.map
+*.dep
+*.bin
+*.hex
+*.uvgui.admin
+*.uvopt
+project/object/

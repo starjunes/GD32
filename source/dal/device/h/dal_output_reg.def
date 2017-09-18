@@ -1,0 +1,46 @@
+/********************************************************************************
+**
+** 文件名:     dal_output_reg.def
+** 版权所有:   (c) 2007-2008 厦门雅迅网络股份有限公司
+** 文件描述:   该模块主要实现I/O输出口注册信息表管理
+**
+*********************************************************************************
+**             修改历史记录
+**===============================================================================
+**| 日期       | 作者   |  修改记录
+**===============================================================================
+**| 2012/02/09 | 叶德焰 |  创建第一版本
+*********************************************************************************/
+
+
+
+/*
+-------------------------------IO类注册信息--------------------------------------
+    BEGIN_OUTPUT_DEF(_TYPE_)
+    _TYPE_:   该IO类父设备，见PE_TYPE_E，OUTPUT_TYPE_MAIN为主板
+********************************************************************************-
+*/
+
+/*
+-------------------------------IO注册信息--------------------------------------
+    OUTPUT_DEF(_TYPE_, _PORT_ID_, _PIN_, _LEVEL_, _INIT_, _PULLUP_, _PULLDOWN_)
+    _TYPE_:      该IO类父设备，见PE_TYPE_E，OUTPUT_TYPE_MAIN为主板
+    _PORT_ID_:   统一IO口编号
+    _PIN_:       对应GPIO管脚
+    _LEVEL_：    初始电平
+    _INIT_：     该IO口初始化函数
+    _PULLUP_：   输出高电平函数
+    _PULLDOWN_:  输出低电平函数
+********************************************************************************-
+*/
+
+//-----------------主板IO输入---------------------------------------------------
+BEGIN_OUTPUT_DEF(OUTPUT_TYPE_MAIN)
+    OUTPUT_DEF(OUTPUT_TYPE_MAIN, OPT_LEDRED,   GPIO_PIN_A13, 0, DAL_GPIO_InitOutput,  DAL_GPIO_Pulldown,          DAL_GPIO_Pullup)
+    OUTPUT_DEF(OUTPUT_TYPE_MAIN, OPT_LEDGREEN, GPIO_PIN_MAX, 0, DAL_GPIO_InitOutput,  DAL_GPIO_Pullup,            DAL_GPIO_Pulldown)
+    //OUTPUT_DEF(OUTPUT_TYPE_MAIN, OPT_LEDRED,   GPIO_PIN_C8, 0,  DAL_GPIO_InitOutput,  DAL_GPIO_Pullup,          DAL_GPIO_Pulldown)
+    //OUTPUT_DEF(OUTPUT_TYPE_MAIN, OPT_LEDGREEN, GPIO_PIN_C9, 0,  DAL_GPIO_InitOutput,  DAL_GPIO_Pullup,          DAL_GPIO_Pulldown)
+    OUTPUT_DEF(OUTPUT_TYPE_MAIN, OPT_LEDMIX,   GPIO_PIN_MAX, 0, DAL_GPIO_InitOutput,  DAL_GPIO_PullupMixLed,    DAL_GPIO_PulldownMixLed)
+END_OUTPUT_DEF(OUTPUT_TYPE_MAIN)
+
+

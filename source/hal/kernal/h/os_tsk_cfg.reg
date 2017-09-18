@@ -1,0 +1,66 @@
+/******************************************************************************
+**
+** Filename:     os_tsk_cfg.reg
+** Copyright:    
+** Description:  该模块主要实现任务和消息注册表信息管理
+**
+*******************************************************************************
+**             Revision history
+**---------------------------------------------------------------------------------------------------
+**| 2013/03/09 | 叶德焰 |  创建文件
+*******************************************************************************/
+
+
+/*------------------- HAL任务 --------------------------------------------*/
+BEGIN_TSK_DEF(TSK_ID_HAL)
+    TSK_INIT_DEF(TSK_ID_HAL, YX_HAL_InitTsk)
+    TSK_INIT_DEF(TSK_ID_HAL, YX_HEAPMEM_Init)
+    TSK_INIT_DEF(TSK_ID_HAL, YX_DYM_Init)
+    TSK_INIT_DEF(TSK_ID_HAL, ST_GPIO_InitDrv)
+    TSK_INIT_DEF(TSK_ID_HAL, ST_UART_InitDrv)
+    TSK_INIT_DEF(TSK_ID_HAL, ST_I2C_InitDrv)
+    TSK_INIT_DEF(TSK_ID_HAL, HAL_IC_InitDrv)
+    TSK_INIT_DEF(TSK_ID_HAL, ST_EXTI_InitDrv)
+    TSK_INIT_DEF(TSK_ID_HAL, ST_RTC_InitDrv)
+    TSK_INIT_DEF(TSK_ID_HAL, ST_ADC_InitDrv)
+    TSK_INIT_DEF(TSK_ID_HAL, HAL_SFLASH_InitDrv)
+    #if EN_GSENSOR > 0
+    TSK_INIT_DEF(TSK_ID_HAL, HAL_HIT_InitDrv)
+    #endif
+    
+    #if EN_CAN > 0
+    TSK_INIT_DEF(TSK_ID_HAL, HAL_CAN_InitDrv)
+    #endif
+     
+END_TSK_DEF(TSK_ID_HAL)
+
+/*------------------- DAL任务 --------------------------------------------*/
+BEGIN_TSK_DEF(TSK_ID_DAL)
+    TSK_INIT_DEF(TSK_ID_DAL, YX_DAL_InitTsk)
+    TSK_INIT_DEF(TSK_ID_DAL, DAL_PP_InitDrv)
+    TSK_INIT_DEF(TSK_ID_DAL, DAL_INPUT_InitDrv)
+    TSK_INIT_DEF(TSK_ID_DAL, DAL_OUTPUT_InitDrv)
+    #if EN_ICCARD > 0
+    TSK_INIT_DEF(TSK_ID_DAL, DAL_IC_InitDrv)
+    #endif
+    TSK_INIT_DEF(TSK_ID_DAL, DAL_PULSE_InitDrv)
+    #if EN_GSENSOR > 0
+    TSK_INIT_DEF(TSK_ID_DAL, DAL_HIT_InitDrv)
+    #endif
+    //#if EN_AT > 0
+    TSK_INIT_DEF(TSK_ID_DAL, AT_DRV_Init)
+    //#endif
+END_TSK_DEF(TSK_ID_DAL)
+
+/*------------------- APP任务 --------------------------------------------*/
+BEGIN_TSK_DEF(TSK_ID_APP)
+    TSK_INIT_DEF(TSK_ID_APP, YX_APP_InitTsk)
+    TSK_INIT_DEF(TSK_ID_APP, YX_InitResetRecord)
+    TSK_INIT_DEF(TSK_ID_APP, YX_MMI_InitDrv)
+    
+    TSK_INIT_DEF(TSK_ID_APP, YX_JT_InitLinkMan)
+    TSK_INIT_DEF(TSK_ID_APP, YX_PROTOCOL_InitSend)
+    TSK_INIT_DEF(TSK_ID_APP, YX_PROTOCOL_InitRecv)
+    TSK_INIT_DEF(TSK_ID_APP, YX_SLEEP_Init)
+    
+END_TSK_DEF(TSK_ID_APP)

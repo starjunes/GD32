@@ -1,0 +1,65 @@
+/********************************************************************************
+**
+** 文件名:     dal_input_reg.def
+** 版权所有:   (c) 2007-2008 厦门雅迅网络股份有限公司
+** 文件描述:   该模块主要实现I/O口输入传感器注册表信息管理
+**
+*********************************************************************************
+**             修改历史记录
+**===============================================================================
+**| 日期       | 作者   |  修改记录
+**===============================================================================
+**| 2010/03/09 | 叶德焰 |  创建第一版本
+*********************************************************************************/
+
+
+
+/*
+-------------------------------IO类注册信息--------------------------------------
+    BEGIN_INPUT_DEF(_PE_FATYPE_)
+    _PE_FATYPE_:   该IO类父设备，见PE_TYPE_NULL为主板
+********************************************************************************-
+*/
+
+/*
+-------------------------------IO注册信息--------------------------------------
+    #define INPUT_DEF(_PE_FATYPE_, _PORT_ID_, _PIN_, _LOW_TIME_, _HIGH_TIME_, _INIT_, _READ_)
+    _PORT_ID_:   统一IO口编号
+    _PIN_:       对应GPIO管脚
+    _LOW_TIME_:  该IO口低电平滤波时间，单位：毫秒，必须为20ms的整数倍
+    _HIGH_TIME_：该IO口高电平滤波时间，单位：毫秒，必须为20ms的整数倍
+    _INIT_：     该IO口初始化函数
+    _READ_：     该IO口状态读取函数
+********************************************************************************-
+*/
+
+//-----------------主板IO输入---------------------------------------------------
+BEGIN_INPUT_DEF(PE_TYPE_NULL, DAL_INPUT_SetFilterPara)
+    INPUT_DEF(PE_TYPE_NULL, IPT_GPSOPEN,  GPIO_PIN_A5,  2000,    1000,   DAL_GPIO_InitInput,    DAL_GPIO_ReadPort)     /* 天线开路 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_GPSSHORT, GPIO_PIN_A6,  2000,    1000,   DAL_GPIO_InitInput,    DAL_GPIO_ReadPort)     /* 天线短路 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_VINLOW,   GPIO_PIN_MAX, 5000,    5000,   DAL_GPIO_InitLowVol,   DAL_GPIO_ReadLowVol)   /* 低压检测 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_ROB,      GPIO_PIN_B1,  1000,    2000,   DAL_GPIO_InitInput,    DAL_GPIO_ReadPort)     /* 抢劫报警 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_POWDECT,  GPIO_PIN_MAX, 1000,    300,    DAL_GPIO_InitPowDect,  DAL_GPIO_ReadPowDect)  /* 断电检测 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_ACC,      GPIO_PIN_B0,  1000,    3000,   DAL_GPIO_InitInput,    DAL_GPIO_ReadPort)     /* ACC */
+    INPUT_DEF(PE_TYPE_NULL, IPT_FBRAKE,   GPIO_PIN_C13, 200,     200,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 脚刹 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_LAMP,     GPIO_PIN_B15, 200,     200,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 车灯/空重载/大灯 */
+#if VERSION_HW == VERSION_HW_OLD
+    INPUT_DEF(PE_TYPE_NULL, IPT_DOOR,     GPIO_PIN_B2,  1000,    1000,   DAL_GPIO_InitInput,    DAL_GPIO_ReadPort)     /* 车门/前车门 */
+#else
+    INPUT_DEF(PE_TYPE_NULL, IPT_DOOR,     GPIO_PIN_B2,  1000,    1000,   DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 车门/前车门 */
+#endif
+    INPUT_DEF(PE_TYPE_NULL, IPT_LLAMP,    GPIO_PIN_D2,  2000,    200,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 左灯 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_RLAMP,    GPIO_PIN_C12, 2000,    200,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 右灯 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_FLAMP,    GPIO_PIN_B14, 2000,    200,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 远光灯 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_NLAMP,    GPIO_PIN_B5,  2000,    200,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 近光灯 */
+    
+    INPUT_DEF(PE_TYPE_NULL, IPT_KEYACK,   GPIO_PIN_C0,  80,     40,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 确认键 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_KEYUP,    GPIO_PIN_C1,  80,     40,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 向上键 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_KEYDOWN,  GPIO_PIN_C2,  80,     40,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 向下键 */
+    INPUT_DEF(PE_TYPE_NULL, IPT_KEYNAK,   GPIO_PIN_C3,  80,     40,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* 取消键 */
+    
+    INPUT_DEF(PE_TYPE_NULL, IPT_ICDECT,   GPIO_PIN_C9,  1000,   1000,  DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)    /* IC卡插入检测 */
+END_INPUT_DEF(PE_TYPE_NULL)
+
+
+
