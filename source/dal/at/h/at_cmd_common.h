@@ -182,6 +182,12 @@ extern AT_CMD_PARA_T const AT_CTTSPARAM_PARA;
 *********************************************************************************/
 INT8U   AT_CMD_Test(INT8U *dptr, INT32U maxlen);
 INT8U   AT_CMD_GetModuleInfo(INT8U *dptr, INT32U maxlen);
+/*
+********************************************************************************
+* CGMR  获取手机模块软件版本号
+********************************************************************************
+*/
+INT8U AT_CMD_GetModuleVerInfo(INT8U *dptr, INT32U maxlen);
 INT8U   AT_CALM(INT8U *dptr, INT32U maxlen);
 INT8U   AT_AND_D(INT8U *dptr, INT32U maxlen);
 INT8U   AT_IPR(INT8U *dptr, INT32U maxlen, char *rate);

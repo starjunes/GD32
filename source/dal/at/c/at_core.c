@@ -60,7 +60,7 @@ typedef enum {
     FLAG_TEST,
     FLAG_SETDTR,
     FLAG_QVER,
-    //FLAG_CALM,
+    FLAG_CGMR,
     FLAG_CFUN,
     FLAG_CSMS,
     FLAG_CMGF,
@@ -84,6 +84,7 @@ typedef enum {
     FLAG_CIPSPRT,
     FLAG_CIPQSEND,
     FLAG_QCEREG,
+    FLAG_CNMP,                                                                 /* 全网通电信卡需强制设置成3G网络 */
 		
     FLAG_MAX
 } FLAG_E;
@@ -417,6 +418,38 @@ static void InitProc_QVER(void)
     AT_SEND_SendCmd(&g_getmoduleinfo_para, YX_GetStrmStartPtr(wstrm), len, Informer_QVER);
 }
 
+/*******************************************************************
+** 函数名:     InitProc_CMGR
+** 函数描述:   查询模块软件版本号
+** 参数:       无
+** 返回:       无
+********************************************************************/
+static void Informer_CMGR(INT8U result)
+{
+    if (result == AT_SUCCESS) {
+        s_dcb.ct_try = 0;
+        s_dcb.flag &= (~(1 << FLAG_CGMR));
+    } else {
+        if (++s_dcb.ct_try > MAX_TRY) {
+            s_dcb.ct_try = 0;
+            ResetGSM();
+            //s_dcb.flag &= (~(1 << FLAG_CFUN));
+        }
+        
+        s_dcb.ct_wait = MAX_WAIT;
+    }
+}
+
+static void InitProc_CMGR(void)
+{
+    INT32U len;
+    STREAM_T *wstrm;
+    
+    wstrm = YX_STREAM_GetBufferStream();
+    len = AT_CMD_GetModuleVerInfo(YX_GetStrmStartPtr(wstrm), YX_GetStrmMaxLen(wstrm));
+    AT_SEND_SendCmd(&g_getmoduleinfo_para, YX_GetStrmStartPtr(wstrm), len, Informer_CMGR);
+}
+
 #if 0
 /*******************************************************************
 ** 函数名:     InitProc_CALM
@@ -666,6 +699,36 @@ static void InitProc_CLIP(void)
     wstrm = YX_STREAM_GetBufferStream();
     len = AT_CMD_SetIncomingDisplay(YX_GetStrmStartPtr(wstrm), YX_GetStrmMaxLen(wstrm));
     AT_SEND_SendCmd(&g_phone_in_para, YX_GetStrmStartPtr(wstrm), len, Informer_CLIP);
+}
+
+/*******************************************************************
+** 函数名:     InitProc_CNMP
+** 函数描述:   全网通模块电信网络，强制社会自成3G网络
+** 参数:       无
+** 返回:       无
+********************************************************************/
+static void Informer_CNMP(INT8U result)
+{
+    if (result == AT_SUCCESS) {
+        s_dcb.flag &= (~(1 << FLAG_CNMP));
+    } else {
+        if (++s_dcb.ct_try > MAX_TRY) {
+            s_dcb.ct_try = 0;
+            ResetGSM();
+            //s_dcb.flag &= (~(1 << FLAG_CLIP));
+        }
+        s_dcb.ct_wait = MAX_WAIT;
+    }
+}
+
+static void InitProc_CNMP(void)
+{
+    INT32U len;
+    STREAM_T *wstrm;
+    
+    wstrm = YX_STREAM_GetBufferStream();
+    len = AT_CMD_Set_CTCC_Net3G(YX_GetStrmStartPtr(wstrm), YX_GetStrmMaxLen(wstrm));
+    AT_SEND_SendCmd(&g_phone_in_para, YX_GetStrmStartPtr(wstrm), len, Informer_CNMP);
 }
 
 /*******************************************************************
@@ -1166,6 +1229,12 @@ static void Proc_init(void)
         InitProc_QVER();
         return;
     }
+
+    /* 查询模块软件版本号 */
+    if ((s_dcb.flag & (1 << FLAG_CGMR)) != 0) {
+        InitProc_CMGR();
+        return;
+    }
 #if 0
     /* 查询ICCID */
     if ((s_dcb.flag & (1 << FLAG_QICCID)) != 0) {
@@ -1255,14 +1324,22 @@ static void Proc_init(void)
     }
     
     /* 设置短信存储方式 */
+    if ((ADP_NET_GetModuleType() == MODULE_TYPE_SIM7100CE) && (ADP_NET_GetOperator() == NETWORK_OP_CT)) {                                             /* 全网通模块且是用电信 */
+        s_dcb.flag &= (~(1 << FLAG_CPMS));
+    } else {
     if ((s_dcb.flag & (1 << FLAG_CPMS)) != 0) {
         InitProc_CPMS();
         return;
     }
+    }
     
-    if ((s_dcb.flag & (1 << FLAG_CSMS)) != 0) {
-        InitProc_CSMS();
-        return;
+    if ((ADP_NET_GetModuleType() == MODULE_TYPE_SIM7100CE) && (ADP_NET_GetOperator() == NETWORK_OP_CT)) {                                             /* 全网通模块且是用电信 */
+        s_dcb.flag &= (~(1 << FLAG_CSMS));
+    } else {
+        if ((s_dcb.flag & (1 << FLAG_CSMS)) != 0) {
+            InitProc_CSMS();
+            return;
+        }
     }
     
     if ((s_dcb.flag & (1 << FLAG_CMGF)) != 0) {
@@ -1281,15 +1358,27 @@ static void Proc_init(void)
         return;
     }
 #endif
-    
-    if ((s_dcb.flag & (1 << FLAG_CLIP)) != 0) {
-        InitProc_CLIP();
-        return;
+    if ((ADP_NET_GetModuleType() == MODULE_TYPE_SIM7100CE) && (ADP_NET_GetOperator() == NETWORK_OP_CT)) {                                             /* 全网通模块且是用电信 */
+        s_dcb.flag &= (~(1 << FLAG_CLIP));
+    } else {
+        if ((s_dcb.flag & (1 << FLAG_CLIP)) != 0) {
+            InitProc_CLIP();
+            return;
+        }
     }
     
     if ((s_dcb.flag & (1 << FLAG_CLCC)) != 0) {
         InitProc_CLCC();
         return;
+    }
+    
+    if ((ADP_NET_GetModuleType() == MODULE_TYPE_SIM7100CE) && (ADP_NET_GetOperator() == NETWORK_OP_CT)) {                                             /* 全网通模块且是用电信,强制设置成3G网络，因为4G网络下短信和电话会有问题 */
+        if ((s_dcb.flag & (1 << FLAG_CNMP)) != 0) {
+            InitProc_CNMP();
+            return;
+        }
+    } else {
+        s_dcb.flag &= (~(1 << FLAG_CNMP));
     }
     
 #if 0

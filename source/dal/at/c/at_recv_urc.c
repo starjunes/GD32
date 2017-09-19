@@ -824,6 +824,7 @@ static URC_HDL_TBL_T const s_hdl_tbl[] = {
                   {"+CMTI:",               2,   true,   Handler_CMTI},
                   {"+CMGL:",               2,   true,   Handler_CMGL},
                   {"+CMGR:",               2,   true,   Handler_CMT}
+                  {"$QCMTI:",              2,   true,   Handler_CMT}
                                      };
 
 

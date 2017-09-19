@@ -75,6 +75,15 @@ static void Wakeup(void)
     OS_StopTmr(s_sleeptmr);
     AT_DRV_Close();
     YX_JT_CloseLink();
+
+    #if DEBUG_SYS > 0
+    printf_com("<唤醒,step = %d>\r\n", s_dcb.step);
+    #endif
+
+    if (s_dcb.step == STEP_POWERONGSM) {
+        OS_RESET(RESET_EVENT_INITIATE);                                        /* 主动复位，防止运行过久出现问题 */    
+    }
+    
     if (s_dcb.step == STEP_POWERDOWNHOST) {                                    /* 已通知主机复位,则要复位电源 */
         YX_MMI_PowerReset();
     }

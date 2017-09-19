@@ -31,7 +31,7 @@
 #define _SLEEP                0x02
 
 #define MAX_QUERY             20                 /* 链路发送周期 */
-#define MAX_OVERTIME          360               /* 监控超时周期 */
+#define MAX_OVERTIME          600               /* 监控超时周期 */
 #define MAX_WATCHDOG          30                /* 看门狗溢出时间 */
 #define MAX_VER               41
 
@@ -386,6 +386,7 @@ static void LinkTmrProc(void *pdata)
         s_tcb.ct_overtime = 0;
         
         YX_MMI_PullDown();
+        OS_RESET(RESET_EVENT_INITIATE);                                        /* 主动复位 */
         OS_StartTmr(s_resettmr, PERIOD_RESET);                                 /* 延时上电 */
     } else if (s_tcb.ct_overtime == MAX_OVERTIME - 10) {
         YX_MMI_CfgBaud(115200, UART_DATABIT_8, UART_STOPBIT_1, UART_PARITY_NONE);

@@ -57,8 +57,11 @@ static INT8U Handler_AT_ATI(INT8U *recvbuf, INT16U len)
         return AT_FAILURE;
     }
     
-    if (YX_SearchKeyWord(recvbuf, len, "SIM7100")) {
-        g_at_ack_info.moduleversion.moduletype = MODULE_TYPE_SIM7100;
+    if (YX_SearchKeyWord(recvbuf, len, "SIM7100CE")) {
+        g_at_ack_info.moduleversion.moduletype = MODULE_TYPE_SIM7100CE;
+        return AT_SUCCESS;
+    }else if (YX_SearchKeyWord(recvbuf, len, "SIM7100C")) {
+        g_at_ack_info.moduleversion.moduletype = MODULE_TYPE_SIM7100C;
         return AT_SUCCESS;
     } else if (YX_SearchKeyWord(recvbuf, len, "SIM6320")) {
         g_at_ack_info.moduleversion.moduletype = MODULE_TYPE_SIM6320;
@@ -378,6 +381,7 @@ AT_CMD_PARA_T const AT_R_CPIN_PARA          =      { 0,                4,  1,  1
 AT_CMD_PARA_T const AT_CLCK_PARA            =      { 0,                4,  1,  1,  Handler_Common   };
 AT_CMD_PARA_T const AT_CPWD_PARA            =      { 0,                4,  1,  1,  Handler_Common   };
 AT_CMD_PARA_T const AT_R_CEREG_PARA         =      { ATCMD_INSANT,     4,  1,  0,  Handler_AT_R_CEREG  };
+AT_CMD_PARA_T const AT_CNMP_PARA            =      { 0,                4,  1,  1,  Handler_Common      };
 
 
 /*
@@ -449,6 +453,20 @@ INT8U AT_CMD_GetModuleInfo(INT8U *dptr, INT32U maxlen)
 {
     STREAM_T wstrm;
     char const str_text[] = {"ATI\r"};
+    
+    YX_InitStrm(&wstrm, dptr, maxlen);
+    YX_WriteSTR_Strm(&wstrm, (char *)str_text);
+    return YX_GetStrmLen(&wstrm);
+}
+/*
+********************************************************************************
+* CGMR  获取手机模块软件版本号
+********************************************************************************
+*/
+INT8U AT_CMD_GetModuleVerInfo(INT8U *dptr, INT32U maxlen)
+{
+    STREAM_T wstrm;
+    char const str_text[] = {"AT+CGMR\r"};
     
     YX_InitStrm(&wstrm, dptr, maxlen);
     YX_WriteSTR_Strm(&wstrm, (char *)str_text);

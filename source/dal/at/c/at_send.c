@@ -356,7 +356,7 @@ BOOLEAN HdlATCmdAck(INT8U *sptr, INT16U slen)
         return false;
     }
     
-    if (!((sptr[0] >= 'A' && sptr[0] <= 'Z') || (sptr[0] >= '0' && sptr[0] <= '9') || sptr[0] == '+' || sptr[0] == '\"')) {
+    if (!((sptr[0] >= 'A' && sptr[0] <= 'Z') || (sptr[0] >= '0' && sptr[0] <= '9') || sptr[0] == '+' || sptr[0] == '\"' || sptr[0] == '$')) {
         return false;
     }
     

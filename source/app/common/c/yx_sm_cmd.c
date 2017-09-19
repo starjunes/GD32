@@ -108,6 +108,7 @@ static FUNCSTRENTRY_T s_functionentry[] = {
     ,"WDCS",             HdlCmd_WDCS    // 配置无线下载参数
     ,"WDTR",             HdlCmd_WDCS    // 启动TR无线下载
     ,"WDND",             HdlCmd_WDCS    // 启动120ND无线下载
+    ,"WDIP",             HdlCmd_WDCS    // 配置无线下载参数-交通部
 };
 
 /*******************************************************************

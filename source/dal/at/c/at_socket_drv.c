@@ -533,7 +533,7 @@ void AT_SOCKET_SendEntry(void)
         
         memlen = s_dcb.sendlen[i] + 20;
         memptr = YX_DYM_Alloc(memlen);
-        if (memptr[i] == 0) {
+        if (memptr == 0) {
             break;
         }
         

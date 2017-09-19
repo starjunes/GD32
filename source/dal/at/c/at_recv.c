@@ -89,7 +89,7 @@ static BOOLEAN HandleUrcData(INT8U *sptr, INT16U slen)
         return false;
     }
     
-    if (!((sptr[0] >= 'A' && sptr[0] <= 'Z') || (sptr[0] >= '0' && sptr[0] <= '9') || sptr[0] == '+' || sptr[0] == '\"')) {
+    if (!((sptr[0] >= 'A' && sptr[0] <= 'Z') || (sptr[0] >= '0' && sptr[0] <= '9') || sptr[0] == '+' || sptr[0] == '\"' || sptr[0] == '$')) {
         return false;
     }
 
@@ -269,7 +269,7 @@ static void ScanTmrProc(void *pdata)
             #if DEBUG_AT > 0
             printf_com("\n");
 
-            if (!((s_rcb.at_rbuf[0] >= 'A' && s_rcb.at_rbuf[0] <= 'Z') || (s_rcb.at_rbuf[0] >= '0' && s_rcb.at_rbuf[0] <= '9') || s_rcb.at_rbuf[0] == '+') && s_rcb.at_rlen >= 4) {
+            if (!((s_rcb.at_rbuf[0] >= 'A' && s_rcb.at_rbuf[0] <= 'Z') || (s_rcb.at_rbuf[0] >= '0' && s_rcb.at_rbuf[0] <= '9') || s_rcb.at_rbuf[0] == '+' || s_rcb.at_rbuf[0] == '$') && s_rcb.at_rlen >= 4) {
                 printf_hex(s_rcb.at_rbuf, s_rcb.at_rlen);
                 printf_com(">\r\n");
             }

@@ -177,6 +177,32 @@ INT8U AT_CMD_SetIncomingDisplay(INT8U *dptr, INT32U maxlen)
 
 /*
 ********************************************************************************
+* AT+CNMP    设置电信网络强制社会自成3G网络，因为4G网络短信和电话存在问题
+********************************************************************************
+*/
+INT8U AT_CMD_Set_CTCC_Net3G(INT8U *dptr, INT32U maxlen)
+{
+    char const str_CNMP[] = {"AT+CNMP=22\r"};
+    
+    YX_MEMCPY(dptr, maxlen, str_CNMP, sizeof(str_CNMP) - 1);
+    return sizeof(str_CNMP) - 1;
+}
+
+/*
+********************************************************************************
+* AT+CNMP    全网通如果在电信网络，需强制设置成3G网络，否则打电话和短信会有问题
+********************************************************************************
+*/
+INT8U AT_CMD_Set_CTCC_3G_Net(INT8U *dptr, INT32U maxlen)
+{
+    char const str_CNMP[] = {"AT+CNMP=22\r"};
+    
+    YX_MEMCPY(dptr, maxlen, str_CNMP, sizeof(str_CNMP) - 1);
+    return sizeof(str_CNMP) - 1;
+}
+
+/*
+********************************************************************************
 * AT+CLCC    List current calls of ME
 ********************************************************************************
 */

@@ -26,7 +26,7 @@
 ********************************************************************************
 */
 #define COM_TCP              SOCKET_CH_1
-#define SIZE_HDL             64
+#define SIZE_HDL             128
 #define PERIOD_SCAN          MILTICK,  1
 
 /*

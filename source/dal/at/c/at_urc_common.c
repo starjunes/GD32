@@ -39,6 +39,7 @@
 * 定义模块变量
 ********************************************************************************
 */
+static BOOLEAN s_6320C_less_B05_ver = FALSE;
 
 
 
@@ -288,6 +289,34 @@ static INT8U Handler_SIMREADY(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U sl
 
 /*
 ********************************************************************************
+* Handler: CGMR
+********************************************************************************
+*/
+
+static INT8U Handler_CGMR(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
+{
+    INT8U pos;
+
+    s_6320C_less_B05_ver = FALSE;
+    
+    if (YX_SearchKeyWord(sptr, slen, "ERROR")) {
+        return AT_FAILURE;
+    }
+
+    pos = YX_FindCharPos(sptr, 'B', 0, slen);
+    #if EN_DEBUG > 0
+    printf_com("Handler_CGMR1 (slen= %d)(%s)\r\n", slen, sptr);
+    printf_com("Handler_CGMR (slen= %d)(pos=%d)(%c)\r\n", slen, pos, sptr[pos+2]);
+    #endif
+    if ((pos != 0) && (sptr[pos+1] == '0') && (sptr[pos+2] < '5')) {
+        s_6320C_less_B05_ver = TRUE;
+    }
+
+    return AT_SUCCESS;
+}
+
+/*
+********************************************************************************
 * define receive control block
 ********************************************************************************
 */
@@ -305,6 +334,7 @@ static URC_HDL_TBL_T const s_hdl_tbl[] = {
     ,{"+CPIN: READY",         2,   true,   Handler_SIMREADY}
     //{"+CTTS:",               2,   true,   Handler_TTSStatus}
     ,{"+CPBR:",               2,   true,   Handler_CPBR}
+    ,{"+CGMR:",               2,   true,   Handler_CGMR}
 };
 
 
@@ -323,5 +353,15 @@ void AT_URC_InitCommon(void)
     }
 }
 
+/*******************************************************************
+** 函数名:     ADP_URC_Is6320CLessB05Ver
+** 函数描述:   是否是6320C模块且版本是小于B05的版本
+** 参数:       无
+** 返回:       小于B05的版本返回TRUE， 否则返回FALSE
+********************************************************************/
+BOOLEAN ADP_URC_Is6320CLessB05Ver(void)
+{
+    return s_6320C_less_B05_ver;
+}
 
 #endif

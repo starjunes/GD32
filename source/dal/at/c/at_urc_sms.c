@@ -166,6 +166,36 @@ static INT8U Handler_CMGL(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
     }
 }
 
+/*******************************************************************
+** 函数名:     Handler_QCMTI
+** 函数描述:   解析短消息索引号
+** 参数:       [in] ct_recv: 接收AT指令的序号
+**             [in] event:   接收处理事件
+**             [in] sptr:    数据指针
+**             [in] slen:    数据长度
+** 返回:       返回处理结果
+********************************************************************/
+static INT8U Handler_QCMTI(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
+{
+    INT16U index;
+    
+    index = YX_SearchDigitalString(sptr, slen, ',', 1);
+    if (index == 0xFFFF) {
+        index = YX_SearchDigitalString(sptr, slen, '\r', 1);
+    }
+    
+    if (index != 0xFFFF) {
+        if (s_rcb.callback_sms.callback_recvsmindex != 0) {
+            s_rcb.callback_sms.callback_recvsmindex(index);
+        }
+    }
+    
+    #if DEBUG_AT > 0
+    printf_com("<Handler_QCMTI(%d)>\r\n", index);
+    #endif
+    
+    return AT_SUCCESS;
+}
 
 /*
 ********************************************************************************
@@ -180,6 +210,7 @@ static URC_HDL_TBL_T const s_hdl_tbl[] = {
                   ,{"+CMTI:",               2,   true,   Handler_CMTI}
                   ,{"+CMGL:",               2,   true,   Handler_CMGL}
                   ,{"+CMGR:",               2,   true,   Handler_CMT}
+                  ,{"$QCMTI:",              4,   true,   Handler_QCMTI}
                                      };
 
 

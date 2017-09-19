@@ -53,6 +53,12 @@ INT8U AT_CMD_SelectChannel(INT8U *dptr, INT32U maxlen, INT8U ch);
 INT8U AT_CMD_SetMicLevel(INT8U *dptr, INT32U maxlen, INT8U ch, INT8U gain);
 INT8U AT_CMD_SetEchoCancel(INT8U *dptr, INT32U maxlen, INT8U ch, INT8U gain);
 INT8U AT_CMD_SetSideTone(INT8U *dptr, INT32U maxlen, INT8U ch, INT8U gain);
+/*
+********************************************************************************
+* AT+CNMP    设置电信网络强制社会自成3G网络，因为4G网络短信和电话存在问题
+********************************************************************************
+*/
+INT8U AT_CMD_Set_CTCC_Net3G(INT8U *dptr, INT32U maxlen);
 
 #endif
 #endif

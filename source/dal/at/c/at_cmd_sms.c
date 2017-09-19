@@ -339,8 +339,13 @@ INT8U AT_CMD_ListSm(INT8U *dptr, INT32U maxlen)
 INT8U AT_CMD_SelectSmStorage(INT8U *dptr, INT32U maxlen)
 {
     char const str_text[] = {"AT+CPMS=\"SM\",\"SM\",\"SM\"\r"};
+    char const str_6320c_text[] = {"AT+CPMS=\"ME\",\"ME\",\"ME\"\r"};
     
+    if((ADP_NET_GetModuleType()==MODULE_TYPE_SIM6320)&&(ADP_URC_Is6320CLessB05Ver() == FALSE) ) {/* 6320C模块，且版本大于B05的版本,短信设置存储到手机模块，否则会提示短信满 */
+        YX_MEMCPY(dptr, maxlen, str_6320c_text, sizeof(str_6320c_text) - 1);
+    } else {
     YX_MEMCPY(dptr, maxlen, str_text, sizeof(str_text) - 1);
+    }
     return sizeof(str_text) - 1;
 }
 
