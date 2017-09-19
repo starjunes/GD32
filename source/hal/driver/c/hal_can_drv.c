@@ -673,7 +673,7 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
         can_filterinitstructure.CAN_FilterActivation     = ENABLE;
             
         for (i = 0; i < idnum && i < MAX_CAN_FILTER_ID_LIST_EXT; i++) {
-            filterid = pfilterid[i] << 3;
+            filterid = (pfilterid[i] << 3) | 0x04;                             /* 0x04表示扩展帧 */
             
             if ((i % 2) == 0) {
                 can_filterinitstructure.CAN_FilterIdHigh     = (filterid >> 16) & 0xFFFF;
@@ -744,8 +744,8 @@ BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U
         can_filterinitstructure.CAN_FilterActivation     = ENABLE;
         
         for (i = 0; i < idnum && i < MAX_CAN_FILTER_ID_MASK_STD; i++) {
-            filterid = pfilterid[i] << 3;
-            maskid   = pmaskid[i] << 3;
+            filterid = pfilterid[i] << 5;
+            maskid   = (pmaskid[i] << 5) | 0x08;                               /* 0x08需要掩码标准帧位 */
             
             if ((i % 2) == 0) {
                 can_filterinitstructure.CAN_FilterIdHigh     = filterid & 0xFFFF;
@@ -777,8 +777,8 @@ BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U
         can_filterinitstructure.CAN_FilterActivation     = ENABLE;
             
         for (i = 0; i < idnum && i < MAX_CAN_FILTER_ID_MASK_EXT; i++) {
-            filterid = pfilterid[i] << 3;
-            maskid   = pmaskid[i] << 3;
+            filterid = (pfilterid[i] << 3) | 0x04;                             /* 0x04表示扩展帧 */
+            maskid   = (pmaskid[i] << 3) | 0x04;
             
             can_filterinitstructure.CAN_FilterIdHigh     = (filterid >> 16) & 0xFFFF;
             can_filterinitstructure.CAN_FilterIdLow      = filterid & 0xFFFF;

@@ -146,6 +146,7 @@ extern AT_CMD_PARA_T const AT_CPIN_PARA;
 extern AT_CMD_PARA_T const AT_R_CPIN_PARA;
 extern AT_CMD_PARA_T const AT_CLCK_PARA;
 extern AT_CMD_PARA_T const AT_CPWD_PARA;
+extern AT_CMD_PARA_T const AT_R_CEREG_PARA;
 
 
 /*
@@ -197,6 +198,7 @@ INT8U   AT_CFUN(INT8U *dptr, INT32U maxlen, INT8U fun);
 INT8U   AT_CSQ(INT8U *dptr, INT32U maxlen);
 INT8U   AT_R_CREG(INT8U *dptr, INT32U maxlen);
 INT8U   AT_R_COPS(INT8U *dptr, INT32U maxlen);
+INT8U   AT_R_CEREG(INT8U *dptr, INT32U maxlen);
 INT8U   AT_CPBS(INT8U *dptr, INT32U maxlen);
 INT8U   AT_CPBR(INT8U *dptr, INT32U maxlen, INT8U index1, INT8U index2);
 INT8U   AT_CPBW(INT8U *dptr, INT32U maxlen, INT8U index, INT8U *tel, INT8U tellen, INT8U *text, INT8U textlen);

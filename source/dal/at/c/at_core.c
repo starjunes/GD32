@@ -83,6 +83,8 @@ typedef enum {
     FLAG_CIPDPDP,
     FLAG_CIPSPRT,
     FLAG_CIPQSEND,
+    FLAG_QCEREG,
+		
     FLAG_MAX
 } FLAG_E;
 
@@ -110,6 +112,8 @@ typedef struct {
     INT8U simstatus;
     INT8U service;
     INT8U moduletype;
+    INT8U ltenetstatus;
+		
     //char  password[7];
     //char  opassword[7];
     //char  npassword[7];
@@ -849,6 +853,7 @@ static void Informer_QSIM(INT8U result)
 	} else if (result == AT_FAILURE) {
 	    s_dcb.simstatus = SIM_NOT_INSERTED;
 	    s_dcb.netstatus = NETWORK_STATE_NOT_REGISTERED;
+	    s_dcb.ltenetstatus = NETWORK_STATE_NOT_REGISTERED;			
 	    //s_dcb.csq       = 0;
 	}
 	
@@ -871,8 +876,8 @@ static void Proc_QSIM(void)
 }
 
 /*******************************************************************
-** 函数名:     Proc_QNET
-** 函数描述:   查询网络
+** 函数名:     Informer_QNET
+** 函数描述:   查询网络应答
 ** 参数:       无
 ** 返回:       无
 ********************************************************************/
@@ -990,6 +995,58 @@ static void Proc_QOSP(void)
     wstrm = YX_STREAM_GetBufferStream();
     len = AT_R_COPS(YX_GetStrmStartPtr(wstrm), YX_GetStrmMaxLen(wstrm));
     AT_SEND_SendCmd(&AT_R_COPS_PARA, YX_GetStrmStartPtr(wstrm), len, Informer_QOSP);
+}
+
+/*******************************************************************
+** 函数名:     Informer_QCEREG
+** 函数描述:   查询LTE网络应答
+** 参数:       无
+** 返回:       无
+********************************************************************/
+static void Informer_QCEREG(INT8U result)
+{
+    INT8U networkregistration;
+    
+    if (result == AT_SUCCESS) {
+        networkregistration = ATCmdAck.ackbuf[1];
+        switch (networkregistration) 
+        {
+        case NETWORK_HomeNetwork:
+            s_dcb.ltenetstatus = NETWORK_STATE_HOME;
+            break;
+        case NETWORK_Roaming:
+            s_dcb.ltenetstatus = NETWORK_STATE_ROAMING;
+            break;
+        case NETWORK_NotRegistered:
+            s_dcb.ltenetstatus = NETWORK_STATE_NOT_REGISTERED;
+            break;
+        case NETWORK_NotRegistered_Searching:
+            s_dcb.ltenetstatus = NETWORK_STATE_SEARCHING;
+            break;
+        case NETWORK_Denied:
+            s_dcb.ltenetstatus = NETWORK_STATE_REG_DENIED;
+            break;
+        case NETWORK_Unknown:
+            s_dcb.ltenetstatus = NETWORK_STATE_UNKNOWN;
+            break;
+        default:
+            s_dcb.ltenetstatus = NETWORK_STATE_UNKNOWN;
+            break;
+        }
+	} else {
+	    s_dcb.ltenetstatus = NETWORK_STATE_NOT_REGISTERED;
+	}
+    s_dcb.flag &= (~(1 << FLAG_QCEREG));
+}
+
+static void Proc_QCEREG(void)
+{
+    INT32U len;
+    STREAM_T *wstrm;
+    
+    wstrm = YX_STREAM_GetBufferStream();
+    len = AT_R_CEREG(YX_GetStrmStartPtr(wstrm), YX_GetStrmMaxLen(wstrm));
+    AT_SEND_SendCmd(&AT_R_CEREG_PARA, YX_GetStrmStartPtr(wstrm), len, Informer_QCEREG);
 }
 
 /*******************************************************************
@@ -1174,6 +1231,12 @@ static void Proc_init(void)
         return;
     }
 
+    /* 查询网络状态 */
+    if ((s_dcb.flag & (1 << FLAG_QCEREG)) != 0) {
+        Proc_QCEREG();
+        return;
+    }
+		
     /* 设置GPRS网络检测时间 */
     if ((s_dcb.flag & (1 << FLAG_CIPDPDP)) != 0) {
         Proc_CIPDPDP();
@@ -1326,6 +1389,7 @@ void AT_CORE_Close(void)
         s_dcb.status = 0;
         s_dcb.simstatus = SIM_NOT_INSERTED;
         s_dcb.netstatus = NETWORK_STATE_NOT_REGISTERED;
+        s_dcb.ltenetstatus = NETWORK_STATE_NOT_REGISTERED;				
         s_dcb.csq = 0;
         s_dcb.cfun = NETWORK_MODE_WORK;
         s_dcb.flag = 0;
@@ -1610,11 +1674,17 @@ BOOLEAN ADP_NET_InformSimPinCodeStatus(INT8U lock)
 ********************************************************************/
 BOOLEAN ADP_NET_GetNetworkState(INT8U *simcard, INT8U *creg, INT8U *cgreg, INT8U *rssi, INT8U *ber)
 {
-    s_dcb.flag |= ((1 << FLAG_QSIM) | (1 << FLAG_QNET) | (1 << FLAG_QCSQ) | (1 << FLAG_QOSP));
+    s_dcb.flag |= ((1 << FLAG_QSIM) | (1 << FLAG_QNET) | (1 << FLAG_QCSQ) | (1 << FLAG_QOSP) | (1 << FLAG_QCEREG));
     
     *simcard = s_dcb.simstatus;
     *creg    = s_dcb.netstatus;
-    if ((s_dcb.netstatus == NETWORK_STATE_HOME) || (s_dcb.netstatus == NETWORK_STATE_ROAMING)) {
+		if ((s_dcb.netstatus != NETWORK_STATE_HOME) && (s_dcb.netstatus != NETWORK_STATE_ROAMING)) {
+	    	if ((s_dcb.ltenetstatus == NETWORK_STATE_HOME) || (s_dcb.ltenetstatus == NETWORK_STATE_ROAMING)) {
+		        *creg = s_dcb.ltenetstatus;		  
+        }
+		}
+    if ((s_dcb.netstatus == NETWORK_STATE_HOME) || (s_dcb.netstatus == NETWORK_STATE_ROAMING) 
+			   || (s_dcb.ltenetstatus == NETWORK_STATE_HOME)  || (s_dcb.ltenetstatus == NETWORK_STATE_ROAMING)) {
         *cgreg   = NETWORK_STATE_REGISTERED;
     } else {
         *cgreg   = NETWORK_STATE_NOT_REGISTERED;

@@ -462,9 +462,8 @@ ARM Macro Assembler    Page 8
               00000000 
 Command Line: --debug --xref --cpu=Cortex-M0 --apcs=interwork --depend=.\object
 \startup_stm32f0xx.d -o.\object\startup_stm32f0xx.o -IC:\Keil\ARM\RV31\INC -IC:
-\Keil\ARM\PACK\ARM\CMSIS\3.20.3\CMSIS\Include -IC:\Keil\ARM\PACK\Keil\STM32F0xx
-_DFP\1.0.0\Device\Include --list=.\startup_stm32f0xx.lst ..\source\hal\CMSIS\ST
-\STM32F0xx\Source\startup_stm32f0xx.s
+\Keil\ARM\PACK\ARM\CMSIS\3.20.3\CMSIS\Include -IDevice\Include --list=.\startup
+_stm32f0xx.lst ..\source\hal\CMSIS\ST\STM32F0xx\Source\startup_stm32f0xx.s
 
 
 

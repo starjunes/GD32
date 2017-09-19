@@ -273,6 +273,33 @@ static INT8U Handler_AT_R_ICCID(INT8U *recvbuf, INT16U len)
     return AT_CONTINUE;
 }
 
+/*
+********************************************************************************
+* Handler:  AT+CEREG? ------ NetWork Registration
+********************************************************************************
+*/
+static INT8U Handler_AT_R_CEREG(INT8U *recvbuf, INT16U len)
+{
+    INT8U temp;
+    
+    if (YX_SearchKeyWord(recvbuf, len, "+CEREG")) {
+        ATCmdAck.ackbuf[0] = YX_SearchDigitalString(recvbuf, len, ',', 1);
+        temp               = YX_SearchDigitalString(recvbuf, len, ',', 2);
+        if (temp == 0xff) {
+            ATCmdAck.ackbuf[1] = YX_SearchDigitalString(recvbuf, len, '\r', 1);
+            ATCmdAck.ackbuf[2] = 0xff;
+            ATCmdAck.ackbuf[3] = 0xff;
+        } else {
+            ATCmdAck.ackbuf[1] = temp;
+            ATCmdAck.ackbuf[2] = YX_SearchDigitalString(recvbuf, len, ',',  3);
+            ATCmdAck.ackbuf[3] = YX_SearchDigitalString(recvbuf, len, '\r', 1);
+        }
+        return AT_SUCCESS;
+    } else {
+        return AT_FAILURE;
+    }
+}
+
 #if GSM_TYPE == GSM_SIMCOM
 
 
@@ -350,6 +377,7 @@ AT_CMD_PARA_T const AT_CPIN_PARA            =      { 0,                4,  1,  1
 AT_CMD_PARA_T const AT_R_CPIN_PARA          =      { 0,                4,  1,  1,  Handler_Common   };
 AT_CMD_PARA_T const AT_CLCK_PARA            =      { 0,                4,  1,  1,  Handler_Common   };
 AT_CMD_PARA_T const AT_CPWD_PARA            =      { 0,                4,  1,  1,  Handler_Common   };
+AT_CMD_PARA_T const AT_R_CEREG_PARA         =      { ATCMD_INSANT,     4,  1,  0,  Handler_AT_R_CEREG  };
 
 
 /*
@@ -529,7 +557,7 @@ INT8U AT_R_CREG(INT8U *dptr, INT32U maxlen)
 
 /*
 ********************************************************************************
-* AT+CREG?    NetWork operator
+* AT+COPS?    NetWork operator
 ********************************************************************************
 */
 INT8U AT_R_COPS(INT8U *dptr, INT32U maxlen)
@@ -807,6 +835,20 @@ INT8U AT_ESCAPE(INT8U *dptr, INT32U maxlen)
     *dptr = 0x1b;
     return 1;
 }
+
+/*
+********************************************************************************
+* AT+CEREG?    NetWork Registration Query
+********************************************************************************
+*/
+INT8U AT_R_CEREG(INT8U *dptr, INT32U maxlen)
+{
+    char const str_R_CEREG[] = {"AT+CEREG?\r"};
+    
+    YX_MEMCPY(dptr, maxlen, str_R_CEREG, sizeof(str_R_CEREG) - 1);
+    return sizeof(str_R_CEREG) - 1;
+}
+
 
 /*********************************************************************************
 **                                                                               *
