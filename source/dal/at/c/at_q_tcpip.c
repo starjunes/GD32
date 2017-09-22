@@ -74,6 +74,9 @@ static CELL_T *AllocCell(void)
     cell->memlen = SIZE_BUF;
     cell->memptr = YX_DYM_Alloc(cell->memlen);
     if (cell->memptr == 0) {
+        #if DEBUG_ERR > 0
+        printf_com("<tcpip AllocCell malloc memory fail>\r\n");
+        #endif
         YX_LIST_AppendListEle(&s_freelist, (INT8U *)cell);
         return 0;
     }

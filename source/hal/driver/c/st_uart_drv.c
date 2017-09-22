@@ -516,6 +516,9 @@ BOOLEAN ST_UART_OpenUart(UART_CFG_T *cfg)
         }
         s_uart[com].p_rx = YX_DYM_Alloc(cfg->rx_len);
         if (s_uart[com].p_rx == 0) {
+            #if DEBUG_ERR > 0
+            printf_com("<p_rx malloc memory fail>\r\n");
+            #endif
             return false;
         }
         
@@ -529,6 +532,9 @@ BOOLEAN ST_UART_OpenUart(UART_CFG_T *cfg)
         }
         s_uart[com].p_tx = YX_DYM_Alloc(cfg->tx_len);
         if (s_uart[com].p_tx == 0) {
+            #if DEBUG_ERR > 0
+            printf_com("<p_tx malloc memory fail>\r\n");
+            #endif
             return false;
         }
         

@@ -167,6 +167,11 @@ typedef struct {
     INT8U password[LEN_PASSWORD];
 } SMS_PASSWORD_T;
 
+/* 日志标志 */
+typedef struct {
+    BOOLEAN flag;           /* 是否开启日志标志 */
+} LOG_FLAG_T;
+
     
 /*
 ********************************************************************************
@@ -186,6 +191,7 @@ static GPRS_PARA_T              i_gprspara            =
 
 static SMS_PASSWORD_T           i_sms_password = {{'1', '2', '3', '4', '5', '6'}};
 
+static LOG_FLAG_T               i_log_flag = {0};
 
 
 

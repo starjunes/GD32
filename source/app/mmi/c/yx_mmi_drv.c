@@ -17,6 +17,7 @@
 #include "dal_pp_drv.h"
 #include "dal_hit_drv.h"
 #include "yx_debug.h"
+#include "dal_pp_drv.h"
 
 #if EN_MMI > 0
 #include "yx_mmi_drv.h"
@@ -37,6 +38,7 @@
 
 #define PERIOD_LINK           _SECOND, 1
 #define PERIOD_RESET          _SECOND, 3
+#define PERIOD_MEM            _SECOND, 10
 
 /*
 ********************************************************************************
@@ -62,6 +64,8 @@ typedef struct {
 */
 static TCB_T s_tcb;
 static INT8U s_linktmr, s_resettmr;
+static INT8U s_memtmr;
+static LOG_FLAG_T s_logflag = {1};                           /* ÎªÁË´òÓ¡¸ÕÉÏµçÊ±µÄÈÕÖ¾ĞÅÏ¢£¬Ä¬ÈÏ¿ªÆô */
 
 /*******************************************************************
 ** º¯ÊıÃû:     SendSetupLinkCommand
@@ -303,6 +307,50 @@ static void HdlMsg_DN_PE_CMD_GET_RESET_REC(INT8U cmd, INT8U *data, INT16U datale
 #endif
 }
 
+/*******************************************************************
+** º¯ÊıÃû:     HdlMsg_DN_PE_CMD_START_OR_STOP_LOG
+** º¯ÊıÃèÊö:   ¿ªÆô»ò¹Ø±ÕÈÕÖ¾
+** ²ÎÊı:       [in]cmd:    ÃüÁî±àÂë
+**             [in]data:   Êı¾İÖ¸Õë
+**             [in]datalen:Êı¾İ³¤¶È
+** ·µ»Ø:       ÎŞ
+********************************************************************/
+static void HdlMsg_DN_PE_CMD_START_OR_STOP_LOG(INT8U cmd, INT8U *data, INT16U datalen)
+{
+    INT8U result = TRUE;
+    STREAM_T *wstrm;
+    
+    if (cmd != DN_PE_CMD_START_OR_STOP_LOG) {
+        return;
+    }
+
+    switch (data[0]) {
+        case 0x01:
+            s_logflag.flag = TRUE;
+            DAL_PP_StoreParaByID(PP_ID_LOG, (INT8U *)&s_logflag, sizeof(LOG_FLAG_T));
+            #if DEBUG_MMI > 0
+            printf_com("¿ªÆôÈÕÖ¾\r\n");
+            #endif
+            break;
+        case 0x02:
+            #if DEBUG_MMI > 0
+            printf_com("¹Ø±ÕÈÕÖ¾\r\n");
+            #endif
+            s_logflag.flag = FALSE;
+            DAL_PP_StoreParaByID(PP_ID_LOG, (INT8U *)&s_logflag, sizeof(LOG_FLAG_T));
+            break;
+        default:
+            result = FALSE;
+            break;
+    }
+
+    wstrm = YX_STREAM_GetBufferStream();
+    YX_WriteBYTE_Strm(wstrm, data[0]);
+    YX_WriteBYTE_Strm(wstrm, result);
+
+    YX_MMI_ListSend(UP_PE_ACK_START_OR_STOP_LOG, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm), 0, 0, 0);
+}
+
 
 
 static FUNCENTRY_MMI_T s_functionentry[] = {
@@ -317,6 +365,8 @@ static FUNCENTRY_MMI_T s_functionentry[] = {
        
        ,DN_PE_CMD_CLEAR_WATCHDOG,             HdlMsg_DN_PE_CMD_CLEAR_WATCHDOG      // ¿´ÃÅ¹·Î¹¹·
        ,DN_PE_CMD_GET_RESET_REC,              HdlMsg_DN_PE_CMD_GET_RESET_REC       // ¸´Î»¼ÇÂ¼²éÑ¯
+
+       ,DN_PE_CMD_START_OR_STOP_LOG,          HdlMsg_DN_PE_CMD_START_OR_STOP_LOG   // ¿ªÆô»ò¹Ø±ÕÈÕÖ¾
 };
 
 static INT8U s_funnum = sizeof(s_functionentry) / sizeof(s_functionentry[0]);
@@ -349,10 +399,16 @@ static void LinkTmrProc(void *pdata)
     OS_StartTmr(s_linktmr, PERIOD_LINK);
     
     if (!YX_MMI_IsON()) {
+        #if DEBUG_MMI > 0
+        printf_com("ÉÏµçÁ´½ÓÇëÇó\r\n");
+        #endif
         SendSetupLinkCommand();
     } else {
         if (++s_tcb.ct_query >= MAX_QUERY) {                                   /* ĞÄÌø·¢ËÍÖÜÆÚ */
             s_tcb.ct_query = 0;
+            #if DEBUG_MMI > 0
+            printf_com("Á´Â·Î¬»¤ÇëÇó\r\n");
+            #endif
             SendBeatCommand();
         }
         #if 1
@@ -360,6 +416,10 @@ static void LinkTmrProc(void *pdata)
             if (--s_tcb.ct_watchdog == 0) {
                 //s_tcb.ct_watchdog = MAX_WATCHDOG;
                 s_tcb.ct_watchdog = MAX_OVERTIME;
+
+                #if DEBUG_MMI > 0
+                printf_com("¿´ÃÅ¹·¸´Î»\r\n");
+                #endif
                 
                 s_tcb.status &= (~_ON);
                 s_tcb.ct_query = 0;
@@ -391,6 +451,38 @@ static void LinkTmrProc(void *pdata)
     } else if (s_tcb.ct_overtime == MAX_OVERTIME - 10) {
         YX_MMI_CfgBaud(115200, UART_DATABIT_8, UART_STOPBIT_1, UART_PARITY_NONE);
         YX_MMI_SendHostResetInform(MMI_RESET_EVENT_NORMAL);
+    }
+    #endif
+}
+
+/*******************************************************************
+** º¯ÊıÃû:     MemTmrProc
+** º¯ÊıÃèÊö:   ÄÚ´æ¶¨Ê±Æ÷
+** ²ÎÊı:       [in] pdata£º¶¨Ê±Æ÷ÌØÕ÷Öµ
+** ·µ»Ø:       ÎŞ
+********************************************************************/
+static void MemTmrProc(void *pdata)
+{
+    #if DEBUG_MMI > 0
+    INT8U                *p;
+    INT16U               i, j, k;
+    static INT32U        cnt = 0;      
+    HEAPMEM_STATISTICS_T *mem = YX_HEAPMEM_GetStatistics();
+
+    OS_StartTmr(s_memtmr, PERIOD_MEM);
+
+    printf_com("ÄÚ´æ¿é%d, Ê¹ÓÃ´óĞ¡%d\r\n", mem->blocks, mem->occupysize);
+
+    if (s_logflag.flag && ++cnt % 60 == 0) {                             /* 10·ÖÖÓ´òÓ¡Ò»´ÎÕû¿éÄÚ´æ */
+        p = YX_HEAPMEM_GetAddress();
+        for (i = 0; i < 4096 / 64; i++) {
+            printf_hex(p + 64 * i, 64);
+            ClearWatchdog();
+            for (j = 350; j > 0; j--) {
+                for (k = 5000; k > 0; k--);
+            }
+        }
+        printf_com("\r\n");
     }
     #endif
 }
@@ -474,9 +566,13 @@ void YX_MMI_InitDrv(void)
     
     s_linktmr  = OS_CreateTmr(TSK_ID_APP, (void *)0, LinkTmrProc);
     s_resettmr = OS_CreateTmr(TSK_ID_APP, (void *)0, ResetTmrProc);
+    s_memtmr = OS_CreateTmr(TSK_ID_APP, (void *)0, MemTmrProc);
+    OS_StartTmr(s_memtmr, PERIOD_MEM);
     //OS_StartTmr(s_linktmr,  PERIOD_LINK);
     //YX_MMI_PullUp();
     OS_RegistResetInform(RESET_PRI_0, ResetInform);
+
+    DAL_PP_ReadParaByID(PP_ID_LOG, (INT8U *)&s_logflag, sizeof(LOG_FLAG_T));
 }
 
 /*******************************************************************
@@ -588,7 +684,7 @@ BOOLEAN YX_MMI_SendPeResetInform(INT8U type)
 
 /***************************************************************
 ** º¯ÊıÃû:    YX_MMI_SendPeResetInform
-** ¹¦ÄÜÃèÊö:  ÍâÉèÍ¨ÖªÖ÷»ú£¬ÍâÉè¼´½«¹Ø±Õ»òÖØÆôÖ÷»ú(ÍâÉè×Ô¼º²»¸´Î»)÷
+** ¹¦ÄÜÃèÊö:  ÍâÉèÍ¨ÖªÖ÷»ú£¬ÍâÉè¼´½«¹Ø±Õ»òÖØÆôÖ÷»ú(ÍâÉè×Ô¼º²»¸´Î»)?
 ** ²ÎÊı:  	  [in] type: ¸´Î»ÀàĞÍ,¼û MMI_RESET_EVENT_E
 ** ·µ»Ø:      ³É¹¦·µ»Øtrue£¬·ñ·µ»Øfalse
 ***************************************************************/
@@ -599,6 +695,17 @@ BOOLEAN YX_MMI_SendHostResetInform(INT8U type)
     wstrm = YX_STREAM_GetBufferStream();
     YX_WriteBYTE_Strm(wstrm, type);
     return YX_MMI_DirSend(UP_PE_CMD_HOST_RESET_INFORM, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
+}
+
+/*******************************************************************
+** º¯ÊıÃû:     YX_MMI_GetLogFlag
+** º¯ÊıÃèÊö:   »ñÈ¡ÈÕÖ¾¿ªÆô»ò¹Ø±Õ
+** ²ÎÊı:       ÎŞ
+** ·µ»Ø:       ¿ªÆô·µ»Øtrue£¬¹Ø±Õ·µ»Øfalse
+********************************************************************/
+BOOLEAN YX_MMI_GetLogFlag(void)
+{
+    return s_logflag.flag;
 }
 
 #endif

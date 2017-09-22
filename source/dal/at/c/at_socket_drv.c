@@ -399,6 +399,9 @@ INT32S AT_SOCKET_SocketSend(INT8U socketid, INT8U *sptr, INT32U slen)
     
     s_dcb.memptr[socketid] = YX_DYM_Alloc(slen);
     if (s_dcb.memptr[socketid] == 0) {
+        #if DEBUG_ERR > 0
+        printf_com("<AT_SOCKET_SocketSend malloc memory fail>\r\n");
+        #endif
         return -1;
     }
     
@@ -534,6 +537,9 @@ void AT_SOCKET_SendEntry(void)
         memlen = s_dcb.sendlen[i] + 20;
         memptr = YX_DYM_Alloc(memlen);
         if (memptr == 0) {
+            #if DEBUG_ERR > 0
+            printf_com("<AT_SOCKET_SendEntry malloc memory fail>\r\n");
+            #endif
             break;
         }
         

@@ -31,7 +31,7 @@
 */
 #define PERIOD_DELAY         _TICK, 1
 #define PERIOD_WAKEUP        _SECOND, 2
-#define PERIOD_WAIT          _SECOND, 10
+#define PERIOD_WAIT          _SECOND, 15
 
 typedef enum {
     STEP_INIT,

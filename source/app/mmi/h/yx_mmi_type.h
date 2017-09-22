@@ -163,6 +163,8 @@ typedef enum {
     DN_PE_CMD_EQUIPMENT_STATUS_CHANGE   = 0x4A,                /* Ö÷»ú×´Ì¬ÇÐ»»¸æÖª(DOWN) */
     UP_PE_ACK_EQUIPMENT_STATUS_CHANGE   = 0x4A,                /* Ö÷»ú×´Ì¬ÇÐ»»Ó¦´ð(UP) */
 
+    DN_PE_CMD_START_OR_STOP_LOG         = 0x4B,                /* ¿ªÆô»ò¹Ø±ÕÈÕÖ¾ÇëÇó(DOWN) */
+    UP_PE_ACK_START_OR_STOP_LOG         = 0x4B,                /* ¿ªÆô»ò¹Ø±ÕÈÕÖ¾Ó¦´ð(UP) */
 
 
 
@@ -237,7 +239,7 @@ typedef enum {
     DN_PE_CMD_CAN_SEND_DATA             = 0x99,                /* ·¢ËÍCANÊý¾ÝÇëÇó(UP) */
     UP_PE_ACK_CAN_SEND_DATA             = 0x99,                /* ·¢ËÍCANÊý¾ÝÇëÇóµÄÓ¦´ð(DOWN)*/
     
-    UP_PE_CMD_CAN_BUS_STATUS_REPORT     = 0x9A,                /* Ö÷¶¯ÉÏ±¨CAN×ÜÏß×´Ì¬ó(UP) */
+    UP_PE_CMD_CAN_BUS_STATUS_REPORT     = 0x9A,                /* Ö÷¶¯ÉÏ±¨CAN×ÜÏß×´Ì¬?UP) */
     DN_PE_ACK_CAN_BUS_STATUS_REPORT     = 0x9A,                /* Ö÷¶¯ÉÏ±¨CAN×ÜÏß×´Ì¬µÄÓ¦´ð(DOWN) */
     
 

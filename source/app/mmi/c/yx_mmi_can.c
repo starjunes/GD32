@@ -1031,6 +1031,9 @@ static void HdlMsg_DN_PE_CMD_CAN_SET_FILTER_ID_LIST(INT8U cmd, INT8U *data, INT1
     
     memptr = (INT32U *)YX_DYM_Alloc(idnum * 4 + 1);
     if (memptr == 0) {
+        #if DEBUG_ERR > 0
+        printf_com("<HdlMsg_DN_PE_CMD_CAN_SET_FILTER_ID_LIST malloc memory fail>\r\n");
+        #endif
         SendAck(UP_PE_ACK_CAN_RESET, com, PE_NAK_MMI);
         return;
     }
@@ -1076,6 +1079,9 @@ static void HdlMsg_DN_PE_CMD_CAN_SET_FILTER_ID_MASK(INT8U cmd, INT8U *data, INT1
     
     memptr = (INT32U *)YX_DYM_Alloc(idnum * 8 + 1);
     if (memptr == 0) {
+        #if DEBUG_ERR > 0
+        printf_com("<HdlMsg_DN_PE_CMD_CAN_SET_FILTER_ID_MASK malloc memory fail>\r\n");
+        #endif
         SendAck(UP_PE_ACK_CAN_RESET, com, PE_NAK_MMI);
         return;
     }

@@ -96,6 +96,10 @@ static INT8U Handler_CMT(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
                 #endif
             }
             YX_DYM_Free(sm);
+        } else {
+            #if DEBUG_ERR > 0
+            printf_com("<Handler_CMT malloc memory fail>\r\n");
+            #endif
         }
         
         return AT_SUCCESS;

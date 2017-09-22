@@ -63,5 +63,12 @@ void HEAPMEM_Free(void *sptr, char *file, INT32U line);
 ********************************************************************/
 HEAPMEM_STATISTICS_T *YX_HEAPMEM_GetStatistics(void);
 
+/*******************************************************************
+** 函数名:     YX_HEAPMEM_GetAddress
+** 函数描述:   获取内存块首地址
+** 参数:       无
+** 返回:       内存块首地址
+********************************************************************/
+INT8U *YX_HEAPMEM_GetAddress(void);
 
 #endif 

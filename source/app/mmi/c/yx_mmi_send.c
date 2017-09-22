@@ -162,6 +162,9 @@ static void SendTmrProc(void *pdata)
                 if (len <= YX_MMI_UartLeftOfSendbuf()) {
                     YX_MMI_SendData(memptr, len);
                 } else {
+                    #if DEBUG_ERR > 0 
+                    printf_com("´®¿Ú»º´æÒÑÂú\r\n");   
+                    #endif
                     ;
                 }
             }
@@ -304,6 +307,9 @@ BOOLEAN YX_MMI_DirSend(INT16U type, INT8U *ptr, INT16U len)
     memlen = len * 2 + 10;
     memptr = YX_DYM_Alloc(len * 2 + 10);
     if (memptr == 0) {
+        #if DEBUG_ERR > 0
+        printf_com("<YX_MMI_DirSend malloc memory fail>\r\n");
+        #endif
         return false;
     }
     s_seq++;

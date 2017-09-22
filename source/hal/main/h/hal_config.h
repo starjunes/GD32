@@ -29,8 +29,8 @@
 #define DEBUG_ERR            1
 
 #else
-#define DEBUG_SYS            0
-#define DEBUG_ERR            0
+#define DEBUG_SYS            1
+#define DEBUG_ERR            1
 
 #endif
 

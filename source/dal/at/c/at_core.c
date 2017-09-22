@@ -1327,10 +1327,10 @@ static void Proc_init(void)
     if ((ADP_NET_GetModuleType() == MODULE_TYPE_SIM7100CE) && (ADP_NET_GetOperator() == NETWORK_OP_CT)) {                                             /* 全网通模块且是用电信 */
         s_dcb.flag &= (~(1 << FLAG_CPMS));
     } else {
-    if ((s_dcb.flag & (1 << FLAG_CPMS)) != 0) {
-        InitProc_CPMS();
-        return;
-    }
+        if ((s_dcb.flag & (1 << FLAG_CPMS)) != 0) {
+            InitProc_CPMS();
+            return;
+        }
     }
     
     if ((ADP_NET_GetModuleType() == MODULE_TYPE_SIM7100CE) && (ADP_NET_GetOperator() == NETWORK_OP_CT)) {                                             /* 全网通模块且是用电信 */
@@ -1371,7 +1371,7 @@ static void Proc_init(void)
         InitProc_CLCC();
         return;
     }
-    
+
     if ((ADP_NET_GetModuleType() == MODULE_TYPE_SIM7100CE) && (ADP_NET_GetOperator() == NETWORK_OP_CT)) {                                             /* 全网通模块且是用电信,强制设置成3G网络，因为4G网络下短信和电话会有问题 */
         if ((s_dcb.flag & (1 << FLAG_CNMP)) != 0) {
             InitProc_CNMP();

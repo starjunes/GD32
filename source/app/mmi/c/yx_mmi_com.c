@@ -262,9 +262,9 @@ BOOLEAN YX_MMI_SendData(INT8U *ptr, INT16U len)
        && ptr[4] != UP_PE_CMD_REPORT_SENSOR_STATUS
        && ptr[4] != UP_PE_CMD_REPORT_AD
        && ptr[4] != UP_PE_CMD_GPS_DATA_SEND) {
-        printf_com("<MMI发送,通道(%x), 长度(%d):", UART_COM_MMI, len);
-        //printf_hex(ptr, len > 64 ? 64 : len);
-        printf_hex(ptr, len);
+        printf_com("<MMI发送, 长度(%d):", len);
+        printf_hex(ptr, len > 64 ? 64 : len);
+        //printf_hex(ptr, len);
         printf_com(">\r\n");
     }
     #endif

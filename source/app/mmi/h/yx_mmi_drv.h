@@ -124,5 +124,13 @@ BOOLEAN YX_MMI_SendPeResetInform(INT8U type);
 ***************************************************************/
 BOOLEAN YX_MMI_SendHostResetInform(INT8U type);
 
+/*******************************************************************
+** 函数名:     YX_MMI_GetLogFlag
+** 函数描述:   获取日志开启或关闭
+** 参数:       无
+** 返回:       开启返回true，关闭返回false
+********************************************************************/
+BOOLEAN YX_MMI_GetLogFlag(void);
+
 #endif
 #endif

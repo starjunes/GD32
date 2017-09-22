@@ -268,6 +268,9 @@ BOOLEAN AT_Q_SendSm(INT8U dcs, INT8U *dataptr, INT16U datalen, void (*fp)(INT8U 
     s_dcb.datalen = datalen;
     s_dcb.memptr = YX_DYM_Alloc(s_dcb.datalen);
     if (s_dcb.memptr == 0) {
+        #if DEBUG_ERR > 0
+        printf_com("<AT_Q_SendSm malloc memory fail>\r\n");
+        #endif
         return false;
     }
 

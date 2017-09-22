@@ -464,6 +464,9 @@ static void HdlMsg_DN_CMD_TEXTINFO(void)
             len = TTS_MAX_SIZE;
         }
         if ((ptr = (INT8U *)YX_DYM_Alloc(len + 12)) == NULL) {
+            #if DEBUG_ERR > 0
+            printf_com("<HdlMsg_DN_CMD_TEXTINFO malloc memory fail>\r\n");
+            #endif
             return;
         }
         YX_MEMCPY(ptr, 12, (INT8U*)"收到文本信息", 12);
@@ -1020,6 +1023,9 @@ static void HdlMsg_DN_CMD_ASK(void)
         temptr = NULL;
         temptr = YX_DYM_Alloc(TTS_MAX_SIZE);
         if (temptr == NULL) {
+            #if DEBUG_ERR > 0
+            printf_com("<HdlMsg_DN_CMD_ASK malloc memory fail>\r\n");
+            #endif
             return;
         }
         YX_InitStrm(&wstrm, temptr, TTS_MAX_SIZE);
@@ -1305,6 +1311,9 @@ static void HdlMsg_DN_CMD_SETCIRCLE(void)
 
     memlen = s_hdlframelen + MAX_AREA_NUM * DIFLEN_POTOCOL_RANGE + 100;                 /* 不能超过125个区域; memlen reserve 100 */
     if (NULL == (memptr = YX_DYM_Alloc(memlen))) {
+        #if DEBUG_ERR > 0
+        printf_com("<HdlMsg_DN_CMD_SETCIRCLE malloc memory fail>\r\n");
+        #endif
         result = ACK_FAIL;
         goto RET_SETCIRCLE;
     }
@@ -1463,6 +1472,9 @@ static void HdlMsg_DN_CMD_DELCIRCLE(void)
 
     memlen = s_hdlframelen + 100;                                                       /* 不能超过125个区域; memlen reserve 100 */
     if (NULL == (memptr = YX_DYM_Alloc(memlen))) {
+        #if DEBUG_ERR > 0
+        printf_com("<HdlMsg_DN_CMD_DELCIRCLE malloc memory fail>\r\n");
+        #endif
         result = ACK_FAIL;
         goto RET_DELCIRCLE;         
     }
@@ -1523,6 +1535,9 @@ static void HdlMsg_DN_CMD_SETRECT(void)
 
     memlen = s_hdlframelen + MAX_AREA_NUM * DIFLEN_POTOCOL_RANGE + 100;                 /* 不能超过125个区域; memlen reserve 100 */
     if (NULL == (memptr = YX_DYM_Alloc(memlen))) {
+        #if DEBUG_ERR > 0
+        printf_com("<HdlMsg_DN_CMD_SETRECT malloc memory fail>\r\n");
+        #endif
         result = ACK_FAIL;
         goto RET_SETRECT;         
     }
@@ -1686,6 +1701,9 @@ static void HdlMsg_DN_CMD_DELRECT(void)
 
     memlen = s_hdlframelen + 100;                                                       /* 不能超过125个区域; memlen reserve 100 */
     if (NULL == (memptr = YX_DYM_Alloc(memlen))) {
+        #if DEBUG_ERR > 0
+        printf_com("<HdlMsg_DN_CMD_DELRECT malloc memory fail>\r\n");
+        #endif
         result = ACK_FAIL;
         goto RET_DELRECT;        
     }
@@ -1792,6 +1810,9 @@ static void HdlMsg_DN_CMD_SETPOLYRANGE(void)
     result = ACK_SUCCESS;
     memlen = s_hdlframelen + MAX_AREA_NUM * DIFLEN_POTOCOL_RANGE + 100;                 /* 不能超过125个区域; memlen reserve 100 */
     if (NULL == (memptr = YX_DYM_Alloc(memlen))) {
+        #if DEBUG_ERR > 0
+        printf_com("<HdlMsg_DN_CMD_SETPOLYRANGE malloc memory fail>\r\n");
+        #endif
         result = ACK_FAIL;
         goto RET_SETPOLY;          
     }
@@ -1931,6 +1952,9 @@ static void HdlMsg_DN_CMD_DELPOLYRANGE(void)
 
     memlen = s_hdlframelen + 100;                                                       /* 不能超过125个区域; memlen reserve 100 */
     if (NULL == (memptr = YX_DYM_Alloc(memlen))) {
+        #if DEBUG_ERR > 0
+        printf_com("<HdlMsg_DN_CMD_DELPOLYRANGE malloc memory fail>\r\n");
+        #endif
         result = ACK_FAIL;
         goto RET_DELPOLY;         
     }

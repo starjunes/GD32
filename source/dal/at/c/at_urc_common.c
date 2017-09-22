@@ -304,7 +304,7 @@ static INT8U Handler_CGMR(INT8U ct_recv, INT8U event, INT8U *sptr, INT16U slen)
     }
 
     pos = YX_FindCharPos(sptr, 'B', 0, slen);
-    #if EN_DEBUG > 0
+    #if DEBUG_AT > 0
     printf_com("Handler_CGMR1 (slen= %d)(%s)\r\n", slen, sptr);
     printf_com("Handler_CGMR (slen= %d)(pos=%d)(%c)\r\n", slen, pos, sptr[pos+2]);
     #endif

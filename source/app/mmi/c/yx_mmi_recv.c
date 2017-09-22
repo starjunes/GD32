@@ -71,6 +71,19 @@ static void HdlRecvData(INT8U *ptr, INT16U len)
     type = *(ptr + 3);
     curptr = s_usedlist;
 
+    #if DEBUG_MMI > 0 
+    if (type != UP_PE_CMD_REPORT_ODOPULSE 
+       //&& type != UP_PE_CMD_LINK_REQ 
+       && type != UP_PE_CMD_REPORT_SENSOR_STATUS
+       && type != UP_PE_CMD_REPORT_AD
+       && type != UP_PE_CMD_GPS_DATA_SEND) {
+        printf_com("<MMI接收, 长度(%d):", len);
+        printf_hex(ptr, len > 64 ? 64 : len);
+        //printf_hex(ptr, len);
+        printf_com(">\r\n");
+    }
+    #endif
+
     while (curptr != 0) {
         if (curptr->type == type) {                                            /* 搜索对应类型 */
             OS_ASSERT((curptr->c_handler != 0), RETURN_VOID);                  /* 注册的处理函数不能为空 */

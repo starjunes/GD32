@@ -144,6 +144,9 @@ BOOLEAN PORT_Hdl_SHELL_MSG_RING_IND(void *msg)
     tellen = YX_STRLEN((char *)msg) + 1;
     memptr = (INT8U *)YX_DYM_Alloc(tellen);
     if (memptr == 0) {
+        #if DEBUG_ERR > 0
+        printf_com("<PORT_Hdl_SHELL_MSG_RING_IND malloc memory fail>\r\n");
+        #endif
         return;
     }
     
@@ -318,6 +321,10 @@ static INT8U Handler_CMT(INT8U event, INT8U *sptr, INT16U slen)
                 #endif
             }
             YX_DYM_Free(sm);
+        } else {
+            #if DEBUG_ERR > 0
+            printf_com("<Handler_CMT malloc memory fail>\r\n");
+            #endif
         }
         
         return RET_END;

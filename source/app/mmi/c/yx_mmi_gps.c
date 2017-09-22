@@ -185,11 +185,11 @@ static void HdlMsg_DN_PE_CMD_SET_GPS_UART(INT8U cmd, INT8U *data, INT16U datalen
     cfg.tx_fcm = UART_FCM_NULL;
     
     cfg.rx_len = 200;
-#if EN_DEBUG > 0
+//#if EN_DEBUG > 0
     cfg.tx_len = 512;
-#else
-    cfg.tx_len = 200;
-#endif
+//#else
+    //cfg.tx_len = 200;
+//#endif
     
     ST_UART_OpenUart(&cfg);
     SendAck(UP_PE_ACK_SET_GPS_UART, PE_ACK_MMI);

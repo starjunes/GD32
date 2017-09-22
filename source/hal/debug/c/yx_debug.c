@@ -13,10 +13,12 @@
 #include "yx_dym_drv.h"
 #include "yx_config.h"
 #include "yx_debug.h"
+#include "st_rtc_drv.h"
+#include "yx_mmi_drv.h"
 
 
 
-#if EN_DEBUG > 0
+//#if EN_DEBUG > 0
 
 /*
 ********************************************************************************
@@ -53,6 +55,24 @@ return true;
     va_list ap;
     INT16U len;
     INT8U sendbuf[128];
+    INT8U weekday;
+    INT32U subsecond;
+    SYSTIME_T systime;
+
+    #if EN_DEBUG == 0
+    if (!YX_MMI_GetLogFlag()) {
+        return FALSE;
+    }
+    #endif
+
+    if (!(fmt[0] == '\r' || fmt[0] == '\n' || fmt[1] == '\r' || fmt[1] == '\n')) {
+        result = ST_RTC_GetSystime(&systime.date, &systime.time, &weekday, &subsecond);
+        if (result) {
+            len = sprintf((char *)sendbuf, "%d-%2d %2d:%2d:%2d ", systime.date.month, systime.date.day, 
+                          systime.time.hour, systime.time.minute, systime.time.second);
+            DEBUG_UART_WriteBlock(UART_COM_DEBUG, sendbuf, len);
+        }
+    }
     
     YX_VA_START(ap, fmt);
     len = YX_VSPRINTF((char *)sendbuf, fmt, ap);
@@ -83,6 +103,12 @@ return true;
     INT8U *memptr;
     INT16U i;
     INT8U  ch;
+
+    #if EN_DEBUG == 0
+    if (!YX_MMI_GetLogFlag()) {
+        return FALSE;
+    }
+    #endif
     
     if (ptr == 0 || len == 0) {
         return false;
@@ -115,6 +141,12 @@ return true;
 -------------------------------------------------------------------*/
 BOOLEAN printf_raw(INT8U *ptr, INT16U len)
 {
+    #if EN_DEBUG == 0
+    if (!YX_MMI_GetLogFlag()) {
+        return FALSE;
+    }
+    #endif
+
 #if 0
 return true;
 #else
@@ -137,6 +169,12 @@ BOOLEAN printf_irq(INT8U *ptr, INT16U len)
 {
     BOOLEAN result = 0;
     INT16U i;
+
+    #if EN_DEBUG == 0
+    if (!YX_MMI_GetLogFlag()) {
+        return FALSE;
+    }
+    #endif
     
     if (ptr == 0 || len == 0) {
         return false;
@@ -151,6 +189,6 @@ BOOLEAN printf_irq(INT8U *ptr, INT16U len)
     return result;
 }
 
-#endif
+//#endif
 
 
