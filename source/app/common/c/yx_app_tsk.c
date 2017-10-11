@@ -12,6 +12,7 @@
 #include "yx_include.h"
 #include "dal_output_drv.h"
 #include "dal_pp_drv.h"
+#include "st_rtc_drv.h"
 #include "yx_debug.h"
 
 
@@ -31,6 +32,7 @@
 typedef struct {
     INT8U creg;
     INT8U ct_nonetwork;
+    INT8U is_set_rtc;
 } DCB_T;
 
 
@@ -73,6 +75,11 @@ INT32U DAL_PULSE_GetTotalPulse(void);
 static void AppTmrProc(void *index)
 {
   
+    /* rtc外部时钟开启需要时间,定时开启，直到启动成功 */
+    if(!s_dcb.is_set_rtc) {
+        s_dcb.is_set_rtc = ST_RTC_OpenRtcFunction(RTC_CLOCK_LSE);
+    }
+    
 #if DEBUG_SYS > 0
 #if 0
     INT32U pfilterid, pmaskid;
