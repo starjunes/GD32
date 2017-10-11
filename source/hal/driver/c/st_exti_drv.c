@@ -299,6 +299,7 @@ BOOLEAN ST_EXTI_CloseExtiFunction(INT8U pinid)
         return FALSE;
     }
 
+    EXTI_StructInit(&exti_initstructure);
     exti_initstructure.EXTI_Line = pinfo->pin;
     exti_initstructure.EXTI_LineCmd = DISABLE;
     EXTI_Init(&exti_initstructure);
