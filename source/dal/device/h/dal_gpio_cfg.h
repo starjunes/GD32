@@ -234,5 +234,14 @@ INT32U ReadValue_VINLOW(void);
 ********************************************************************/
 INT32U ReadValue_ADC2(void);
 
+/*******************************************************************
+** 函数名:     DAL_GPIO_RegistReadAdValue
+** 函数描述:   读取app AD值函数
+** 参数:       [in] handler: 处理器
+** 返回:        成功返回TRUE,无效返回false
+********************************************************************/
+BOOLEAN DAL_GPIO_RegistReadAdValue( INT16U (* handler)(INT8U ch));
+
+
 #endif
 

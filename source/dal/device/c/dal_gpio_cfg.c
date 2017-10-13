@@ -37,11 +37,22 @@
 
 /*
 ********************************************************************************
+* 定义ad值
+********************************************************************************
+*/
+#define AD_POWER_CH 0
+
+/*
+********************************************************************************
 * 定义模块变量
 ********************************************************************************
 */
-//static INT32U s_advalue, ct_readvin, s_type;
 
+typedef struct {
+    INT16U (* get_ad_values)(INT8U ch);
+}DAL_GPIO_DCB_T;
+//static INT32U s_advalue, ct_readvin, s_type;
+static DAL_GPIO_DCB_T s_dal_gpio_dcb = {0};
         
 
 /*
@@ -49,7 +60,6 @@
 *  看门狗
 ********************************************************************************
 */
-
 void DAL_GPIO_InitWatchdog(void)
 {
     ST_GPIO_SetPin(PIN_WATCHDOG, GPIO_DIR_OUT, GPIO_MODE_PP, 0);
@@ -465,8 +475,11 @@ BOOLEAN DAL_GPIO_ReadPowDect(INT8U port)
 {
     INT32S value;
 
-    value = ST_ADC_GetValue(ADC_CH_0);
-    if (value < 400) {
+    if(s_dal_gpio_dcb.get_ad_values == 0) {
+        return FALSE;
+    }
+    value = s_dal_gpio_dcb.get_ad_values(AD_POWER_CH);
+    if (value < 5000 && value != 0) {
         return true;
     } else {
         return false;
@@ -492,8 +505,17 @@ BOOLEAN DAL_GPIO_ReadLowVol(INT8U port)
         return false;
     }
 
+    if(s_dal_gpio_dcb.get_ad_values == 0) {
+        return FALSE;
+    }
+
+    value = s_dal_gpio_dcb.get_ad_values(AD_POWER_CH);
+    if(value == 0) {
+        return FALSE;
+    }
+
 #if VERSION_HW == VERSION_HW_OLD
-    value = ST_ADC_GetValue(ADC_CH_0);
+    //value = ST_ADC_GetValue(ADC_CH_0);
     if (value > 1513) {                                                        /* 读出的电压值〉18V认为是24V系统 */
         if (value > 1929) {                                                    /* 比较基准电压为22.6V:1929,22.2V:1896,23V:1968 */
             return false;
@@ -505,13 +527,13 @@ BOOLEAN DAL_GPIO_ReadLowVol(INT8U port)
     }
     return true;
 #else
-    value = ST_ADC_GetValue(ADC_CH_0);
-    if (value > 1580) {                                                        /* 读出的电压值〉18V认为是24V系统 */
-        if (value > 1990) {                                                     /* 比较基准电压为22.6V:1990,22.2V:1960,23V:2031 */
+    //value = ST_ADC_GetValue(ADC_CH_0);
+    if (value > 18000) {                                                        /* 读出的电压值〉18V认为是24V系统 */
+        if (value > 22600) {                                                     /* 比较基准电压为22.6V:1990,22.2V:1960,23V:2031 */
             return false;
         }
-    } else if (value > 652) {                                                  /* 读出的电压值>8V，认为是12V系统 */
-        if (value > 897) {                                                     /* 比较基准电压为10.6V:897,10.2V:859,11V:932 */
+    } else if (value > 8000) {                                                  /* 读出的电压值>8V，认为是12V系统 */
+        if (value > 10600) {                                                     /* 比较基准电压为10.6V:897,10.2V:859,11V:932 */
             return false;
         }
     }
@@ -520,6 +542,21 @@ BOOLEAN DAL_GPIO_ReadLowVol(INT8U port)
 }
 
 
+/*******************************************************************
+** 函数名:     DAL_GPIO_RegistReadAdValue
+** 函数描述:   读取app
+** 参数:       [in] handler: 处理器
+** 返回:        成功返回TRUE,无效返回false
+********************************************************************/
+BOOLEAN DAL_GPIO_RegistReadAdValue( INT16U (* handler)(INT8U ch))
+{
+    if(handler == NULL) {
+        return FALSE;
+    }
 
+    s_dal_gpio_dcb.get_ad_values = handler;
+
+    return TRUE;
+}
     
 
