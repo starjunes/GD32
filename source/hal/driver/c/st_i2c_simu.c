@@ -12,7 +12,7 @@
 **| 2014/04/09 | 叶德焰 |  创建第一版本
 *********************************************************************************/
 #include "hal_include.h"
-#include "stm32f0xx.h"
+#include "stm32f10x.h"
 #include "st_gpio_drv.h"
 #include "st_i2c_reg.h"
 #include "st_i2c_simu.h"
@@ -76,18 +76,18 @@ static void I2C_PinsConfig(const I2C_REG_T *pinfo)
     /* Configure gpio SCL */
     gpio_initstruct.GPIO_Pin   = (INT16U)(1 << pinfo->pin_scl);
     gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_initstruct.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_initstruct.GPIO_OType = GPIO_OType_OD;
-    gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
+    gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_OD;
+    //gpio_initstruct.GPIO_OType = GPIO_OType_OD;
+    //gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
     
     GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
     
     /* Configure gpio SDA */
     gpio_initstruct.GPIO_Pin   = (INT16U)(1 << pinfo->pin_sda);
     gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_initstruct.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_initstruct.GPIO_OType = GPIO_OType_OD;
-    gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
+    gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_OD;
+    //gpio_initstruct.GPIO_OType = GPIO_OType_OD;
+    //gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
     
     GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
 }

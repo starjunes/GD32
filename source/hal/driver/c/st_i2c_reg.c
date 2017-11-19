@@ -10,8 +10,8 @@
 **| 2014/03/09 | 叶德焰 |  创建文件
 *******************************************************************************/
 #include "hal_include.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_conf.h"
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "st_i2c_reg.h"
 
 /*

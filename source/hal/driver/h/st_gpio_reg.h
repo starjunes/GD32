@@ -22,8 +22,8 @@ typedef struct {
     INT8U id;                /* 统一GPIO编号*/
     INT16U pin;              /* 管脚PIN编号 */
     INT8U direction;         /* 方向：输入/输出 */
-    INT8U mode;              /* 控制模式：开漏、推挽 */
-    INT8U pupd;              /* 上下拉模式：上下、下拉、无 */
+    //INT8U mode;              /* 控制模式：开漏、推挽 M3无需单独设置*/
+    //INT8U pupd;              /* 上下拉模式：上下、下拉、无 M3 无需单独设置 */
     INT8U level;             /* 初始化电平 */
     INT8U enable;            /* 初始化使能 */
 } GPIO_REG_T;

@@ -48,7 +48,7 @@ typedef struct {
 * define ticks
 ***********************************************
 */
-#define PERTICK                             20                      /* 1 tick = 20 ms */
+#define PERTICK                             1                      /* 1 tick = 20 ms */
 #define TICK_MILSECOND                      (100L / PERTICK)
 #define TICK_SECOND                         (1000L / PERTICK)
 #define TICK_MINUTE                         ((60 * 1000L) / PERTICK)
@@ -57,7 +57,8 @@ typedef struct {
 * define attrib
 ***********************************************
 */
-#define _TICK                               1
+#define _HIGHTICK                            1
+#define _TICK                               10
 #define _MILTICK                            TICK_MILSECOND
 #define _SECOND                             TICK_SECOND
 #define _MINUTE                             TICK_MINUTE

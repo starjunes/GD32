@@ -26,7 +26,7 @@
 * 定义配置参数
 ********************************************************************************
 */
-#define PERIOD_SAMPLE        _TICK, 2
+#define PERIOD_SAMPLE        _TICK, 4
 
 #define MAX_ERROR            5
 

@@ -28,7 +28,7 @@
 
 #define UART_COM_GPS         UART_COM_1
 
-#define PERIOD_SCAN          _TICK, 2
+#define PERIOD_SCAN          _TICK, 4
 
 /*
 ********************************************************************************

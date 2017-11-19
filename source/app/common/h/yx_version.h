@@ -16,7 +16,7 @@
 
 
 #define MAX_VERSION_LEN      40
-#define YX_VERSION_STR       "c022600d-110rv01m0-704"
+#define YX_VERSION_STR       "c0226001-110rv01m3-701_test05"
 
 
 /*******************************************************************

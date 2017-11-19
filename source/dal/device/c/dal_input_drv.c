@@ -26,7 +26,7 @@
 #define MAX_USER                4                /* 一个IO的注册用户数 */
 
 
-#define PERIOD_SAMPLE           _TICK, 2
+#define PERIOD_SAMPLE           _TICK, 4
 
 /*
 ********************************************************************************
@@ -215,7 +215,7 @@ void DAL_INPUT_InitDrv(void)
             //pin  = pio->pin;
             
             //if (pin < ST_GPIO_GetCfgTblMax()) {                                /* 物理GPIO */
-            //    ST_GPIO_SetPin(pin, GPIO_DIR_IN, GPIO_PULL_UP, 1);
+            //    ST_GPIO_SetPin(pin, GPIO_DIR_IN, GPIO_MODE_UP, 1);
             //} else {
                 initproc(port);                                                /* 初始化IO */
             //}

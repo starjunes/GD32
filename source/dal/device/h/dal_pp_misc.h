@@ -171,7 +171,10 @@ typedef struct {
 typedef struct {
     BOOLEAN flag;           /* 是否开启日志标志 */
 } LOG_FLAG_T;
-
+/* 存储主机复位记录的状态 */
+typedef struct {
+    INT8U status;
+}HOST_RESET_STATUS_T;
     
 /*
 ********************************************************************************

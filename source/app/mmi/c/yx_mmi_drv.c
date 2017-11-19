@@ -66,6 +66,7 @@ static TCB_T s_tcb;
 static INT8U s_linktmr, s_resettmr;
 static INT8U s_memtmr;
 static LOG_FLAG_T s_logflag = {1};                           /* 为了打印刚上电时的日志信息，默认开启 */
+static BOOLEAN s_firstflag = FALSE;
 
 /*******************************************************************
 ** 函数名:     SendSetupLinkCommand
@@ -396,8 +397,9 @@ static void ResetTmrProc(void *pdata)
 ********************************************************************/
 static void LinkTmrProc(void *pdata)
 {
-    OS_StartTmr(s_linktmr, PERIOD_LINK);
+    HOST_RESET_STATUS_T reset_info;
     
+    OS_StartTmr(s_linktmr, PERIOD_LINK);
     if (!YX_MMI_IsON()) {
         #if DEBUG_MMI > 0
         printf_com("上电链接请求\r\n");
@@ -410,6 +412,14 @@ static void LinkTmrProc(void *pdata)
             printf_com("链路维护请求\r\n");
             #endif
             SendBeatCommand();
+            if (s_firstflag == FALSE ) {
+                DAL_PP_ReadParaByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
+                #if DEBUG_MMI > 0
+                printf_com("LinkTmrProc ,status(%d)\r\n", reset_info.status);
+                #endif
+                YX_MMI_SendHostResetInform_New(reset_info.status);
+                s_firstflag = TRUE;
+            }
         }
         #if 1
         if (s_tcb.ct_watchdog > 0) {                                           /* 看门狗监控 */
@@ -444,7 +454,7 @@ static void LinkTmrProc(void *pdata)
         s_tcb.status &= (~_ON);
         s_tcb.ct_query = 0;
         s_tcb.ct_overtime = 0;
-        
+        s_firstflag = FALSE ;
         YX_MMI_PullDown();
         OS_RESET(RESET_EVENT_INITIATE);                                        /* 主动复位 */
         OS_StartTmr(s_resettmr, PERIOD_RESET);                                 /* 延时上电 */
@@ -615,6 +625,7 @@ BOOLEAN YX_MMI_Sleep(void)
 {
     OS_StopTmr(s_linktmr);
     s_tcb.status = 0;
+    s_firstflag = FALSE;
     return true;
 }
 
@@ -661,6 +672,7 @@ BOOLEAN YX_MMI_ResetReq(INT8U type)
     if (!YX_MMI_IsON()) {
         return FALSE;
     }
+    YX_MMI_SendHostResetInform_New(type);
     
     wstrm = YX_STREAM_GetBufferStream();
     YX_WriteBYTE_Strm(wstrm, type);
@@ -676,7 +688,8 @@ BOOLEAN YX_MMI_ResetReq(INT8U type)
 BOOLEAN YX_MMI_SendPeResetInform(INT8U type)
 {
     STREAM_T *wstrm;
-    
+
+    YX_MMI_SendHostResetInform_New(type);
     wstrm = YX_STREAM_GetBufferStream();
     YX_WriteBYTE_Strm(wstrm, type);
     return YX_MMI_DirSend(UP_PE_CMD_PE_RESET_INFORM, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
@@ -691,7 +704,8 @@ BOOLEAN YX_MMI_SendPeResetInform(INT8U type)
 BOOLEAN YX_MMI_SendHostResetInform(INT8U type)
 {
     STREAM_T *wstrm;
-    
+
+    YX_MMI_SendHostResetInform_New(type);                                      /* 新协议上报 */
     wstrm = YX_STREAM_GetBufferStream();
     YX_WriteBYTE_Strm(wstrm, type);
     return YX_MMI_DirSend(UP_PE_CMD_HOST_RESET_INFORM, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
@@ -706,6 +720,27 @@ BOOLEAN YX_MMI_SendHostResetInform(INT8U type)
 BOOLEAN YX_MMI_GetLogFlag(void)
 {
     return s_logflag.flag;
+}
+
+
+/***************************************************************
+** 函数名:    YX_MMI_SendHostResetInform_New
+** 功能描述:  外设通知主机，外设即将关闭或重启主机(外设自己不复位)(新 增加休眠唤醒和上电状态上报)
+** 参数:      [in] type: 复位类型,见 MMI_RESET_EVENT_NEW_E
+** 返回:      成功返回true，否返回false
+***************************************************************/
+BOOLEAN YX_MMI_SendHostResetInform_New(INT8U type)
+{
+    STREAM_T *wstrm;
+    HOST_RESET_STATUS_T reset_info;
+
+    DAL_PP_ReadParaByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
+    reset_info.status = type;
+    DAL_PP_StoreParaByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
+    
+    wstrm = YX_STREAM_GetBufferStream();
+    YX_WriteBYTE_Strm(wstrm, type);
+    return YX_MMI_DirSend(UP_PE_CMD_HOST_RESET_INFORM_NEW, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
 }
 
 #endif

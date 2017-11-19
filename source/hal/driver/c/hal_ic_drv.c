@@ -70,10 +70,10 @@
 ********************************************************************/
 static void PinsConfig(void)
 {
-    ST_GPIO_SetPin(PIN_IC_CLK,  GPIO_DIR_OUT, GPIO_PULL_UP, 0);
-    ST_GPIO_SetPin(PIN_IC_RST,  GPIO_DIR_OUT, GPIO_PULL_UP, 0);
-    ST_GPIO_SetPin(PIN_IC_IO,   GPIO_DIR_OUT, GPIO_PULL_UP, 1);
-    //ST_GPIO_SetPin(PIN_IC_DECT, GPIO_DIR_IN,  GPIO_PULL_UP, 0);
+    ST_GPIO_SetPin(PIN_IC_CLK,  GPIO_DIR_OUT, GPIO_MODE_PP, 0);
+    ST_GPIO_SetPin(PIN_IC_RST,  GPIO_DIR_OUT, GPIO_MODE_PP, 0);
+    ST_GPIO_SetPin(PIN_IC_IO,   GPIO_DIR_OUT, GPIO_MODE_PP, 1);
+    //ST_GPIO_SetPin(PIN_IC_DECT, GPIO_DIR_IN,  GPIO_MODE_PULL, 0);
 }
 
 /*******************************************************************

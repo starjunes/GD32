@@ -50,36 +50,73 @@ __attribute__ ((section ("VECTOR_RAM")))  IRQ_SERVICE_FUNC g_vector_tbl[IRQ_ID_M
                                             
                                             (IRQ_SERVICE_FUNC)WWDG_IRQHandler,
                                             (IRQ_SERVICE_FUNC)PVD_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)TAMPER_IRQHandler,
                                             (IRQ_SERVICE_FUNC)RTC_IRQHandler,
                                             (IRQ_SERVICE_FUNC)FLASH_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)RCC_CRS_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)EXTI0_1_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)EXTI2_3_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)EXTI4_15_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)TSC_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)RCC_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)EXTI0_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)EXTI1_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)EXTI2_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)EXTI3_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)EXTI4_IRQHandler,
                                             (IRQ_SERVICE_FUNC)DMA1_Channel1_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)DMA1_Channel2_3_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)DMA1_Channel4_5_6_7_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)ADC1_COMP_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)TIM1_BRK_UP_TRG_COM_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA1_Channel2_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA1_Channel3_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA1_Channel4_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA1_Channel5_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA1_Channel6_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA1_Channel7_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)ADC1_2_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)CAN1_TX_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)CAN1_RX0_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)CAN1_RX1_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)CAN1_SCE_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)EXTI9_5_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)TIM1_BRK_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)TIM1_UP_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)TIM1_TRG_COM_IRQHandler,
                                             (IRQ_SERVICE_FUNC)TIM1_CC_IRQHandler,
                                             (IRQ_SERVICE_FUNC)TIM2_IRQHandler,
                                             (IRQ_SERVICE_FUNC)TIM3_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)TIM6_DAC_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)TIM7_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)TIM14_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)TIM15_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)TIM16_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)TIM17_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)I2C1_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)I2C2_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)TIM4_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)I2C1_EV_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)I2C1_ER_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)I2C2_EV_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)I2C2_ER_IRQHandler,
                                             (IRQ_SERVICE_FUNC)SPI1_IRQHandler,
                                             (IRQ_SERVICE_FUNC)SPI2_IRQHandler,
                                             (IRQ_SERVICE_FUNC)USART1_IRQHandler,
                                             (IRQ_SERVICE_FUNC)USART2_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)USART3_4_IRQHandler, 
-                                            (IRQ_SERVICE_FUNC)CEC_CAN_IRQHandler,
-                                            (IRQ_SERVICE_FUNC)USB_IRQHandler
+                                            (IRQ_SERVICE_FUNC)USART3_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)EXTI15_10_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)RTCAlarm_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)OTG_FS_WKUP_IRQHandler, 
+                                            (IRQ_SERVICE_FUNC)0,
+                                            (IRQ_SERVICE_FUNC)0,
+                                            (IRQ_SERVICE_FUNC)0,
+                                            (IRQ_SERVICE_FUNC)0,
+                                            (IRQ_SERVICE_FUNC)0,
+                                            (IRQ_SERVICE_FUNC)0,
+                                            (IRQ_SERVICE_FUNC)0,
+                                            (IRQ_SERVICE_FUNC)TIM5_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)SPI3_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)UART4_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)UART5_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)TIM6_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)TIM7_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA2_Channel1_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA2_Channel2_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA2_Channel3_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA2_Channel4_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)DMA2_Channel5_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)ETH_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)ETH_WKUP_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)CAN2_TX_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)CAN2_RX0_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)CAN2_RX1_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)CAN2_SCE_IRQHandler,
+                                            (IRQ_SERVICE_FUNC)OTG_FS_IRQHandler
+
 
 };
 
@@ -95,7 +132,7 @@ void ST_IRQ_InstallIrqHandler(INT32S irqid, IRQ_SERVICE_FUNC handle)
 {
     INT32U cpu_sr;
     
-    *(INT8U *)__headinfo_base = 0;
+    //*(INT8U *)__headinfo_base = 0;
     OS_ASSERT(((irqid > -16) && (irqid + 16 < IRQ_ID_MAX)), RETURN_VOID);
     OS_ASSERT((handle != 0), RETURN_VOID);
     
@@ -115,12 +152,17 @@ void ST_IRQ_InstallIrqHandler(INT32S irqid, IRQ_SERVICE_FUNC handle)
 void ST_IRQ_ConfigIrqPriority(INT32S irqid, INT32U pree_pr, INT32U sub_pr)
 {
     INT32U cpu_sr;
-    
+    NVIC_InitTypeDef  nvic_inittypedef;
     OS_ASSERT(((irqid > -16) && (irqid + 16 < IRQ_ID_MAX)), RETURN_VOID);
-    OS_ASSERT((IS_NVIC_PRIORITY(sub_pr)), RETURN_VOID);
-    
+    OS_ASSERT((IS_NVIC_SUB_PRIORITY(sub_pr)), RETURN_VOID);
+
+    nvic_inittypedef.NVIC_IRQChannel                   = irqid - 16;
+    nvic_inittypedef.NVIC_IRQChannelPreemptionPriority = pree_pr;
+    nvic_inittypedef.NVIC_IRQChannelSubPriority        = sub_pr;
+    nvic_inittypedef.NVIC_IRQChannelCmd                = ENABLE;
     OS_ENTER_CRITICAL();
-	NVIC_SetPriority((IRQn_Type)irqid, sub_pr);
+	//NVIC_SetPriority((IRQn_Type)irqid, sub_pr);
+	NVIC_Init(&nvic_inittypedef);
 	OS_EXIT_CRITICAL();
 }
 

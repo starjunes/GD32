@@ -14,7 +14,7 @@
 
 
 #define CODE_FLAG_UPDATE     0x55AA5AA5      /* 无线下载请求标志 */
-#define CODE_FLAG_VAR        "STM0"          /* 平台信息 */
+#define CODE_FLAG_VAR        "STM3"          /* 平台信息 */
 #define CODE_FLAG_PLAT       "PLAT"          /* 平台层标志 */
 #define CODE_FLAG_HAL        "HAL0"          /* HAL层标志 */
 #define CODE_FLAG_APP        "APP0"          /* APP层标志 */
@@ -31,8 +31,11 @@ typedef struct {
     INT8U checksum[2];                 /* 文件校验和 */
     INT8U filesize[4];                 /* 文件长度：从文件头标志开始算 */
     INT8U res;                         /* 填充字节 */
+    //INT8U date[3];                     /* 生成日期 */
+    //INT8U time[3];                     /* 生成时间 */
     INT8U platflag[4];                 /* 平台标志 */
     INT8U appflag[4];                  /* 分层标识：APP */
+    INT8U time[4];                      /* 编译时间入口地址 */
     INT8U entry[4];                    /* 入口地址 */
 } APP_HEAD_T;
 
@@ -44,6 +47,7 @@ typedef struct {
 
 #ifdef GLOBALS_BOOTMAIN
 CODE_INFO_T const g_code_info = {YX_VERSION_STR};
+
 #else
 extern CODE_INFO_T const g_code_info;
 #endif

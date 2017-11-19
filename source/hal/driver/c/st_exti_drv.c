@@ -12,7 +12,7 @@
 **| 2014/04/09 | 叶德焰 |  创建第一版本
 *********************************************************************************/
 #include "hal_include.h"
-#include "stm32f0xx.h"
+#include "stm32f10x.h"
 #include "st_gpio_drv.h"
 #include "st_irq_drv.h"
 #include "st_exti_drv.h"
@@ -82,9 +82,9 @@ static void EXTI_PinsConfig(const GPIO_REG_T *pinfo, const GPIO_CLASS_T *pclass)
     /* Configure gpio SCL */
     gpio_initstruct.GPIO_Pin   = pinfo->pin;
     gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_initstruct.GPIO_Mode  = GPIO_Mode_IN;
-    gpio_initstruct.GPIO_OType = GPIO_OType_OD;
-    gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+    gpio_initstruct.GPIO_Mode  = GPIO_Mode_IN_FLOATING;
+    //gpio_initstruct.GPIO_OType = GPIO_OType_OD;
+    //gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     
     GPIO_Init((GPIO_TypeDef *)pclass->gpio_base, &gpio_initstruct);
     //GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->pin, GPIO_AF_1);
@@ -104,19 +104,19 @@ static void EXTI_ExtiLineConfig(const GPIO_REG_T *pinfo, const GPIO_CLASS_T *pcl
     switch(pclass->gpio_base)
     {
     case GPIOA_BASE:
-        port = EXTI_PortSourceGPIOA;
+        port = GPIO_PortSourceGPIOA;
         break;
     case GPIOB_BASE:
-        port = EXTI_PortSourceGPIOB;
+        port = GPIO_PortSourceGPIOB;
         break;
     case GPIOC_BASE:
-        port = EXTI_PortSourceGPIOC;
+        port = GPIO_PortSourceGPIOC;
         break;
     case GPIOD_BASE:
-        port = EXTI_PortSourceGPIOD;
+        port = GPIO_PortSourceGPIOD;
         break;
     case GPIOF_BASE:
-        port = EXTI_PortSourceGPIOF;
+        port = GPIO_PortSourceGPIOF;
         break;
     default:
         //OS_ASSERT(0, RETURN_VOID);
@@ -124,7 +124,7 @@ static void EXTI_ExtiLineConfig(const GPIO_REG_T *pinfo, const GPIO_CLASS_T *pcl
         return;
     }
     
-    SYSCFG_EXTILineConfig(port, EXTI_GetPinNumByBit(pinfo));
+    GPIO_EXTILineConfig(port, EXTI_GetPinNumByBit(pinfo));
 }
 
 /*******************************************************************
@@ -166,15 +166,15 @@ static void EXTI_IrqConfig(const GPIO_REG_T *pinfo, const GPIO_CLASS_T *pclass, 
     INT32S irq_id;
     IRQ_SERVICE_FUNC irqhandler;
     
-    if (pinfo->pin <= GPIO_Pin_1) {
-        irq_id = EXTI0_1_IRQn;
-        irqhandler = (IRQ_SERVICE_FUNC)EXTI0_1_IrqHandle;
-    } else if (pinfo->pin <= GPIO_Pin_3) {
-        irq_id = EXTI2_3_IRQn;
-        irqhandler = (IRQ_SERVICE_FUNC)EXTI2_3_IrqHandle;
-    } else if (pinfo->pin <= GPIO_Pin_15) {
-        irq_id = EXTI4_15_IRQn;
-        irqhandler = (IRQ_SERVICE_FUNC)EXTI4_15_IrqHandle;
+    if (pinfo->pin == GPIO_Pin_1) {
+        irq_id = EXTI0_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)EXTI0_IrqHandle;
+    } else if (pinfo->pin == GPIO_Pin_2) {
+        irq_id = EXTI1_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)EXTI1_IrqHandle;
+    } else if (pinfo->pin == GPIO_Pin_3) {
+        irq_id = EXTI3_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)EXTI3_IrqHandle;
     } else {
         return;
     }
@@ -222,8 +222,8 @@ BOOLEAN ST_EXTI_OpenExtiFunction(INT8U pinid, INT8U trig, void (*callback)(void)
     
     s_exti.callback = callback;
     
-    /* Enable SYSCFG clock */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE); 
+    /* Enable AFIO clock */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE); 
      
     /* Configure the GPIO ports */
     EXTI_PinsConfig(pinfo, pclass);
@@ -270,24 +270,50 @@ BOOLEAN ST_EXTI_CloseExtiFunction(INT8U pinid)
 ** 参数:     无
 ** 返回:     无
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void EXTI0_1_IrqHandle(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI0_IrqHandle(void)
 {
-    //if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
-        EXTI_ClearITPendingBit(EXTI_Line0 | EXTI_Line1);
-    //}
+    if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
+        EXTI_ClearITPendingBit(EXTI_Line0);
+    }
 }
 
 /*******************************************************************
-** 函数名称: EXTI2_3_IrqHandle
+** 函数名称: EXTI1_IrqHandle
 ** 函数描述: 中断服务程序
 ** 参数:     无
 ** 返回:     无
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void EXTI2_3_IrqHandle(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI1_IrqHandle(void)
+{
+    if (EXTI_GetITStatus(EXTI_Line1) != RESET) {
+        EXTI_ClearITPendingBit(EXTI_Line1);
+    }
+}
+
+
+/*******************************************************************
+** 函数名称: EXTI2_IrqHandle
+** 函数描述: 中断服务程序
+** 参数:     无
+** 返回:     无
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI2_IrqHandle(void)
 {
     if (EXTI_GetITStatus(EXTI_Line2) != RESET) {
         EXTI_ClearITPendingBit(EXTI_Line2);
     }
+    
+}
+
+/*******************************************************************
+** 函数名称: EXTI3_IrqHandle
+** 函数描述: 中断服务程序
+** 参数:     无
+** 返回:     无
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI3_IrqHandle(void)
+{
+
     
     if (EXTI_GetITStatus(EXTI_Line3) != RESET) {
         EXTI_ClearITPendingBit(EXTI_Line3);
@@ -297,6 +323,8 @@ __attribute__ ((section ("IRQ_HANDLE"))) void EXTI2_3_IrqHandle(void)
         }
     }
 }
+
+#if 0
 
 /*******************************************************************
 ** 函数名称: EXTI4_15_IrqHandle
@@ -313,7 +341,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void EXTI4_15_IrqHandle(void)
     //}
 }
 
-
+#endif
 
 
 

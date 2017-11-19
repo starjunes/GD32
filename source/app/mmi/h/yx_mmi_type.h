@@ -36,6 +36,8 @@ typedef enum {
     MMI_RESET_EVENT_SLEEP,          /* 进入省电，关闭主机 */
     MMI_RESET_EVENT_UPDATE,         /* 程序升级复位，如启动外设程序升级，外设程序升级完毕 */
     MMI_RESET_EVENT_POWERDOWN,      /* 主电源断电 */
+    MMI_RESET_EVENT_POWERUP,        /* 主电源上电 利用新协议0x0A上报*/
+    MMI_RESET_EVENT_WAKEUP,         /* 休眠唤醒   利用新协议0x0A上报*/
     MMI_RESET_EVENT_MAX
 } MMI_RESET_EVENT_E;
 
@@ -67,6 +69,10 @@ typedef enum {
     
     DN_PE_CMD_GET_RESET_REC             = 0x09,                /* 复位记录查询请求 (DOWN) */
     UP_PE_ACK_GET_RESET_REC             = 0x09,                /* 复位记录查询请求应答 (UP) */
+
+    UP_PE_CMD_HOST_RESET_INFORM_NEW     = 0x0A,                /* 外设通知主机，外设即将关闭或重启主机通知请求 (UP) (新 增加休眠唤醒和上电状态上报)*/
+    DN_PE_ACK_HOST_RESET_INFORM_NEW     = 0x0A,                /* 外设通知主机，外设即将关闭或重启主机通知请求应答 (DOWN)(新 增加休眠唤醒和上电状态上报)*/
+ 
     
     /* 基础业务协议 */
     DN_PE_CMD_CTL_GPIO                  = 0x41,                /* 控制GPIO输出 (DOWN) */

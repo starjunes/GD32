@@ -10,8 +10,8 @@
 **| 2014/03/09 | 叶德焰 |  创建文件
 *******************************************************************************/
 #include "yx_include.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_flash.h"
+#include "stm32f10x.h"
+#include "stm32f10x_flash.h"
 #include "hal_flash_drv.h"
 
 /*
@@ -34,6 +34,7 @@
 */
 static INT8U s_unlock = 0;
 
+#define FLASH_ER_PRG_TIMEOUT ((uint32_t)0x000B0000)
 
 
 /*******************************************************************

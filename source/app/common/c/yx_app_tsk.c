@@ -66,7 +66,6 @@ void Hdl_MSG_APP_OVERTIME(INT16U tskid, INT16U msgid, INT32U para1, INT32U para2
 ** 参数:       [in] index:定时器标识
 ** 返回:       无
 ********************************************************************/
-#include "stm32f0_discovery.h"
 #include "yx_dym_cfg.h"
 #include "st_rtc_drv.h"
 #include "hal_hit_drv.h"

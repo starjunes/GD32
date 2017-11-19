@@ -13,7 +13,7 @@
 
 /*
 -------------------------------通道注册信息--------------------------------------
-    UART_DEF(_COM_, _ENABLE, _PIN_TX, _PIN_RX,  _DMA_TX_BASE, _DMA_RX_BASE, _UART_BASE, _GPIO_BASE, _RCC, _REMAP)
+    UART_DEF(_COM_, _ENABLE, _PIN_TX, _PIN_RX,  _DMA_TX_BASE, _DMA_RX_BASE, _UART_BASE, _GPIO_BASE, _RCC,_ISREMAP, _REMAP)
     _COM_:          统一通道编号
     _ENABLE：       串口使能
     _PIN_TX：       发送管脚
@@ -23,6 +23,7 @@
     _UART_BASE：    UART寄存器基准地址
     _GPIO_BASE：    gpio寄存器基准地址
     _RCC：          UART系统时钟
+    _ISREMAP:       是否使用重映射功能 TRUE OR FALSE OR 0XFF (0xff表示不配置)
     _REMAP：        DMA重映射功能
 ********************************************************************************-
 */
@@ -32,21 +33,21 @@ BEGIN_UART_CFG
     /* uart1 */
     //UART_DEF(UART_COM_0, 1, GPIO_PinSource9, GPIO_PinSource10,  DMA1_Channel2_BASE, DMA1_Channel3_BASE, USART1_BASE, GPIOA_BASE, RCC_APB2Periph_USART1, 0)
     //UART_DEF(UART_COM_0, 1, GPIO_PinSource9, GPIO_PinSource10,  DMA1_Channel2_BASE, 0, USART1_BASE, GPIOA_BASE, RCC_APB2Periph_USART1, 0)
-    UART_DEF(UART_COM_0, 1, GPIO_PinSource6, GPIO_PinSource7,  DMA1_Channel2_BASE, 0, USART1_BASE, GPIOB_BASE, RCC_APB2Periph_USART1, 0)
+    UART_DEF(UART_COM_0, 1, GPIO_PinSource6, GPIO_PinSource7,  DMA1_Channel4_BASE, 0, USART1_BASE, GPIOB_BASE, RCC_APB2Periph_USART1, TRUE, GPIO_Remap_USART1)
 
     /* uart2 */
     //UART_DEF(UART_COM_1, 0, GPIO_PinSource2, GPIO_PinSource3,   DMA1_Channel4_BASE, DMA1_Channel5_BASE, USART2_BASE, GPIOA_BASE, RCC_APB1Periph_USART2, 0)
-    UART_DEF(UART_COM_1, 1, GPIO_PinSource2, GPIO_PinSource3,   DMA1_Channel4_BASE, 0, USART2_BASE, GPIOA_BASE, RCC_APB1Periph_USART2, 0)
+    UART_DEF(UART_COM_1, 1, GPIO_PinSource2, GPIO_PinSource3,   DMA1_Channel7_BASE, 0, USART2_BASE, GPIOA_BASE, RCC_APB1Periph_USART2, 0xff, 0)
     
     /* uart1 remap */
-    UART_DEF(UART_COM_2, 1, GPIO_PinSource9, GPIO_PinSource10,  DMA1_Channel2_BASE, 0, USART1_BASE, GPIOA_BASE, RCC_APB2Periph_USART1, 0)
+    UART_DEF(UART_COM_2, 1, GPIO_PinSource9, GPIO_PinSource10,  DMA1_Channel4_BASE, 0, USART1_BASE, GPIOA_BASE, RCC_APB2Periph_USART1, FALSE, GPIO_Remap_USART1)
 
 #if EN_UARTEXT > 0
     /* uart3 */
-    UART_DEF(UART_COM_3, 1, GPIO_PinSource4, GPIO_PinSource5,  DMA1_Channel7_BASE, 0, USART3_BASE, GPIOC_BASE, RCC_APB1Periph_USART3, 0)
+    UART_DEF(UART_COM_3, 1, GPIO_PinSource4, GPIO_PinSource5,  DMA1_Channel2_BASE, 0, USART3_BASE, GPIOC_BASE, RCC_APB1Periph_USART3, 0xff, 0)
 #else
     /* uart3 */
-    UART_DEF(UART_COM_3, 0, GPIO_PinSource4, GPIO_PinSource5,  DMA1_Channel7_BASE, 0, USART3_BASE, GPIOC_BASE, RCC_APB1Periph_USART3, 0)
+    UART_DEF(UART_COM_3, 0, GPIO_PinSource4, GPIO_PinSource5,  DMA1_Channel2_BASE, 0, USART3_BASE, GPIOC_BASE, RCC_APB1Periph_USART3, 0xff, 0)
 #endif
 END_UART_CFG
 

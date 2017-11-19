@@ -12,7 +12,7 @@
 **| 2014/04/09 | 叶德焰 |  创建第一版本
 *********************************************************************************/
 #include "hal_include.h"
-#include "stm32f0xx.h"
+#include "stm32f10x.h"
 #include "st_gpio_drv.h"
 #include "st_i2c_reg.h"
 #include "st_i2c_simu.h"

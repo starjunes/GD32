@@ -12,8 +12,8 @@
 **| 2014/08/15 | 叶德焰 |  创建第一版本
 *********************************************************************************/
 #include "yx_include.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_conf.h"
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "st_adc_reg.h"
 
 /*

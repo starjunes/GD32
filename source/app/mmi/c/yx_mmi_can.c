@@ -21,6 +21,7 @@
 #include "dal_ic_drv.h"
 #include "yx_debug.h"
 
+
 #if EN_MMI > 0
 #include "yx_mmi_drv.h"
 
@@ -29,7 +30,7 @@
 *宏定义
 ********************************************************************************
 */
-#define PERIOD_SCAN          _TICK, 2
+#define PERIOD_SCAN          _TICK, 4
 
 /*
 ********************************************************************************
@@ -748,6 +749,42 @@ static void PaserCommonData(STREAM_T *wstrm, INT8U *sptr, INT32U slen)
         case PARA_DATA_GPS:                                                    /* GPS数据 */
             result = SetGpsData(YX_GetStrmPtr(&rstrm), paralen);
             break;
+        #if 0 /* gps调试功能 */
+        case 0x82:
+            if(sptr[3] == '1') {
+                printf_com("打开RTC功能\r\n");
+                result = ST_RTC_OpenRtcFunction(RTC_CLOCK_LSE);
+            }else if(sptr[3] == '2') {
+                printf_com("关闭RTC功能\r\n");
+                
+                result = ST_RTC_CloseRtcFunction();
+            }else if(sptr[3] == '3') {
+                DATE_T date;
+                TIME_T time;
+                INT8U week;
+                INT32U subsec;
+                //BOOLEAN result2;
+                
+                result = ST_RTC_GetSystime(&date, &time, &week, &subsec);
+                printf_com("result:%d 获取时间:%02d-%02d-%02d %02d:%02d:%02d 周%d\r\n", result, date.year, date.month, date.day, time.hour, time.minute, time.second, week);
+            }else if(sptr[3] == '4') {
+                DATE_T date;
+                TIME_T time;
+                //BOOLEAN result;
+
+                date.year = 17;
+                date.month = 04;
+                date.day   = 15;
+                time.hour = 21;
+                time.minute = 36;
+                time.second = 28;
+                result = ST_RTC_SetSystime(&date, &time, 0);
+                printf_com("设置时间结果:%d\r\n", result);
+            }else {
+                result = TRUE;
+            }
+            break;
+        #endif
         default:
             result = false;
             break;
@@ -792,6 +829,9 @@ static void HdlMsg_DN_PE_CMD_HOST_SET_PARA(INT8U cmd, INT8U *data, INT16U datale
     STREAM_T *wstrm;
     
     wstrm = YX_STREAM_GetBufferStream();
+    printf_com("收到gps参数设置请求");
+    printf_hex(data, datalen);
+    printf_com("\r\n");
     PaserCommonData(wstrm, data, datalen);
     YX_MMI_ListSend(UP_PE_ACK_HOST_SET_PARA, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm), 0, 0, 0);
 }

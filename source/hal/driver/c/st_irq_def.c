@@ -207,9 +207,69 @@ __attribute__ ((section ("IRQ_HANDLE"))) void FLASH_IRQHandler(void)
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void RCC_CRS_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void RCC_IRQHandler(void)
 {
 }
+
+
+/*******************************************************************
+* Function Name  : EXTI0_IRQHandler
+* Description    : This function handles EXTI0 interrupt request. 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI0_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : EXTI1_IRQHandler
+* Description    : This function handles EXTI1 interrupt request. 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI1_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : EXTI2_IRQHandler
+* Description    : This function handles EXTI2 interrupt request. 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI2_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : EXTI3_IRQHandler
+* Description    : This function handles EXTI3 interrupt request. 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI3_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : EXTI4_IRQHandler
+* Description    : This function handles EXTI4 interrupt request. 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI4_IRQHandler(void)
+{
+}
+
+
+
+#if 0
 
 /*******************************************************************
 * Function Name  : EXTI0_1_IRQHandler
@@ -254,6 +314,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void EXTI4_15_IRQHandler(void)
 __attribute__ ((section ("IRQ_HANDLE"))) void TSC_IRQHandler(void)
 {
 }
+#endif
 
 /*******************************************************************
 * Function Name  : DMA1_Channel1_IRQHandler
@@ -265,6 +326,75 @@ __attribute__ ((section ("IRQ_HANDLE"))) void TSC_IRQHandler(void)
 __attribute__ ((section ("IRQ_HANDLE"))) void DMA1_Channel1_IRQHandler(void)
 {
 }
+
+/*******************************************************************
+* Function Name  : DMA1_Channel2_IRQHandler
+* Description    : This function handles DMA1 Channel 2 interrupt request.
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA1_Channel2_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA1_Channel3_IRQHandler
+* Description    : This function handles DMA1 Channel 3 interrupt request.
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA1_Channel3_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA1_Channel4_IRQHandler
+* Description    : This function handles DMA1 Channel 4 interrupt request.
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA1_Channel4_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA1_Channel5_IRQHandler
+* Description    : This function handles DMA1 Channel 5 interrupt request.
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA1_Channel5_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA1_Channel6_IRQHandler
+* Description    : This function handles DMA1 Channel 6 interrupt request.
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA1_Channel6_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA1_Channel7_IRQHandler
+* Description    : This function handles DMA1 Channel 7 interrupt request.
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA1_Channel7_IRQHandler(void)
+{
+}
+
+
+#if 0
 
 /*******************************************************************
 * Function Name  : DMA1_Channel2_3_IRQHandler
@@ -288,6 +418,8 @@ __attribute__ ((section ("IRQ_HANDLE"))) void DMA1_Channel4_5_6_7_IRQHandler(voi
 {
 }
 
+#endif
+
 /*******************************************************************
 * Function Name  : ADC1_COMP_IRQHandler
 * Description    : This function handles ADC1, COMP1 and COMP2 
@@ -295,24 +427,102 @@ __attribute__ ((section ("IRQ_HANDLE"))) void DMA1_Channel4_5_6_7_IRQHandler(voi
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void ADC1_COMP_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void ADC1_2_IRQHandler(void)
 {
 }
 
+
 /*******************************************************************
-* Function Name  : TIM1_BRK_UP_TRG_COM_IRQHandler
-* Description    : This function handles TIM1 Break, Update, Trigger and Commutation
+* Function Name  : CAN1_TX_IRQHandler
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_TX_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : CAN1_RX0_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_RX0_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : CAN1_RX1_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_RX1_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : CAN1_SCE_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_SCE_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : EXTI9_5_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI9_5_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : TIM1_BRK_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void TIM1_BRK_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : TIM1_UP_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void TIM1_UP_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : TIM1_TRG_COM_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void TIM1_TRG_COM_IRQHandler(void)
 {
 }
 
 /*******************************************************************
 * Function Name  : TIM1_CC_IRQHandler
-* Description    : This function handles TIM1 capture compare interrupt request.
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
@@ -323,7 +533,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void TIM1_CC_IRQHandler(void)
 
 /*******************************************************************
 * Function Name  : TIM2_IRQHandler
-* Description    : This function handles TIM2 global interrupt request.
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
@@ -334,7 +544,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void TIM2_IRQHandler(void)
 
 /*******************************************************************
 * Function Name  : TIM3_IRQHandler
-* Description    : This function handles TIM3 global interrupt request.
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
@@ -344,97 +554,63 @@ __attribute__ ((section ("IRQ_HANDLE"))) void TIM3_IRQHandler(void)
 }
 
 /*******************************************************************
-* Function Name  : TIM6_DAC_IRQHandler
-* Description    : This function handles TIM6 and DAC global interrupt request.
+* Function Name  : TIM4_IRQHandler
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void TIM6_DAC_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void TIM4_IRQHandler(void)
 {
 }
 
 /*******************************************************************
-* Function Name  : TIM7_IRQHandler
-* Description    : This function handles TIM6 and DAC global interrupt request.
+* Function Name  : I2C1_EV_IRQHandler
+* Description    :
 * Input          : None
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void TIM7_IRQHandler(void)
-{
-}
-
-
-/*******************************************************************
-* Function Name  : TIM14_IRQHandler
-* Description    : This function handles TIM14 Event interrupt request.
-* Input          : None
-* Output         : None
-* Return         : None
-********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void TIM14_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void I2C1_EV_IRQHandler(void)
 {
 }
 
 /*******************************************************************
-* Function Name  : TIM15_IRQHandler
-* Description    : This function handles TIM15 Error interrupt request.
+* Function Name  : I2C1_ER_IRQHandler
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void TIM15_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void I2C1_ER_IRQHandler(void)
 {
 }
 
 /*******************************************************************
-* Function Name  : TIM16_IRQHandler
-* Description    : This function handles TIM16 Event interrupt request.
+* Function Name  : I2C2_EV_IRQHandler
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void TIM16_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void I2C2_EV_IRQHandler(void)
 {
 }
 
 /*******************************************************************
-* Function Name  : TIM17_IRQHandler
-* Description    : This function handles TIM17 Event interrupt request.
+* Function Name  : I2C2_ER_IRQHandler
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void TIM17_IRQHandler(void)
-{
-}
-
-/*******************************************************************
-* Function Name  : I2C1_IRQHandler
-* Description    : This function handles I2C1 global interrupt request.
-* Input          : None
-* Output         : None
-* Return         : None
-********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void I2C1_IRQHandler(void)
-{
-}
-
-/*******************************************************************
-* Function Name  : I2C2_IRQHandler
-* Description    : This function handles I2C2 global interrupt request.
-* Input          : None
-* Output         : None
-* Return         : None
-********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void I2C2_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void I2C2_ER_IRQHandler(void)
 {
 }
 
 /*******************************************************************
 * Function Name  : SPI1_IRQHandler
-* Description    : This function handles SPI1 global interrupt request.
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
@@ -445,7 +621,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void SPI1_IRQHandler(void)
 
 /*******************************************************************
 * Function Name  : SPI2_IRQHandler
-* Description    : This function handles SPI2 global interrupt request.
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
@@ -456,7 +632,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void SPI2_IRQHandler(void)
 
 /*******************************************************************
 * Function Name  : USART1_IRQHandler
-* Description    : This function handles USART1 global interrupt request.
+* Description    :
 * Input          : None
 * Output         : None
 * Return         : None
@@ -467,7 +643,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void USART1_IRQHandler(void)
 
 /*******************************************************************
 * Function Name  : USART2_IRQHandler
-* Description    : This function handles USART2 global interrupt request.
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
@@ -477,41 +653,247 @@ __attribute__ ((section ("IRQ_HANDLE"))) void USART2_IRQHandler(void)
 }
 
 /*******************************************************************
-* Function Name  : USART3_4_IRQHandler
-* Description    : This function handles USART2 global interrupt request.
+* Function Name  : USART3_IRQHandler
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void USART3_4_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void USART3_IRQHandler(void)
 {
 }
 
 /*******************************************************************
-* Function Name  : CEC_IRQHandler
-* Description    : This function handles CEC global interrupt request.
-*                  requests.
+* Function Name  : EXTI15_10_IRQHandler
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void CEC_CAN_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI15_10_IRQHandler(void)
 {
 }
 
 /*******************************************************************
-* Function Name  : USB_IRQHandler
-* Description    : This function handles USB global interrupt request.
-*                  requests.
+* Function Name  : RTCAlarm_IRQHandler
+* Description    : 
 * Input          : None
 * Output         : None
 * Return         : None
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void USB_IRQHandler(void)
+__attribute__ ((section ("IRQ_HANDLE"))) void RTCAlarm_IRQHandler(void)
 {
 }
 
+/*******************************************************************
+* Function Name  : OTG_FS_WKUP_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void OTG_FS_WKUP_IRQHandler(void)
+{
+} 
 
+
+/*******************************************************************
+* Function Name  : TIM5_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void TIM5_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : SPI3_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void SPI3_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : UART4_IRQHandler
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void UART4_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : UART5_IRQHandler
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void UART5_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : TIM6_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void TIM6_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : TIM7_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void TIM7_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA2_Channel1_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA2_Channel1_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA2_Channel2_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA2_Channel2_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA2_Channel3_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA2_Channel3_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA2_Channel4_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA2_Channel4_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : DMA2_Channel5_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void DMA2_Channel5_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : ETH_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void ETH_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : ETH_WKUP_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void ETH_WKUP_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : CAN2_TX_IRQHandler
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_TX_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : CAN2_RX0_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_RX0_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : CAN2_RX1_IRQHandler
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_RX1_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : CAN2_SCE_IRQHandler
+* Description    : 
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_SCE_IRQHandler(void)
+{
+}
+
+/*******************************************************************
+* Function Name  : OTG_FS_IRQHandler
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+********************************************************************/
+__attribute__ ((section ("IRQ_HANDLE"))) void OTG_FS_IRQHandler(void)
+{
+}
 
 
 /******************* (C) COPYRIGHT 2009 XIAMEN YAXON.LTD *********END OF FILE******/

@@ -13,11 +13,11 @@
 #define  ST_IRQ_DRV_H
 
 
-#include "stm32f0xx.h"
+#include "stm32f10x.h"
 
 
 /* 定义中断向量个数 */
-#define IRQ_ID_MAX           (16 + 32)
+#define IRQ_ID_MAX           (16 + 68)
 
 /* 中断优先级定义 */
 #define IRQ_PRIOTITY_0       0

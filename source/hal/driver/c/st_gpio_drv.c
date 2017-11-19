@@ -10,8 +10,8 @@
 **| 2014/03/09 | 叶德焰 |  创建文件
 *******************************************************************************/
 #include "hal_include.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_conf.h"
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "st_gpio_reg.h"
 #include "st_gpio_drv.h"
 
@@ -111,11 +111,11 @@ void USERGPCDE_IRQHandler(INT32U CStatus, INT32U DStatus, INT32U EStatus)
 ** 函数描述: 初始化管脚状态
 ** 参数:     [in] id:        GPIO统一编号,GPIO_PIN_E
 **           [in] direction: 方向,GPIO_DIR_E
-**           [in] pull:      上下拉,GPIO_PULL_E
+**           [in] mode:      上下拉,GPIO_MODE_E
 **           [in] level:     高低电平,TRUE-高电平，FALSE-低电平
 ** 返回:     成功返回TRUE，失败返回FALSE
 ********************************************************************/
-void ST_GPIO_SetPin(INT8U id, INT8U direction, INT8U pull, INT8U level)
+void ST_GPIO_SetPin(INT8U id, INT8U direction, INT8U mode, INT8U level)
 {
     const GPIO_REG_T *pinfo;
     const GPIO_CLASS_T *pclass;
@@ -130,21 +130,38 @@ void ST_GPIO_SetPin(INT8U id, INT8U direction, INT8U pull, INT8U level)
     
     /* Configure the GPIO pin */
     GPIO_InitStructure.GPIO_Pin   = pinfo->pin;
-    if (direction == GPIO_DIR_IN) {                                            /* 方向 */
-        GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
-    } else {
-        GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_OUT;
+
+    if(direction == GPIO_DIR_IN) {
+
+        switch(mode) {
+            case GPIO_MODE_UP:
+                GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+                break;
+            case GPIO_MODE_DOWN:
+                GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+                break;
+            case GPIO_MODE_ANALOG:
+                GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+                break;
+            default:
+                GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+                break;           
+        }
+    }else {
+        switch(mode) {
+            case GPIO_MODE_OD:
+                 GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD; /* 开漏输出*/
+                break;
+            case GPIO_MODE_PP:
+                 GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; /* 推挽输出*/
+                break;
+             default:
+                 GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; /* 默认 推挽输出*/
+                break;
+        }
+       
     }
-    GPIO_InitStructure.GPIO_OType = (GPIOOType_TypeDef)pinfo->mode;
-    
-    if (pull == GPIO_PULL_UP) {                                                /* 上下拉 */
-        GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-    } else if (pull == GPIO_PULL_DOWN) {
-        GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
-    } else {
-        GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    }
-    //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     
     GPIO_Init((GPIO_TypeDef *)pclass->gpio_base, &GPIO_InitStructure);
@@ -242,22 +259,26 @@ void ST_GPIO_InitDrv(void)
     GPIO_InitTypeDef  GPIO_InitStructure;
     
     num = DAL_GPIO_GetRegClassMax();
+
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE); /* 开启gpio复用时钟 */
+    
     for (i = 0; i < num; i++) {
         pclass = DAL_GPIO_GetRegClassInfo(i);
         pinfo = pclass->preg;
-        RCC_AHBPeriphClockCmd(pclass->gpio_rcc, ENABLE);                       /* Enable the GPIO Clock */
+        RCC_APB2PeriphClockCmd(pclass->gpio_rcc, ENABLE);                       /* Enable the GPIO Clock */
         
         for (j = 0; j < pclass->nreg; j++) {
             if (pinfo->enable) {
                 /* Configure the GPIO pin */
                 GPIO_InitStructure.GPIO_Pin   = pinfo->pin;
                 GPIO_InitStructure.GPIO_Mode  = (GPIOMode_TypeDef)pinfo->direction;
-                GPIO_InitStructure.GPIO_OType = (GPIOOType_TypeDef)pinfo->mode;
-                GPIO_InitStructure.GPIO_PuPd  = (GPIOPuPd_TypeDef)pinfo->pupd;
+                //GPIO_InitStructure.GPIO_OType = (GPIOOType_TypeDef)pinfo->mode;
+                //GPIO_InitStructure.GPIO_PuPd  = (GPIOPuPd_TypeDef)pinfo->pupd;
                 GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
                 GPIO_Init((GPIO_TypeDef *)pclass->gpio_base, &GPIO_InitStructure);
                 
-                if (pinfo->direction == GPIO_Mode_OUT) {
+                if ((pinfo->direction == GPIO_Mode_Out_PP) || (pinfo->direction == GPIO_Mode_Out_OD)) {
                     ST_GPIO_WritePin(pinfo->id, pinfo->level);
                 }
             }

@@ -20,6 +20,7 @@
 typedef struct {
     INT8U  com;                        /* 统一编号 */
     INT8U  enable;                     /* 通道使能 */
+    INT8U  fifo;                       /* fifo */
     INT32U pin_tx;                     /* TX管脚编号 */
     INT32U pin_rx;                     /* RX管脚编号 */
     
@@ -47,7 +48,7 @@ typedef struct {
 
 #define BEGIN_CAN_CFG
 
-#define CAN_DEF(_COM_, _ENABLE, _PIN_TX, _PIN_RX,  _CAN_BASE, _GPIO_BASE, _RCC) \
+#define CAN_DEF(_COM_, _ENABLE, _PIN_TX, _PIN_RX,  _CAN_BASE, _GPIO_BASE, _RCC, _FIFO) \
                  _COM_,
                  
 #define END_CAN_CFG

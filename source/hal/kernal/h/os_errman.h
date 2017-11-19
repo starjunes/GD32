@@ -39,6 +39,7 @@ typedef enum {
     RESET_EVENT_INITIATE,              /* 主动复位 */
     RESET_EVENT_DIRECT,                /* 直接复位，复位前不回调注册进来的复位通知函数 */
     RESET_EVENT_UPDATE,                /* 外设程序升级复位，如启动外设程序升级，外设程序升级完毕 */
+    RESET_EVENT_UNREPORT,              /* 主动复位不上报, 用于唤醒是M0主动复位 */
     RESET_EVENT_MAX
 } RESET_EVENT_E;
 

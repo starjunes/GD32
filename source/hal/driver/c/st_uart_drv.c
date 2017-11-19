@@ -10,8 +10,8 @@
 **| 2014/03/09 | 叶德焰 |  创建文件
 *******************************************************************************/
 #include "yx_include.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_conf.h"
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "yx_dym_drv.h"
 #include "yx_loopbuf.h"
 #include "st_uart_reg.h"
@@ -80,28 +80,39 @@ static void STM32_UART_PinsConfig(const UART_TBL_T *pinfo, INT8U onoff)
     }
     
     /* remap uart pins if need */
-    if (pinfo->uart_remap != 0) {
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+    //if (pinfo->uart_remap != 0) {
+    //    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
         //GPIO_PinRemapConfig(pinfo->uart_remap, ENABLE);
+   // }
+
+    if(pinfo->is_remap != 0xff) {
+        if(pinfo->is_remap) {
+            GPIO_PinRemapConfig(pinfo->uart_remap, ENABLE);
+        }else {
+            GPIO_PinRemapConfig(pinfo->uart_remap, DISABLE);
+        }
     }
     
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);                        /* 开启GPIO系统时钟 */
+    
+    //RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);                        /* 开启GPIO系统时钟 */
     
     /* Configure USARTx_Tx as alternate function push-pull */
     gpio_initstruct.GPIO_Pin   = (INT16U)(1 << pinfo->uart_pin_tx);
     gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_initstruct.GPIO_OType = GPIO_OType_PP;
-    gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
+
     if (onoff) {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AF;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AF_PP;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
+        
+        #if 0
         if (pinfo->gpio_base == GPIOB_BASE) {
             GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->uart_pin_tx, GPIO_AF_0);
         } else {
             GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->uart_pin_tx, GPIO_AF_1);
         }
+        #endif
     } else {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_OUT;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_PP;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
         GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->uart_pin_tx));
     }
@@ -109,18 +120,20 @@ static void STM32_UART_PinsConfig(const UART_TBL_T *pinfo, INT8U onoff)
     /* Configure USARTx_Rx as input floating */
     gpio_initstruct.GPIO_Pin   = (INT16U)(1 << pinfo->uart_pin_rx);
     gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_initstruct.GPIO_OType = GPIO_OType_PP;
-    gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
+    //gpio_initstruct.GPIO_OType = GPIO_OType_PP;
+    //gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
     if (onoff) {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AF;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_IN_FLOATING;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
+        #if 0
         if (pinfo->gpio_base == GPIOB_BASE) {
             GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->uart_pin_rx, GPIO_AF_0);
         } else {
             GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->uart_pin_rx, GPIO_AF_1);
         }
+        #endif
     } else {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_OUT;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_PP;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
         GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->uart_pin_rx));
     }
@@ -135,7 +148,7 @@ static void STM32_UART_PinsConfig(const UART_TBL_T *pinfo, INT8U onoff)
 static void STM32_UART_DMAConfig(const UART_TBL_T *pinfo)
 {
     INT32S irq_id;
-    BOOLEAN is_dma1;
+    BOOLEAN is_dma1 = FALSE;
     IRQ_SERVICE_FUNC irqhandler;
     DMA_InitTypeDef dma_initstruct;
     
@@ -148,18 +161,17 @@ static void STM32_UART_DMAConfig(const UART_TBL_T *pinfo)
         switch (pinfo->dma_base_tx)
 	    {
         case DMA1_Channel2_BASE:                          /* for uart1 tx */
-            irq_id   = DMA1_Channel2_3_IRQn;
+            irq_id   = DMA1_Channel2_IRQn;
             irqhandler = (IRQ_SERVICE_FUNC)DMA1_CHANNEL2_IrqHandle;
             is_dma1  = TRUE;
             break;
         case DMA1_Channel4_BASE:                          /* for uart2 tx */
-        case DMA1_Channel7_BASE:                          /* for uart3 tx */
-            #ifdef STM32F072
-            irq_id   = DMA1_Channel4_5_6_7_IRQn;
-            #else
-            irq_id   = DMA1_Channel4_5_IRQn;
-            #endif
+            irq_id = DMA1_Channel4_IRQn;
             irqhandler = (IRQ_SERVICE_FUNC)DMA1_CHANNEL4_IrqHandle;
+            break;
+        case DMA1_Channel7_BASE:                          /* for uart3 tx */
+            irq_id   = DMA1_Channel7_IRQn;
+            irqhandler = (IRQ_SERVICE_FUNC)DMA1_CHANNEL7_IrqHandle;
             is_dma1  = TRUE;
 	  	    break;
         default:
@@ -170,13 +182,13 @@ static void STM32_UART_DMAConfig(const UART_TBL_T *pinfo)
         if (is_dma1) {
             RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
         } else {
-            //RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
+            RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
         }
     
         DMA_DeInit((DMA_Channel_TypeDef *)pinfo->dma_base_tx);        /* 恢复DMA通道 */
     
         DMA_StructInit(&dma_initstruct);
-        dma_initstruct.DMA_PeripheralBaseAddr  = (INT32U)&(((USART_TypeDef *)pinfo->uart_base)->TDR);/* 外设基准地址 */
+        dma_initstruct.DMA_PeripheralBaseAddr  = (INT32U)&(((USART_TypeDef *)pinfo->uart_base)->DR);/* 外设基准地址 */
         dma_initstruct.DMA_MemoryBaseAddr      = 0;                            /* 内存基准地址 */
         dma_initstruct.DMA_DIR                 = DMA_DIR_PeripheralDST;        /* 通道方向 */
         dma_initstruct.DMA_BufferSize          = 0;                            /* 内存缓存大小 */
@@ -193,6 +205,7 @@ static void STM32_UART_DMAConfig(const UART_TBL_T *pinfo)
         ST_IRQ_InstallIrqHandler(irq_id, irqhandler);                           /* install irq handle */
         ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_TXDMA);
         ST_IRQ_ConfigIrqEnable(irq_id, true);                                   /* 打开中断 */
+        
     }
     
     /* 配置接收通道 */
@@ -200,18 +213,18 @@ static void STM32_UART_DMAConfig(const UART_TBL_T *pinfo)
         switch (pinfo->dma_base_rx)
 	    {
         case DMA1_Channel3_BASE:                          /* for uart1 rx */
-            irq_id   = DMA1_Channel2_3_IRQn;
-            irqhandler = (IRQ_SERVICE_FUNC)DMA1_CHANNEL2_IrqHandle;
+            irq_id   = DMA1_Channel3_IRQn;
+            irqhandler = (IRQ_SERVICE_FUNC)DMA1_CHANNEL3_IrqHandle;
             is_dma1  = TRUE;
             break;
         case DMA1_Channel5_BASE:                          /* for uart2 rx */
+            irq_id   = DMA1_Channel5_IRQn;
+            irqhandler = (IRQ_SERVICE_FUNC)DMA1_CHANNEL5_IrqHandle;
+            is_dma1  = TRUE;
+	  	    break;
         case DMA1_Channel6_BASE:                          /* for uart3 rx */
-            #ifdef STM32F072
-            irq_id   = DMA1_Channel4_5_6_7_IRQn;
-            #else
-            irq_id   = DMA1_Channel4_5_IRQn;
-            #endif
-            irqhandler = (IRQ_SERVICE_FUNC)DMA1_CHANNEL4_IrqHandle;
+            irq_id   = DMA1_Channel6_IRQn;
+            irqhandler = (IRQ_SERVICE_FUNC)DMA1_CHANNEL6_IrqHandle;
             is_dma1  = TRUE;
 	  	    break;
         default:
@@ -222,13 +235,13 @@ static void STM32_UART_DMAConfig(const UART_TBL_T *pinfo)
         if (is_dma1) {
             RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
         } else {
-            //RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
+            RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
         }
     
         DMA_DeInit((DMA_Channel_TypeDef *)pinfo->dma_base_rx);             /* 恢复DMA通道 */
     
         DMA_StructInit(&dma_initstruct);
-        dma_initstruct.DMA_PeripheralBaseAddr  = (INT32U)&(((USART_TypeDef *)pinfo->uart_base)->RDR);/* 外设基准地址 */
+        dma_initstruct.DMA_PeripheralBaseAddr  = (INT32U)&(((USART_TypeDef *)pinfo->uart_base)->DR);/* 外设基准地址 */
         dma_initstruct.DMA_MemoryBaseAddr      = (INT32U)s_uart[pinfo->com].p_dma_rx0;     /* 内存基准地址 */
         dma_initstruct.DMA_DIR                 = DMA_DIR_PeripheralSRC;        /* 通道方向 */
         dma_initstruct.DMA_BufferSize          = DMA_RX_LEN;                   /* 内存缓存大小 */
@@ -302,12 +315,10 @@ static void STM32_UART_IrqConfig(const UART_TBL_T *pinfo)
         irq_id = USART2_IRQn;
         irqhandler = (IRQ_SERVICE_FUNC)UART2_IrqHandle;
         break;
-#ifdef STM32F072
     case USART3_BASE:
-        irq_id = USART3_4_IRQn;
+        irq_id = USART3_IRQn;
         irqhandler = (IRQ_SERVICE_FUNC)UART3_IrqHandle;
         break;
-#endif
     default:
         return;
     }
@@ -316,7 +327,6 @@ static void STM32_UART_IrqConfig(const UART_TBL_T *pinfo)
     ST_IRQ_InstallIrqHandler(irq_id, irqhandler);                               /* install irq handle */
     ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_UART);
     ST_IRQ_ConfigIrqEnable(irq_id, true);                                       /* 打开中断 */
-    
     //USART_ITConfig((USART_TypeDef *)pinfo->uart_base, inter, ENABLE); /* enable the usart rx or tx interrupt */
 }
 
@@ -333,17 +343,18 @@ static void STM32_UART_Init(UART_CFG_T *cfg)
     INT16U stopbit, databit, parity, mode;
     INT32U baud;
     USART_InitTypeDef usart_initstruct;
+    USART_ClockInitTypeDef usart_clock;
     const UART_TBL_T *pinfo;
 	  
     com = cfg->com;
     pinfo = ST_UART_GetRegTblInfo(com);
-	 	    
-    /* usart clock enable */
-    if (pinfo->uart_base == USART1_BASE) {
-        RCC_APB2PeriphClockCmd(pinfo->uart_rcc, ENABLE);
-    } else {
-        RCC_APB1PeriphClockCmd(pinfo->uart_rcc, ENABLE);
-    }
+
+    
+	usart_clock.USART_Clock               = USART_Clock_Disable;
+    usart_clock.USART_CPOL                = USART_CPOL_Low;
+    usart_clock.USART_CPHA                = USART_CPHA_2Edge;
+    usart_clock.USART_LastBit             = USART_LastBit_Disable;    
+
     
     baud = cfg->baud;
     switch (cfg->databit)
@@ -397,18 +408,28 @@ static void STM32_UART_Init(UART_CFG_T *cfg)
 	mode = USART_Mode_Rx | USART_Mode_Tx;
 	
 	/* deinit usart */
-	USART_Cmd((USART_TypeDef *)pinfo->uart_base, DISABLE);
+	//USART_Cmd((USART_TypeDef *)pinfo->uart_base, DISABLE);
 	USART_DeInit((USART_TypeDef *)pinfo->uart_base);
 	
 	usart_initstruct.USART_BaudRate            = baud;
+    //usart_initstruct.USART_BaudRate            = 9600L;
 	usart_initstruct.USART_WordLength          = databit;
 	usart_initstruct.USART_StopBits            = stopbit;
 	usart_initstruct.USART_Parity              = parity;
 	usart_initstruct.USART_Mode                = mode;
 	usart_initstruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+     /* usart clock enable */
+     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE); /* 开启gpio复用时钟 */
+    if (pinfo->uart_base == USART1_BASE) {
+        RCC_APB2PeriphClockCmd(pinfo->uart_rcc, ENABLE);
+    } else {
+        RCC_APB1PeriphClockCmd(pinfo->uart_rcc, ENABLE);
+    }
+
 	/* configure usart */
 	USART_Init((USART_TypeDef *)pinfo->uart_base, &usart_initstruct);
-	
+    USART_ClockInit((USART_TypeDef *)pinfo->uart_base, &usart_clock);
+
 	if (pinfo->dma_base_tx != 0 && pinfo->dma_base_rx != 0) {
 	    /* enable usart dma tx and rx request */
 	    USART_DMACmd((USART_TypeDef *)pinfo->uart_base, USART_DMAReq_Tx | USART_DMAReq_Rx, ENABLE);
@@ -432,7 +453,7 @@ static void STM32_UART_Init(UART_CFG_T *cfg)
         USART_ITConfig((USART_TypeDef *)pinfo->uart_base, USART_IT_RXNE, ENABLE);
         USART_ITConfig((USART_TypeDef *)pinfo->uart_base, USART_IT_TXE, ENABLE);
 	}
-    
+
     /* enable the usart */
     USART_Cmd((USART_TypeDef *)pinfo->uart_base, ENABLE);
 }
@@ -485,6 +506,7 @@ BOOLEAN ST_UART_OpenUart(UART_CFG_T *cfg)
     OS_ASSERT((cfg->com < UART_COM_MAX), RETURN_FALSE);
     OS_ASSERT((cfg->tx_len != 0), RETURN_FALSE);
     OS_ASSERT((cfg->rx_len != 0), RETURN_FALSE);
+
     
     com = cfg->com;
     pinfo = ST_UART_GetRegTblInfo(com);
@@ -689,11 +711,16 @@ BOOLEAN ST_UART_WriteCharWait(INT8U com, INT8U data)
     if (pinfo->enable == 0) {
         return false;
     }
-    
+
+    USART_SendData((USART_TypeDef *)pinfo->uart_base, data);
+    while(USART_GetFlagStatus((USART_TypeDef *)pinfo->uart_base, USART_FLAG_TXE) == RESET)
+    {
+    }
+    #if 0
     //while ((((USART_TypeDef *)pinfo->uart_base)->ISR & 0x80) == 0) {};
-    ((USART_TypeDef *)pinfo->uart_base)->TDR = (data & 0x01FF);
-    while ((((USART_TypeDef *)pinfo->uart_base)->ISR & 0x80) == 0) {};
-    
+    ((USART_TypeDef *)pinfo->uart_base)->DR = (data & 0x01FF);
+    while ((((USART_TypeDef *)pinfo->uart_base)->SR & 0x40) == 0) {};
+    #endif
     return true;
 }
 
@@ -896,7 +923,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void Uartx_TxIrqService(INT8U com, INT3
 	if ((s_uart[com].status & _OPEN) != 0) {
 	    ch = YX_ReadLoopBuffer_INT(&s_uart[com].s_round);
 	    if (ch != -1) {
-	        ((USART_TypeDef *)uart_base)->TDR = (ch & 0x01FF);
+	        ((USART_TypeDef *)uart_base)->DR = (ch & 0x01FF);
 	    }
 	} else {
 	    USART_ITConfig((USART_TypeDef *)uart_base, USART_IT_TXE, DISABLE);

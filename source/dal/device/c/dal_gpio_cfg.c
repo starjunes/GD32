@@ -52,7 +52,7 @@
 
 void DAL_GPIO_InitWatchdog(void)
 {
-    ST_GPIO_SetPin(PIN_WATCHDOG, GPIO_DIR_OUT, GPIO_PULL_UP, 0);
+    ST_GPIO_SetPin(PIN_WATCHDOG, GPIO_DIR_OUT, GPIO_MODE_PP, 0);
 }
 
 void DAL_GPIO_ClearWatchdog(void)
@@ -79,7 +79,7 @@ void DAL_GPIO_InitOutput(INT8U port)
     }
     
     pinfo = DAL_OUTPUT_GetRegInfo(port);
-    ST_GPIO_SetPin(pinfo->pin, GPIO_DIR_OUT, GPIO_PULL_UP, pinfo->level);
+    ST_GPIO_SetPin(pinfo->pin, GPIO_DIR_OUT, GPIO_MODE_PP, pinfo->level);
 }
 
 /*******************************************************************
@@ -158,7 +158,7 @@ void DAL_GPIO_PulldownMixLed(INT8U port)
 ********************************************************************/
 void DAL_GPIO_InitDvrPower(void)
 {
-    ST_GPIO_SetPin(PIN_MMIPOWER, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
+    ST_GPIO_SetPin(PIN_MMIPOWER, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 void DAL_GPIO_PullupDvrPower(void)
@@ -181,7 +181,7 @@ void DAL_GPIO_PulldownDvrPower(void)
 ********************************************************************/
 void DAL_GPIO_InitDvrReset(void)
 {
-    ST_GPIO_SetPin(PIN_MMIRESET, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
+    ST_GPIO_SetPin(PIN_MMIRESET, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 void DAL_GPIO_PullupDvrReset(void)
@@ -204,7 +204,7 @@ void DAL_GPIO_PulldownDvrReset(void)
 ********************************************************************/
 void DAL_GPIO_InitPowerSave(void)
 {
-    ST_GPIO_SetPin(PIN_POWERSAVE, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
+    ST_GPIO_SetPin(PIN_POWERSAVE, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 void DAL_GPIO_PullupPowerSave(void)
@@ -227,7 +227,7 @@ void DAL_GPIO_PulldownPowerSave(void)
 ********************************************************************/
 void DAL_GPIO_InitGpsPower(void)
 {
-    ST_GPIO_SetPin(PIN_GPSPOWER, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
+    ST_GPIO_SetPin(PIN_GPSPOWER, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 void DAL_GPIO_PullupGpsPower(void)
@@ -250,7 +250,7 @@ void DAL_GPIO_PulldownGpsPower(void)
 ********************************************************************/
 void DAL_GPIO_InitGpsVbat(void)
 {
-    ST_GPIO_SetPin(PIN_GPSBAT, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
+    ST_GPIO_SetPin(PIN_GPSBAT, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 void DAL_GPIO_PullupGpsVbat(void)
@@ -273,7 +273,7 @@ void DAL_GPIO_PulldownGpsVbat(void)
 ********************************************************************/
 void DAL_GPIO_InitGsmPower(void)
 {
-    ST_GPIO_SetPin(PIN_GSMPOWER, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
+    ST_GPIO_SetPin(PIN_GSMPOWER, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 void DAL_GPIO_PullupGsmPower(void)
@@ -297,7 +297,7 @@ void DAL_GPIO_PulldownGsmPower(void)
 ********************************************************************/
 void DAL_GPIO_InitGsmOnOff(void)
 {
-    ST_GPIO_SetPin(PIN_GSMONOFF, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
+    ST_GPIO_SetPin(PIN_GSMONOFF, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 void DAL_GPIO_PullupGsmOnOff(void)
@@ -320,8 +320,8 @@ void DAL_GPIO_PulldownGsmOnOff(void)
 ********************************************************************/
 void DAL_GPIO_InitPulseChanne(void)
 {
-    ST_GPIO_SetPin(PIN_PULSE1, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
-    ST_GPIO_SetPin(PIN_PULSE2, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
+    ST_GPIO_SetPin(PIN_PULSE1, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
+    ST_GPIO_SetPin(PIN_PULSE2, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 void DAL_GPIO_PullupPulseCh1(void)
@@ -357,8 +357,8 @@ PIN_LICHENG_CH  PIN_PULSE_CH           DB9的第7脚的用途
 
 void DAL_GPIO_InitPulseChannel(void)
 {
-    ST_GPIO_SetPin(PIN_PULSE1, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
-    ST_GPIO_SetPin(PIN_PULSE2, GPIO_DIR_OUT, GPIO_PULL_UP, FALSE);
+    ST_GPIO_SetPin(PIN_PULSE1, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
+    ST_GPIO_SetPin(PIN_PULSE2, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 /* 选择里程脉冲从外部线束上输入 */
@@ -411,7 +411,7 @@ void DAL_GPIO_InitInput(INT8U port)
         return;
     }
     pinfo = DAL_INPUT_GetCfgTblInfo(port);
-    ST_GPIO_SetPin(pinfo->pin, GPIO_DIR_IN, GPIO_PULL_UP, 1);
+    ST_GPIO_SetPin(pinfo->pin, GPIO_DIR_IN, GPIO_MODE_UP, 1);
 }
 
 /*******************************************************************

@@ -20,6 +20,7 @@
 typedef struct {
     INT8U  com;
     INT8U  enable;
+    INT8U  is_remap;
     INT32U uart_pin_tx;
     INT32U uart_pin_rx;
     
@@ -52,7 +53,7 @@ typedef struct {
 
 #define BEGIN_UART_CFG
 
-#define UART_DEF(_COM_, _ENABLE, _PIN_TX, _PIN_RX,  _DMA_TX_BASE, _DMA_RX_BASE, _UART_BASE, _GPIO_BASE, _RCC, _REMAP) \
+#define UART_DEF(_COM_, _ENABLE, _PIN_TX, _PIN_RX,  _DMA_TX_BASE, _DMA_RX_BASE, _UART_BASE, _GPIO_BASE, _RCC, _ISREMAP, _REMAP) \
                  _COM_,
                  
 #define END_UART_CFG

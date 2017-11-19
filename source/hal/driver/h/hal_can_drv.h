@@ -207,6 +207,17 @@ INT32U HAL_CAN_UsedOfRecvbuf(INT8U com);
 ********************************************************************/
 INT32U HAL_CAN_LeftOfSendbuf(INT8U com);
 
+
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_Rx_IrqHandle(void);
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_Rx1_IrqHandle(void);
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_Tx_IrqHandle(void);
+
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_Rx_IrqHandle(void);
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_Rx1_IrqHandle(void);
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_Tx_IrqHandle(void);
+
+
+
 /*******************************************************************
 ** 函数名称: CAN1_IrqHandle
 ** 函数描述: CAN中断处理

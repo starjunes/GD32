@@ -12,19 +12,19 @@
 #ifndef HAL_FLASH_DRV_H
 #define HAL_FLASH_DRV_H      1
 
-#include "stm32f0xx.h"
-#include "stm32f0xx_conf.h"
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 
 
 #define FLASH_OP_FLAG        0x55                /* 操作标志 */
 
 #define FLASH_BASE_ADDR      FLASH_BASE          /* FLASH基准地址 */
 #define FLASH_PAGE_SIZE      2048                /* 页面大小 */
-#define FLASH_MAX_PAGES      64                  /* 页面数量 */
+#define FLASH_MAX_PAGES      128                  /* 页面数量 */
 #define FLASH_TOTAL_SIZE     (FLASH_PAGE_SIZE * FLASH_MAX_PAGES)/* FLASH空间总大小 */
 #define FLASH_END_ADDR       (FLASH_BASE_ADDR + FLASH_TOTAL_SIZE)/* FLASH最大空间地址 */
 
-#define FLASH_HEAD_OFFSET    0x100               /* 头信息偏移量 */
+#define FLASH_HEAD_OFFSET    0x200               /* 头信息偏移量 */
 
 #define FLASH_BOOT_BASE      FLASH_BASE_ADDR     /* BOOT程序基准地址 */
 #define FLASH_BOOT_SIZE      (0x8000)            /* BOOT程序大小 */

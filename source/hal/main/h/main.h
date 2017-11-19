@@ -30,8 +30,8 @@
 #define __MAIN_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f0xx.h"
-#include "stm32f0_discovery.h"
+#include "stm32f10x.h"
+//#include "stm32f0_discovery.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

@@ -29,7 +29,7 @@
 * 定义模块配置参数
 ********************************************************************************
 */
-#define PERIOD_DELAY         _TICK, 1
+#define PERIOD_DELAY         _TICK, 2
 #define PERIOD_WAKEUP        _SECOND, 2
 #define PERIOD_WAIT          _SECOND, 15
 
@@ -81,7 +81,7 @@ static void Wakeup(void)
     #endif
 
     if (s_dcb.step == STEP_POWERONGSM) {
-        OS_RESET(RESET_EVENT_INITIATE);                                        /* 主动复位，防止运行过久出现问题 */    
+        OS_RESET(RESET_EVENT_UNREPORT);                                        /* 主动复位，防止运行过久出现问题 */    
     }
     
     if (s_dcb.step == STEP_POWERDOWNHOST) {                                    /* 已通知主机复位,则要复位电源 */
@@ -351,6 +351,7 @@ static void SleepTmrProc(void *pdata)
 {
     BOOLEAN accon, poweroff;
     SLEEP_PARA_T sleeppara;
+    HOST_RESET_STATUS_T reset_info;
     
     switch (s_dcb.step)
     {
@@ -369,9 +370,20 @@ static void SleepTmrProc(void *pdata)
             YX_MMI_Wakeup();
             DAL_GPIO_PullupPowerSave();
             OS_StopTmr(s_sleeptmr);
+            DAL_PP_ReadParaByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));    
+            if (reset_info.status == MMI_RESET_EVENT_POWERDOWN) {
+                reset_info.status = MMI_RESET_EVENT_POWERUP;
+            } else if (reset_info.status == MMI_RESET_EVENT_SLEEP){
+                reset_info.status = MMI_RESET_EVENT_WAKEUP;
+            } 
+            DAL_PP_StoreParaInstantByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
         } else {
             s_dcb.step = STEP_POWERDOWNHOST;
             OS_StartTmr(s_sleeptmr, PERIOD_DELAY);
+            if (!poweroff) {
+                reset_info.status = MMI_RESET_EVENT_SLEEP;
+                DAL_PP_StoreParaInstantByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
+            }
         }
         break;
     case STEP_WAKEUP:                                                          /* 唤醒 */
@@ -438,6 +450,7 @@ static void SleepTmrProc(void *pdata)
         YX_MMI_Sleep();
 #if EN_CAN > 0
         HAL_CAN_CloseCan(CAN_COM_0);                                           /* 关闭CAN */
+        HAL_CAN_CloseCan(CAN_COM_1);
 #endif
             
         DAL_GPIO_PulldownGsmPower();                                           /* 关闭GSM */
@@ -482,6 +495,9 @@ static void SleepTmrProc(void *pdata)
 ********************************************************************/
 static void SignalChangeInformer_ACC(INT8U port, INT8U mode)
 {
+    HOST_RESET_STATUS_T reset_info;
+
+    DAL_PP_ReadParaByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
 #if 1
     OS_ASSERT((port == IPT_ACC), RETURN_VOID);
     
@@ -494,6 +510,10 @@ static void SignalChangeInformer_ACC(INT8U port, INT8U mode)
             s_dcb.wakeupevent = WAKEUP_EVENT_ACC;
             s_dcb.waketime    = 0;
             Wakeup();
+            if(s_dcb.step != STEP_INIT) {
+                reset_info.status = MMI_RESET_EVENT_WAKEUP;
+                DAL_PP_StoreParaInstantByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
+            }
         } else {
             #if DEBUG_SYS > 0
             printf_com("<省电,ACC有效,主电源断电>\r\n");
@@ -522,6 +542,9 @@ static void SignalChangeInformer_ACC(INT8U port, INT8U mode)
 ********************************************************************/
 static void SignalChangeInformer_POWDECT(INT8U port, INT8U mode)
 {
+    HOST_RESET_STATUS_T reset_info;
+
+    DAL_PP_ReadParaByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));    
 #if 1
     OS_ASSERT((port == IPT_POWDECT), RETURN_VOID);
 
@@ -545,6 +568,8 @@ static void SignalChangeInformer_POWDECT(INT8U port, INT8U mode)
             s_dcb.wakeupevent = WAKEUP_EVENT_ACC;
             s_dcb.waketime    = 0;
             Wakeup();
+            reset_info.status = MMI_RESET_EVENT_POWERUP;
+            DAL_PP_StoreParaInstantByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
         } else {
             #if DEBUG_SYS > 0
             printf_com("<省电,主电源上电,ACC无效>\r\n");
@@ -611,12 +636,17 @@ void YX_SLEEP_Init(void)
 ********************************************************************/
 void YX_SLEEP_Wakeup(INT8U waketime, INT8U event)
 {
+    HOST_RESET_STATUS_T reset_info;
+
+    DAL_PP_ReadParaByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));   
     if (!DAL_INPUT_ReadFilterStatus(IPT_POWDECT)) {
         s_dcb.wakeupevent = event;
         s_dcb.step = STEP_WAKEUP;
         OS_StartTmr(s_sleeptmr, PERIOD_WAKEUP);
     }
     s_dcb.waketime = waketime;
+    reset_info.status = MMI_RESET_EVENT_WAKEUP;
+    DAL_PP_StoreParaByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
 }
 
 /*******************************************************************

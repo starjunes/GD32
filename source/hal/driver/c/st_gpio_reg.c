@@ -10,8 +10,8 @@
 **| 2014/03/09 | 叶德焰 |  创建文件
 *******************************************************************************/
 #include "hal_include.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_conf.h"
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "st_gpio_reg.h"
 
 /*
@@ -34,7 +34,7 @@
 #define BEGIN_GPIO_CFG(_PORT_, _GPIO_BASE_, _RCC_)
 
 #define GPIO_DEF(_PORT_, _ID_, _EN_, _PIN_, _DIRECTION_, _MODE_, _PU_PD_, _INIT_) \
-   {(INT8U)_PORT_, (INT8U)_ID_, _PIN_, (INT8U)_DIRECTION_, (INT8U)_MODE_, (INT8U)_PU_PD_, (INT8U)_INIT_, (INT8U)_EN_},
+   {(INT8U)_PORT_, (INT8U)_ID_, _PIN_, (INT8U)_DIRECTION_, /*(INT8U)_MODE_, (INT8U)_PU_PD_,*/ (INT8U)_INIT_, (INT8U)_EN_},
 
 #define END_GPIO_CFG(_PORT_)
 

@@ -10,8 +10,8 @@
 **| 2014/03/09 | 叶德焰 |  创建文件
 *******************************************************************************/
 #include "yx_include.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_conf.h"
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "yx_dym_drv.h"
 #include "yx_loopbuf.h"
 #include "hal_can_reg.h"
@@ -28,8 +28,8 @@
 #define _SENDING             0x01
 #define _OPEN                0x80
 
-#define MAX_CAN_SEND         30
-#define MAX_CAN_RECV         50
+#define MAX_CAN_SEND         50
+#define MAX_CAN_RECV         100
 
 /*
 ********************************************************************************
@@ -245,18 +245,20 @@ static void STM32_CAN_PinsConfig(const CAN_REG_T *pinfo, INT8U onoff)
         return;
     }
     
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);                        /* 开启GPIO系统时钟 */
+    RCC_AHBPeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOB, ENABLE);                        /* 开启GPIO系统时钟 */
+
+    
     /* Configure USARTx_Tx as alternate function push-pull */
     gpio_initstruct.GPIO_Pin   = (INT16U)(1 << pinfo->pin_tx);
     gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_initstruct.GPIO_OType = GPIO_OType_PP;
-    gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
+    //gpio_initstruct.GPIO_OType = GPIO_OType_PP;
+    //gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
     if (onoff) {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AF;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AF_PP;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
-        GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->pin_tx, GPIO_AF_4);
+        //GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->pin_tx, GPIO_AF_4);
     } else {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_OUT;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_PP;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
         GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->pin_tx));
     }
@@ -264,17 +266,27 @@ static void STM32_CAN_PinsConfig(const CAN_REG_T *pinfo, INT8U onoff)
     /* Configure USARTx_Rx as input floating */
     gpio_initstruct.GPIO_Pin   = (INT16U)(1 << pinfo->pin_rx);
     gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_initstruct.GPIO_OType = GPIO_OType_PP;
-    gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
+    //gpio_initstruct.GPIO_OType = GPIO_OType_PP;
+    //gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_UP;
     if (onoff) {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AF;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_IPU;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
-        GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->pin_rx, GPIO_AF_4);
+        //GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->pin_rx, GPIO_AF_4);
     } else {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_OUT;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_PP;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
         GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->pin_rx));
     }
+
+    switch(pinfo->can_base) {
+        case CAN1_BASE:
+            GPIO_PinRemapConfig(GPIO_Remap1_CAN1 , ENABLE);
+            break;
+        case CAN2_BASE:
+            //GPIO_PinRemapConfig(GPIO_Remap_CAN2, ENABLE);
+            break;
+    }
+
 }
 
 /*******************************************************************
@@ -296,23 +308,64 @@ static void STM32_CAN_IrqConfig(const CAN_REG_T *pinfo)
     
     switch (pinfo->can_base)
     {
-    case CAN_BASE:
-        irq_id = CEC_CAN_IRQn;
-        irqhandler = (IRQ_SERVICE_FUNC)CAN1_IrqHandle;
-	  	break;
+    case CAN1_BASE:
+        irq_id = CAN1_RX0_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)CAN1_Rx_IrqHandle;
+        ST_IRQ_ConfigIrqEnable(irq_id, false);                                      /* 关闭中断 */
+        ST_IRQ_InstallIrqHandler(irq_id, irqhandler);                               /* install irq handle */
+        ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_CAN);
+        ST_IRQ_ConfigIrqEnable(irq_id, true);                                       /* 打开中断 */
+
+        irq_id = CAN1_RX1_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)CAN1_Rx1_IrqHandle;
+        ST_IRQ_ConfigIrqEnable(irq_id, false);                                      /* 关闭中断 */
+        ST_IRQ_InstallIrqHandler(irq_id, irqhandler);                               /* install irq handle */
+        ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_CAN);
+        ST_IRQ_ConfigIrqEnable(irq_id, true); 
+
+        irq_id = CAN1_TX_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)CAN1_Tx_IrqHandle;
+        ST_IRQ_ConfigIrqEnable(irq_id, false);                                      /* 关闭中断 */
+        ST_IRQ_InstallIrqHandler(irq_id, irqhandler);                               /* install irq handle */
+        ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_CAN);
+        ST_IRQ_ConfigIrqEnable(irq_id, true);  
+    	break;
+
+    case CAN2_BASE: 
+        irq_id = CAN2_RX0_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)CAN2_Rx_IrqHandle;
+        ST_IRQ_ConfigIrqEnable(irq_id, false);                                      /* 关闭中断 */
+        ST_IRQ_InstallIrqHandler(irq_id, irqhandler);                               /* install irq handle */
+        ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_CAN);
+        ST_IRQ_ConfigIrqEnable(irq_id, true);                                       /* 打开中断 */
+
+        irq_id = CAN2_RX1_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)CAN2_Rx1_IrqHandle;
+        ST_IRQ_ConfigIrqEnable(irq_id, false);                                      /* 关闭中断 */
+        ST_IRQ_InstallIrqHandler(irq_id, irqhandler);                               /* install irq handle */
+        ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_CAN);
+        ST_IRQ_ConfigIrqEnable(irq_id, true);                                       /* 打开中断 */
+
+        irq_id = CAN2_TX_IRQn;
+        irqhandler = (IRQ_SERVICE_FUNC)CAN2_Tx_IrqHandle;
+        ST_IRQ_ConfigIrqEnable(irq_id, false);                                      /* 关闭中断 */
+        ST_IRQ_InstallIrqHandler(irq_id, irqhandler);                               /* install irq handle */
+        ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_CAN);
+        ST_IRQ_ConfigIrqEnable(irq_id, true);  
+    	break;
     default:
         return;
     }
     
-    ST_IRQ_ConfigIrqEnable(irq_id, false);                                      /* 关闭中断 */
-    ST_IRQ_InstallIrqHandler(irq_id, irqhandler);                               /* install irq handle */
-    ST_IRQ_ConfigIrqPriority(irq_id, IRQ_PRIOTITY_CAN);
-    ST_IRQ_ConfigIrqEnable(irq_id, true);                                       /* 打开中断 */
+   
     
-    //flag = CAN_IT_FF0 | CAN_IT_FF1;// | CAN_IT_BOF | CAN_IT_ERR;
-    flag = CAN_IT_FMP0 | CAN_IT_FMP1;
+    flag = CAN_IT_FF0 | CAN_IT_FF1;// | CAN_IT_BOF | CAN_IT_ERR;
+    //flag = CAN_IT_FMP0;
     CAN_ITConfig((CAN_TypeDef *)pinfo->can_base, flag, ENABLE);                 /* Enable Interrupt */
 }
+
+
+#if 0
 
 /*******************************************************************
 ** 函数名称: CAN_Init1
@@ -399,6 +452,8 @@ static INT8U CAN_Init1(CAN_TypeDef *CANx, CAN_InitTypeDef *can_initstruct)
     return CAN_InitStatus_Success;
 }
 
+#endif
+
 /*******************************************************************
 ** 函数名称: STM32_CAN_Init
 ** 函数描述: 串口通信参数配置，并设置是否支持DMA
@@ -420,6 +475,7 @@ static BOOLEAN STM32_CAN_Init(CAN_CFG_T *cfg)
     
     /* deinit can */
 	//CAN_DeInit((CAN_TypeDef *)pinfo->can_base);
+
 	
 	/* CAN cell init */
 	CAN_StructInit(&can_initstruct);
@@ -450,13 +506,18 @@ static BOOLEAN STM32_CAN_Init(CAN_CFG_T *cfg)
     
     /* CAN Baudrate = 1MBps (CAN clocked at 48 MHz) */
     baud = cfg->baud;
+   // can_initstruct.CAN_SJW = CAN_SJW_1tq;                                      /* bit to perform resynchronization */
+   // can_initstruct.CAN_BS1 = CAN_BS1_15tq;                                     /* Segment 1 */
+   // can_initstruct.CAN_BS2 = CAN_BS2_8tq;                                      /* Segment 2 */
+   // can_initstruct.CAN_Prescaler = 2 * (1000000 / baud);                       /* Specifies the length of a time quantum. It ranges from 1 to 1024. */
+
     can_initstruct.CAN_SJW = CAN_SJW_1tq;                                      /* bit to perform resynchronization */
-    can_initstruct.CAN_BS1 = CAN_BS1_15tq;                                     /* Segment 1 */
-    can_initstruct.CAN_BS2 = CAN_BS2_8tq;                                      /* Segment 2 */
-    can_initstruct.CAN_Prescaler = 2 * (1000000 / baud);                       /* Specifies the length of a time quantum. It ranges from 1 to 1024. */
+    can_initstruct.CAN_BS1 = CAN_BS1_3tq;                                     /* Segment 1 */
+    can_initstruct.CAN_BS2 = CAN_BS2_2tq;                                     /* Segment 2 */
+    can_initstruct.CAN_Prescaler = (36000000 / (baud * (1 + 3 + 2)));       /* Specifies the length of a time quantum. It ranges from 1 to 1024. */
 	
 	/* configure can */
-    result = CAN_Init1((CAN_TypeDef *)pinfo->can_base, &can_initstruct);
+    result = CAN_Init((CAN_TypeDef *)pinfo->can_base, &can_initstruct);
     if (result == CAN_InitStatus_Success) {
         result = TRUE;
         STM32_CAN_IrqConfig(pinfo);                                            /* 配置中断使能 */
@@ -620,8 +681,10 @@ BOOLEAN HAL_CAN_CloseCan(INT8U com)
 BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U *pfilterid)
 {
     INT8U i;
+    INT8U ch_offset; 
     INT32U filterid;
     CAN_FilterInitTypeDef  can_filterinitstructure;
+    const CAN_REG_T *pinfo;
     
     if (com >= CAN_COM_MAX) {
         return false;
@@ -630,11 +693,13 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
     if ((s_can[com].status & _OPEN) == 0) {
         return false;
     }
-    
+
+    pinfo = HAL_CAN_GetRegTblInfo(com);
+    ch_offset = (com * 14);
     if (idtype == CAN_ID_TYPE_STD) {                                           /* 标准帧 */
         can_filterinitstructure.CAN_FilterMode           = CAN_FilterMode_IdList;
         can_filterinitstructure.CAN_FilterScale          = CAN_FilterScale_16bit;
-        can_filterinitstructure.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
+        can_filterinitstructure.CAN_FilterFIFOAssignment = pinfo->fifo;
         can_filterinitstructure.CAN_FilterActivation     = ENABLE;
         
         for (i = 0; i < idnum && i < MAX_CAN_FILTER_ID_LIST_STD; i++) {
@@ -645,14 +710,14 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
                 can_filterinitstructure.CAN_FilterIdLow      = filterid & 0xFFFF;
                 can_filterinitstructure.CAN_FilterMaskIdHigh = filterid & 0xFFFF;
                 can_filterinitstructure.CAN_FilterMaskIdLow  = filterid & 0xFFFF;
-                can_filterinitstructure.CAN_FilterNumber     = i / 4;
+                can_filterinitstructure.CAN_FilterNumber     = i / 4 + ch_offset;
             } else if ((i % 4) == 1) {
                 can_filterinitstructure.CAN_FilterIdLow      = filterid & 0xFFFF;
             } else if ((i % 4) == 2) {
                 can_filterinitstructure.CAN_FilterMaskIdHigh = filterid & 0xFFFF;
             } else if ((i % 4) == 3) {
                 can_filterinitstructure.CAN_FilterMaskIdLow  = filterid & 0xFFFF;
-                can_filterinitstructure.CAN_FilterNumber     = i / 4;
+                can_filterinitstructure.CAN_FilterNumber     = i / 4 + ch_offset;
                 CAN_FilterInit(&can_filterinitstructure);
             }
         }
@@ -663,13 +728,13 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
         
         for (i = (i + 3) / 4; i < MAX_CAN_FILTER_ID_BANK; i++) {               /* 关闭剩余滤波器组 */
             can_filterinitstructure.CAN_FilterActivation = DISABLE;
-            can_filterinitstructure.CAN_FilterNumber     = i;
+            can_filterinitstructure.CAN_FilterNumber     = i + ch_offset;
             CAN_FilterInit(&can_filterinitstructure);
         }
     } else {
         can_filterinitstructure.CAN_FilterMode           = CAN_FilterMode_IdList;
         can_filterinitstructure.CAN_FilterScale          = CAN_FilterScale_32bit;
-        can_filterinitstructure.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
+        can_filterinitstructure.CAN_FilterFIFOAssignment = pinfo->fifo;
         can_filterinitstructure.CAN_FilterActivation     = ENABLE;
             
         for (i = 0; i < idnum && i < MAX_CAN_FILTER_ID_LIST_EXT; i++) {
@@ -680,11 +745,11 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
                 can_filterinitstructure.CAN_FilterIdLow      = filterid & 0xFFFF;
                 can_filterinitstructure.CAN_FilterMaskIdHigh = (filterid >> 16) & 0xFFFF;
                 can_filterinitstructure.CAN_FilterMaskIdLow  = filterid & 0xFFFF;
-                can_filterinitstructure.CAN_FilterNumber     = i / 2;
+                can_filterinitstructure.CAN_FilterNumber     = i / 2 + ch_offset;
             } else {
                 can_filterinitstructure.CAN_FilterMaskIdHigh = (filterid >> 16) & 0xFFFF;
                 can_filterinitstructure.CAN_FilterMaskIdLow  = filterid & 0xFFFF;
-                can_filterinitstructure.CAN_FilterNumber     = i / 2;
+                can_filterinitstructure.CAN_FilterNumber     = i / 2 + ch_offset;
                 CAN_FilterInit(&can_filterinitstructure);
             }
         }
@@ -695,7 +760,7 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
         
         for (i = (i + 1) / 2; i < MAX_CAN_FILTER_ID_BANK; i++) {               /* 关闭剩余滤波器组 */
             can_filterinitstructure.CAN_FilterActivation = DISABLE;
-            can_filterinitstructure.CAN_FilterNumber     = i;
+            can_filterinitstructure.CAN_FilterNumber     = i + ch_offset;
             CAN_FilterInit(&can_filterinitstructure);
         }
     }
@@ -707,7 +772,7 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
         can_filterinitstructure.CAN_FilterIdLow      = 0;
         can_filterinitstructure.CAN_FilterMaskIdHigh = 0;
         can_filterinitstructure.CAN_FilterMaskIdLow  = 0;
-        can_filterinitstructure.CAN_FilterNumber     = 0;
+        can_filterinitstructure.CAN_FilterNumber     = 0 + ch_offset;
         CAN_FilterInit(&can_filterinitstructure);
     }
     return true;
@@ -726,8 +791,10 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
 BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U *pfilterid, INT32U *pmaskid)
 {
     INT8U i;
+    INT8U ch_offset;                                                           /* 通道偏移 */
     INT32U filterid, maskid;
     CAN_FilterInitTypeDef  can_filterinitstructure;
+    const CAN_REG_T *pinfo;
     
     if (com >= CAN_COM_MAX) {
         return false;
@@ -736,11 +803,13 @@ BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U
     if ((s_can[com].status & _OPEN) == 0) {
         return false;
     }
-    
+
+    pinfo = HAL_CAN_GetRegTblInfo(com);
+    ch_offset = (com*14);
     if (idtype == CAN_ID_TYPE_STD) {
         can_filterinitstructure.CAN_FilterMode           = CAN_FilterMode_IdMask;
         can_filterinitstructure.CAN_FilterScale          = CAN_FilterScale_16bit;
-        can_filterinitstructure.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
+        can_filterinitstructure.CAN_FilterFIFOAssignment = pinfo->fifo;
         can_filterinitstructure.CAN_FilterActivation     = ENABLE;
         
         for (i = 0; i < idnum && i < MAX_CAN_FILTER_ID_MASK_STD; i++) {
@@ -752,11 +821,11 @@ BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U
                 can_filterinitstructure.CAN_FilterMaskIdHigh = maskid & 0xFFFF;
                 can_filterinitstructure.CAN_FilterIdLow      = filterid & 0xFFFF;
                 can_filterinitstructure.CAN_FilterMaskIdLow  = maskid & 0xFFFF;
-                can_filterinitstructure.CAN_FilterNumber     = i / 2;
+                can_filterinitstructure.CAN_FilterNumber     = i / 2 + ch_offset;
             } else {
                 can_filterinitstructure.CAN_FilterIdLow      = filterid & 0xFFFF;
                 can_filterinitstructure.CAN_FilterMaskIdLow  = maskid & 0xFFFF;
-                can_filterinitstructure.CAN_FilterNumber     = i / 2;
+                can_filterinitstructure.CAN_FilterNumber     = i / 2 + ch_offset;
                 CAN_FilterInit(&can_filterinitstructure);
             }
         }
@@ -767,13 +836,13 @@ BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U
         
         for (i = (i + 1) / 2; i < MAX_CAN_FILTER_ID_BANK; i++) {               /* 关闭剩余滤波器组 */
             can_filterinitstructure.CAN_FilterActivation = DISABLE;
-            can_filterinitstructure.CAN_FilterNumber     = i;
+            can_filterinitstructure.CAN_FilterNumber     = i + ch_offset;
             CAN_FilterInit(&can_filterinitstructure);
         }
     } else {
         can_filterinitstructure.CAN_FilterMode           = CAN_FilterMode_IdMask;
         can_filterinitstructure.CAN_FilterScale          = CAN_FilterScale_32bit;
-        can_filterinitstructure.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
+        can_filterinitstructure.CAN_FilterFIFOAssignment = pinfo->fifo;
         can_filterinitstructure.CAN_FilterActivation     = ENABLE;
             
         for (i = 0; i < idnum && i < MAX_CAN_FILTER_ID_MASK_EXT; i++) {
@@ -784,13 +853,13 @@ BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U
             can_filterinitstructure.CAN_FilterIdLow      = filterid & 0xFFFF;
             can_filterinitstructure.CAN_FilterMaskIdHigh = (maskid >> 16) & 0xFFFF;
             can_filterinitstructure.CAN_FilterMaskIdLow  = maskid & 0xFFFF;
-            can_filterinitstructure.CAN_FilterNumber     = i;
+            can_filterinitstructure.CAN_FilterNumber     = i + ch_offset;
             CAN_FilterInit(&can_filterinitstructure);
         }
         
         for (; i < MAX_CAN_FILTER_ID_BANK; i++) {                              /* 关闭剩余滤波器组 */
             can_filterinitstructure.CAN_FilterActivation = DISABLE;
-            can_filterinitstructure.CAN_FilterNumber     = i;
+            can_filterinitstructure.CAN_FilterNumber     = i + ch_offset;
             CAN_FilterInit(&can_filterinitstructure);
         }
     }
@@ -802,7 +871,7 @@ BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U
         can_filterinitstructure.CAN_FilterIdLow      = 0;
         can_filterinitstructure.CAN_FilterMaskIdHigh = 0;
         can_filterinitstructure.CAN_FilterMaskIdLow  = 0;
-        can_filterinitstructure.CAN_FilterNumber     = 0;
+        can_filterinitstructure.CAN_FilterNumber     = 0 + ch_offset;
         CAN_FilterInit(&can_filterinitstructure);
     }
     return true;
@@ -955,6 +1024,150 @@ static BOOLEAN StartCanSend(const CAN_REG_T *pinfo, CAN_DATA_T *data)
     }
 }
 
+
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN_Recive_IRQ(CAN_TypeDef* CANx, INT8U FIFONumber, INT32U flag)
+{
+    INT8U i, j, com;
+    CanRxMsg rxmessage;
+    CAN_DATA_T recvdata;
+    
+    com = CAN_COM_0;
+    switch((INT32U)CANx) {
+        case CAN1_BASE:
+            com = CAN_COM_0;
+            break;
+        case CAN2_BASE:
+            com = CAN_COM_1;
+            break;
+
+            default:
+                return;
+    }
+    if (CAN_GetFlagStatus((CAN_TypeDef *)CANx, flag) != RESET) {                       /* FIFO0数据接收中断 */
+        CAN_ClearITPendingBit(CANx, flag);                               /* Clears the CAN1 interrupt pending bit */
+       
+        for (i = 0; i < 1; i++) {
+            CAN_Receive((CAN_TypeDef *)CANx, FIFONumber, &rxmessage);
+            
+            if (rxmessage.IDE == CAN_ID_STD) {
+                recvdata.idtype = CAN_ID_TYPE_STD;
+                recvdata.id     = rxmessage.StdId;
+            } else {
+                recvdata.idtype = CAN_ID_TYPE_EXT;
+                recvdata.id     = rxmessage.ExtId;
+            }
+            
+            if (rxmessage.RTR == CAN_RTR_DATA) {
+                recvdata.datatype = CAN_RTR_TYPE_DATA;
+            } else {
+                recvdata.datatype = CAN_RTR_TYPE_REMOTE;
+            }
+            
+            recvdata.index = rxmessage.FMI;
+            recvdata.dlc   = rxmessage.DLC;
+            
+            for (j = 0; j < rxmessage.DLC; j++) {
+                recvdata.data[j] = rxmessage.Data[j];
+            }
+            
+            WriteLoopData_INT(&s_can[com].recvloop, &recvdata);
+            
+            #if DEBUG_CAN > 0
+            printf_com("CAN%d_IrqHandle(ID:%08x)(idtype:%d)(datatype:%d)(FIFONumber:%d)\r\n",com, recvdata.id
+                                                                                            ,recvdata.idtype
+                                                                                            , recvdata.datatype
+                                                                                            , FIFONumber);
+            printf_hex(recvdata.data, recvdata.dlc);
+            printf_com("\r\n");
+            #endif
+        }
+    }
+}
+
+
+
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_Rx_IrqHandle(void)
+{
+
+   CAN_Recive_IRQ(CAN1, CAN_FIFO0, CAN_FLAG_FMP0);
+}
+
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_Rx1_IrqHandle(void)
+{
+
+    CAN_Recive_IRQ(CAN1, CAN_FIFO1, CAN_FLAG_FMP1);
+    
+}
+
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN1_Tx_IrqHandle(void)
+{
+    INT8U  used, com;
+    CAN_DATA_T recvdata;
+    const CAN_REG_T *pinfo;
+
+    com = CAN_COM_0;
+    if (CAN_GetITStatus(CAN1, CAN_IT_TME) != RESET) {                           /* 数据发送中断 */
+        CAN_ClearITPendingBit(CAN1, CAN_IT_TME);                                /* Clears the CAN1 interrupt pending bit */
+        
+        pinfo = HAL_CAN_GetRegTblInfo(com);
+        if (((s_can[com].status & _OPEN) == 0) || ((s_can[com].status & _SENDING) == 0)) {
+            CAN_ITConfig((CAN_TypeDef *)pinfo->can_base, CAN_IT_TME, DISABLE); /* 关闭发送中断 */
+        } else {
+            used = UsedOfLoopBuffer_INT(&s_can[com].sendloop);
+            if (used == 0) {                                                   /* 无数据要发送 */
+                s_can[com].status &= (~_SENDING);
+                CAN_ITConfig((CAN_TypeDef *)pinfo->can_base, CAN_IT_TME, DISABLE); /* 关闭发送中断 */
+            } else {
+                ReadLoopData_INT(&s_can[com].sendloop, &recvdata);
+                StartCanSend(pinfo, &recvdata);
+            }
+        }
+    }
+}
+
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_Rx_IrqHandle(void)
+{
+
+    CAN_Recive_IRQ(CAN2, CAN_FIFO0, CAN_FLAG_FMP0);
+
+}
+
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_Rx1_IrqHandle(void)
+{
+
+    CAN_Recive_IRQ(CAN2, CAN_FIFO1, CAN_FLAG_FMP1);
+
+}
+
+
+__attribute__ ((section ("IRQ_HANDLE"))) void CAN2_Tx_IrqHandle(void)
+{
+    INT8U  used, com;
+    CAN_DATA_T recvdata;
+    const CAN_REG_T *pinfo;
+
+    com = CAN_COM_1;
+    if (CAN_GetITStatus(CAN2, CAN_IT_TME) != RESET) {                           /* 数据发送中断 */
+        CAN_ClearITPendingBit(CAN2, CAN_IT_TME);                                /* Clears the CAN1 interrupt pending bit */
+        
+        pinfo = HAL_CAN_GetRegTblInfo(com);
+        if (((s_can[com].status & _OPEN) == 0) || ((s_can[com].status & _SENDING) == 0)) {
+            CAN_ITConfig((CAN_TypeDef *)pinfo->can_base, CAN_IT_TME, DISABLE); /* 关闭发送中断 */
+        } else {
+            used = UsedOfLoopBuffer_INT(&s_can[com].sendloop);
+            if (used == 0) {                                                   /* 无数据要发送 */
+                s_can[com].status &= (~_SENDING);
+                CAN_ITConfig((CAN_TypeDef *)pinfo->can_base, CAN_IT_TME, DISABLE); /* 关闭发送中断 */
+            } else {
+                ReadLoopData_INT(&s_can[com].sendloop, &recvdata);
+                StartCanSend(pinfo, &recvdata);
+            }
+        }
+    }
+}
+
+
+#if 0
 __attribute__ ((section ("IRQ_HANDLE"))) void CAN1_IrqHandle(void)
 {
     INT8U i, j, used, com;
@@ -964,7 +1177,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) void CAN1_IrqHandle(void)
     
     com = CAN_COM_0;
 #if 1
-    if (CAN_GetFlagStatus(CAN, CAN_FLAG_FMP0) != RESET) {                       /* FIFO0数据接收中断 */
+    if (CAN_GetFlagStatus(CAN1, CAN_FLAG_FMP0) != RESET) {                       /* FIFO0数据接收中断 */
         CAN_ClearITPendingBit(CAN, CAN_FLAG_FMP0);                               /* Clears the CAN1 interrupt pending bit */
         
         for (i = 0; i < 1; i++) {
@@ -1113,6 +1326,6 @@ __attribute__ ((section ("IRQ_HANDLE"))) void CAN1_IrqHandle(void)
 
 #endif
 
-
+#endif
 
 

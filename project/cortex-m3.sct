@@ -1,0 +1,35 @@
+; *************************************************************
+; *** Scatter-Loading Description File ***
+; *************************************************************
+
+FLASH_LR (0x08000000 + 0x8000) 0x00040000 - 0x8000 ; load region size_region
+{
+    FLASH_ER1 +0 0x00000160             ; load address = execution address
+    {
+        *.o (RESET, +First)
+        ;*(HEADINFO)
+    }
+    
+    FLASH_ER2 +0                        ; load address = execution address
+    {
+        *(HEADINFO, +First)
+        *(InRoot$$Sections)
+        .ANY (+RO)
+    }
+    
+    RAM_IRQ_TBL 0x20000000 NOCOMPRESS   ; for interrupt vector table
+    {
+		*(VECTOR_RAM)
+	}
+	
+	;RAM_CODE +0 NOCOMPRESS             ; for ram code
+    ;{
+        ;*(IRQ_HANDLE)
+    ;}
+   
+    RAM_RW_ZI +0 0x00010000-200         ; RW data
+    {
+       .ANY (+RW +ZI)
+    }
+}
+

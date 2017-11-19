@@ -11,8 +11,9 @@
 **===============================================================================
 **| 2014/04/09 | 叶德焰 |  创建第一版本
 *********************************************************************************/
+#include <time.h>
 #include "hal_include.h"
-#include "stm32f0xx.h"
+#include "stm32f10x.h"
 #include "st_gpio_drv.h"
 #include "st_irq_drv.h"
 #include "st_rtc_drv.h"
@@ -46,6 +47,70 @@ typedef struct {
 static DCB_T s_rtc;
 
 
+/*******************************************************************
+** 函数名称: RTC_WaitForSynchro2
+** 函数描述: 对st库RTC_WaitForSynchro函数进行重写,加入计数防止无限循环
+** 参数:     无
+** 返回:     是否执行成功.
+********************************************************************/
+BOOLEAN RTC_WaitForSynchro2(void)
+{
+
+  INT32U ct_delay;
+
+  ct_delay = 0;
+  /* Clear RSF flag */
+  RTC->CRL &= (uint16_t)~RTC_FLAG_RSF;
+  /* Loop until RSF flag is set */
+  while ((RTC->CRL & RTC_FLAG_RSF) == (uint16_t)RESET)
+  {
+
+    ClearWatchdog();
+    ct_delay++;
+    if(ct_delay > 0x4f000) {
+        break;
+    }
+  }
+
+  if(ct_delay <= 0x4f000) {
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+/*******************************************************************
+** 函数名称: RTC_WaitForLastTask2
+** 函数描述: 对st库RTC_WaitForLastTask函数进行重写,加入计数防止无限循环
+** 参数:     无
+** 返回:     是否执行成功.
+********************************************************************/
+
+BOOLEAN RTC_WaitForLastTask2(void)
+{
+
+    INT32U ct_delay;
+  
+    ct_delay = 0;
+
+    /* Loop until RTOFF flag is set */
+    while ((RTC->CRL & RTC_FLAG_RTOFF) == (uint16_t)RESET)
+    {
+        ClearWatchdog();
+        ct_delay++;
+        if(ct_delay > 0x4f000) {
+            break;
+        }
+    }
+
+    if(ct_delay <= 0x4f000) {
+      return TRUE;
+    }
+
+    return FALSE;
+}
+
+
 
 /*******************************************************************
 ** 函数名称: RTC_PwrConfig
@@ -55,7 +120,7 @@ static DCB_T s_rtc;
 ********************************************************************/
 static void RTC_PwrConfig(void)
 {
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);                        /* 使能PWR 时钟*/
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);                        /* 使能PWR 时钟*/
     PWR_BackupAccessCmd(ENABLE);                                               /* 使能RTC和备份域寄存器写访问 */
 }
 
@@ -83,26 +148,34 @@ static BOOLEAN RTC_ClockConfig(INT8U clock)
         
         RCC_RTCCLKConfig(RCC_RTCCLKSource_LSI);                                /* 把RTC 时钟源配置为LSI */
     } else if (clock == RTC_CLOCK_LSE) {                                       /* 当使用LSE 最为RTC 时钟源*/
-        RCC_LSEConfig(RCC_LSE_ON);                                             /* 使能LSE 振荡*/
-        RCC_LSEDriveConfig(RCC_LSEDrive_High);
         
+        RCC_LSEConfig(RCC_LSE_ON);                                             /* 使能LSE 振荡*/
+        //RCC_LSEDriveConfig(RCC_LSEDrive_High);
         ct_delay = 0;
-        while (++ct_delay < 0x8000) {                                          /* 等待到LSE 准备就绪 */
+
+        while (++ct_delay < 0x4f000) {                                          /* 等待到LSE 准备就绪 */
             ClearWatchdog();
             if (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == SET) {
                 break;
             }
         }
+
         
         RCC_RTCCLKConfig(RCC_RTCCLKSource_LSE);                                /* 把RTC 时钟源配置为使用LSE */
     } else {
         ;
     }
     
-    RTC_WaitForSynchro();
-    if (ct_delay < 0x8000) {
+    printf_com("wait time:s%d\r\n", ct_delay);
+    if (ct_delay < 0x4f000) {
         RCC_RTCCLKCmd(ENABLE);                                                 /* 使能RTC 时钟*/
-        RTC_WaitForSynchro();                                                  /* Wait for RTC APB registers synchronisation */
+        if(!RTC_WaitForSynchro2()) {                                            /* Wait for RTC APB registers synchronisation */
+            return FALSE;
+        }
+        
+        if(!RTC_WaitForLastTask2()) {
+            return FALSE;
+        }
         return true;
     } else {
         return false;
@@ -117,32 +190,44 @@ static BOOLEAN RTC_ClockConfig(INT8U clock)
 ********************************************************************/
 static BOOLEAN RTC_RtcConfig(INT8U clock)
 {
-    INT32U synprediv, asynprediv;
-    RTC_InitTypeDef RTC_InitStruct;
+    //INT32U synprediv, asynprediv;
+    //RTC_InitTypeDef RTC_InitStruct;
     
     if (clock == RTC_CLOCK_LSI) {                                              /* 当使用LSI 作为RTC 时钟源*/
-        synprediv  = 400 - 1;                                                  /* 同步分频值和异步分频值*/
-        asynprediv = 100 - 1;                                                  /* 40000HZ / (400 * 100) = 1HZ */
+        //synprediv  = 400 - 1;                                                  /* 同步分频值和异步分频值*/
+        //asynprediv = 100 - 1;                                                  /* 40000HZ / (400 * 100) = 1HZ */
+        RTC_SetPrescaler(40000);
     } else if (clock == RTC_CLOCK_LSE) {                                       /* 当使用LSE 最为RTC 时钟源*/
-        synprediv  = 256 - 1;                                                  /* 同步分频值和异步分频值*/
-        asynprediv = 128 - 1;                                                  /* 32768HZ/(256 * 128) =1HZ */
+        //synprediv  = 256 - 1;                                                  /* 同步分频值和异步分频值*/
+        //asynprediv = 128 - 1;                                                  /* 32768HZ/(256 * 128) =1HZ */
+        RTC_SetPrescaler(32767);                               /* RTC period = RTCCLK/RTC_PR = (32.768 KHz)/(32767+1) */
     } else {
-        synprediv  = 2500 - 1;                                                 /* 同步分频值和异步分频值*/
-        asynprediv = 100 - 1;                                                  /* 32768HZ/(256 * 128) =1HZ */
+        //synprediv  = 2500 - 1;                                                 /* 同步分频值和异步分频值*/
+        //asynprediv = 100 - 1;                                                  /* 32768HZ/(256 * 128) =1HZ */
+        return FALSE;
     }
-    
+
+    if(!RTC_WaitForLastTask2()) {
+        return FALSE;
+    }
+    BKP_WriteBackupRegister(BKP_DR1, RTC_CONFIG);                      /* Indicator for the RTC configuration */
+
+    return TRUE;
+
+    #if 0
     RTC_InitStruct.RTC_HourFormat   = RTC_HourFormat_24;                       /*!< Specifies the RTC Hour Format.This parameter can be a value of @ref RTC_Hour_Formats */
     RTC_InitStruct.RTC_AsynchPrediv = asynprediv;                              /*!< Specifies the RTC Asynchronous Predivider value.This parameter must be set to a value lower than 0x7F */
     RTC_InitStruct.RTC_SynchPrediv  = synprediv;                               /*!< Specifies the RTC Synchronous Predivider value.This parameter must be set to a value lower than 0x1FFF */
     
     if (RTC_Init(&RTC_InitStruct) == SUCCESS) {
         RTC_WaitForSynchro();
-        RTC_WriteBackupRegister(RTC_BKP_DR0, RTC_CONFIG);                      /* Indicator for the RTC configuration */
+        BKP_WriteBackupRegister(BKP_DR1, RTC_CONFIG);                      /* Indicator for the RTC configuration */
         return true;
     } else {
-        //RTC_WriteBackupRegister(RTC_BKP_DR0, RTC_CONFIG);                      /* Indicator for the RTC configuration */
+        //BKP_WriteBackupRegister(BKP_DR1, RTC_CONFIG);                      /* Indicator for the RTC configuration */
         return false;
     }
+    #endif
 }
 
 
@@ -156,6 +241,25 @@ static BOOLEAN RTC_RtcConfig(INT8U clock)
 ********************************************************************/
 static BOOLEAN RTC_SetSystime(DATE_T *date, TIME_T *time, INT8U weekday)
 {
+    struct tm timetm;
+    INT32U timemap;
+
+
+    //weekday = weekday;
+    timetm.tm_year  = (date->year + 100);  
+    timetm.tm_mon   = (date->month - 1);                                       /* c库月份0~11代表1到12月份 */
+    timetm.tm_mday  = date->day;  
+    timetm.tm_hour  = time->hour;  
+    timetm.tm_min   = time->minute;  
+    timetm.tm_sec   = time->second;
+    timetm.tm_wday  = (weekday == 7)? 0 : weekday;
+    timemap = mktime(&timetm);
+    RTC_SetCounter(timemap);
+
+    BKP_WriteBackupRegister(BKP_DR2, RTC_CONFIG);                              /* 标记时间已经被设置 */
+
+    return TRUE;
+    #if 0
     ErrorStatus result;
     RTC_TimeTypeDef RTC_TimeStruct;
     RTC_DateTypeDef RTC_DateStruct;
@@ -184,9 +288,10 @@ static BOOLEAN RTC_SetSystime(DATE_T *date, TIME_T *time, INT8U weekday)
         return false;
     }
     
-    RTC_WriteBackupRegister(RTC_BKP_DR1, RTC_CONFIG);                          /* Indicator for the RTC configuration */
+    BKP_WriteBackupRegister(BKP_DR2, RTC_CONFIG);                          /* Indicator for the RTC configuration */
     
     return true;
+    #endif
 }
 
 /*******************************************************************
@@ -200,6 +305,28 @@ static BOOLEAN RTC_SetSystime(DATE_T *date, TIME_T *time, INT8U weekday)
 ********************************************************************/
 static BOOLEAN RTC_GetSystime(DATE_T *date, TIME_T *time, INT8U *weekday, INT32U *subsecond)
 {
+    INT32U timemap;
+    struct tm *timetm;
+    
+    if((date == NULL) || (time == NULL) || (weekday == NULL)) {
+        return FALSE;
+    }
+
+    subsecond = subsecond;
+    
+    timemap = RTC_GetCounter();
+    timetm = localtime(&timemap);
+
+    date->year      = (timetm->tm_year - 100);
+    date->month     = (timetm->tm_mon + 1);                                    /* c库月份0~11代表1到12月份 */
+    date->day       = timetm->tm_mday;                                   
+    time->hour      = timetm->tm_hour;
+    time->minute    = timetm->tm_min;
+    time->second    = timetm->tm_sec;
+    (*weekday)      = (timetm->tm_wday == 0) ? 7 : (timetm->tm_wday);          /* C库0为周天 */
+
+    return TRUE;
+    #if 0
     RTC_TimeTypeDef RTC_TimeStruct;
     RTC_DateTypeDef RTC_DateStruct;
     
@@ -218,6 +345,7 @@ static BOOLEAN RTC_GetSystime(DATE_T *date, TIME_T *time, INT8U *weekday, INT32U
     *weekday    = RTC_DateStruct.RTC_WeekDay;
     
     return true;
+    #endif
 }
 
 /*******************************************************************
@@ -230,7 +358,7 @@ void ST_RTC_InitDrv(void)
 {
     YX_MEMSET(&s_rtc, 0, sizeof(s_rtc));
     
-    if (RTC_ReadBackupRegister(RTC_BKP_DR0) != RTC_CONFIG) {                   /* 未开启实时时钟功能 */
+    if (BKP_ReadBackupRegister(BKP_DR1) != RTC_CONFIG) {                   /* 未开启实时时钟功能 */
         s_rtc.battle = FALSE;
     } else {
         s_rtc.battle = TRUE;
@@ -246,8 +374,8 @@ void ST_RTC_InitDrv(void)
 BOOLEAN ST_RTC_OpenRtcFunction(INT8U clock)
 {
     BOOLEAN result;
-    
-    if (RTC_ReadBackupRegister(RTC_BKP_DR0) == RTC_CONFIG) {
+
+    if (BKP_ReadBackupRegister(BKP_DR1) == RTC_CONFIG) {
         if (s_rtc.status == 0x00) {
             s_rtc.status = 0x01;
             
@@ -256,16 +384,18 @@ BOOLEAN ST_RTC_OpenRtcFunction(INT8U clock)
                 RCC_LSICmd(ENABLE);                                            /* 使能LSI 振荡*/
             }
         
-            RTC_WaitForSynchro();                                              /* Wait for RTC APB registers synchronisation */
+            if(!RTC_WaitForSynchro2()) {                                              /* Wait for RTC APB registers synchronisation */
+                return false;
+            }
         }
         return true;
     }
-    
+
     RTC_PwrConfig();
-    
-    RTC_DeInit();                                                              /* 恢复RTC寄存器 */
-    RCC_BackupResetCmd(ENABLE);                                                /* 复位备份区和时钟配置 */
-    RCC_BackupResetCmd(DISABLE);                                               /* 不复位 */
+    //RTC_DeInit();                                                              /* 恢复RTC寄存器 */
+    BKP_DeInit();                                                              /* Reset Backup Domain */
+    //RCC_BackupResetCmd(ENABLE);                                                /* 复位备份区和时钟配置 */
+    //RCC_BackupResetCmd(DISABLE);                                               /* 不复位 */
     
     //RTC_PwrConfig();
     result = RTC_ClockConfig(clock);
@@ -281,7 +411,6 @@ BOOLEAN ST_RTC_OpenRtcFunction(INT8U clock)
         printf_com("<RTC_ClockConfig(%d)>\r\n", result);
         #endif
     }
-    
     return result;
 }
 
@@ -293,20 +422,27 @@ BOOLEAN ST_RTC_OpenRtcFunction(INT8U clock)
 ********************************************************************/
 BOOLEAN ST_RTC_CloseRtcFunction(void)
 {
-    if (RTC_ReadBackupRegister(RTC_BKP_DR0) == 0x00000000) {
+
+    #if EN_M3_TEMP > 0
+    return FALSE;
+    #else
+    if (BKP_ReadBackupRegister(BKP_DR1) == 0x00000000) {
         s_rtc.status = 0x00;
         return true;
     }
     
-    s_rtc.status = 0x00;
+    s_rtc.status = 0x00; 
     RTC_PwrConfig();
-    RTC_DeInit();                                                              /* 恢复RTC寄存器 */
+    //RTC_DeInit();                                                                                      /* 恢复RTC寄存器 */
+    BKP_DeInit();
     RCC_BackupResetCmd(ENABLE);                                                /* 恢复备份区和时钟配置 */
     RCC_BackupResetCmd(DISABLE);                                               /* 不复位 */
     PWR_BackupAccessCmd(DISABLE);                                              /* 关闭RTC和备份域寄存器写访问 */
+    RCC_LSEConfig(RCC_LSE_OFF);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, DISABLE);                       /* 关闭PWR 时钟*/
     
     return true;
+    #endif
 }
 
 /*******************************************************************
@@ -319,7 +455,7 @@ BOOLEAN ST_RTC_CloseRtcFunction(void)
 ********************************************************************/
 BOOLEAN ST_RTC_SetSystime(DATE_T *date, TIME_T *time, INT8U weekday)
 {
-    if (RTC_ReadBackupRegister(RTC_BKP_DR0) == RTC_CONFIG) {
+    if (BKP_ReadBackupRegister(BKP_DR1) == RTC_CONFIG) {
         return RTC_SetSystime(date, time, weekday);
     } else {
         return false;
@@ -337,11 +473,11 @@ BOOLEAN ST_RTC_SetSystime(DATE_T *date, TIME_T *time, INT8U weekday)
 ********************************************************************/
 BOOLEAN ST_RTC_GetSystime(DATE_T *date, TIME_T *time, INT8U *weekday, INT32U *subsecond)
 {
-    if (RTC_ReadBackupRegister(RTC_BKP_DR0) != RTC_CONFIG) {                   /* 未开启实时时钟功能 */
+    if (BKP_ReadBackupRegister(BKP_DR1) != RTC_CONFIG) {                   /* 未开启实时时钟功能 */
         return false;
     }
     
-    if (RTC_ReadBackupRegister(RTC_BKP_DR1) != RTC_CONFIG) {                   /* 未配置实时时钟 */
+    if (BKP_ReadBackupRegister(BKP_DR2) != RTC_CONFIG) {                   /* 未配置实时时钟 */
         return false;
     }
     

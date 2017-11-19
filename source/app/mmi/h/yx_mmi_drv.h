@@ -132,5 +132,14 @@ BOOLEAN YX_MMI_SendHostResetInform(INT8U type);
 ********************************************************************/
 BOOLEAN YX_MMI_GetLogFlag(void);
 
+/***************************************************************
+** 函数名:    YX_MMI_SendHostResetInform_New
+** 功能描述:  外设通知主机，外设即将关闭或重启主机(外设自己不复位)(新 增加休眠唤醒和上电状态上报)
+** 参数:      [in] type: 复位类型,见 MMI_RESET_EVENT_NEW_E
+** 返回:      成功返回true，否返回false
+***************************************************************/
+BOOLEAN YX_MMI_SendHostResetInform_New(INT8U type);
+
+
 #endif
 #endif

@@ -22,13 +22,16 @@ typedef enum {
     GPIO_DIR_MAX
 } GPIO_DIR_E;
 
-/* 上下拉设置 */
+/* IO模式设置 */
 typedef enum {
-  GPIO_PULL_NULL = 0x00,     /* 无上下拉 */
-  GPIO_PULL_UP,              /* 上拉 */
-  GPIO_PULL_DOWN,            /* 下拉 */
+  GPIO_MODE_NULL = 0x00,     /* 无上下拉 */
+  GPIO_MODE_UP,              /* 上拉 */
+  GPIO_MODE_DOWN,            /* 下拉 */
+  GPIO_MODE_ANALOG,          /* 模拟输入 */
+  GPIO_MODE_OD,              /* 开漏输出 */
+  GPIO_MODE_PP,              /* 推挽输出 */
   GPIO_PULL_MAX
-} GPIO_PULL_E;
+} GPIO_MODE_E;
 
 
 /*******************************************************************
@@ -36,11 +39,11 @@ typedef enum {
 ** 函数描述: 初始化管脚状态
 ** 参数:     [in] id:        GPIO统一编号,GPIO_PIN_E
 **           [in] direction: 方向,GPIO_DIR_E
-**           [in] pull:      上下拉,GPIO_PULL_E
+**           [in] mode:      模式,GPIO_MODE_E
 **           [in] level:     高低电平,TRUE-高电平，FALSE-低电平
 ** 返回:     成功返回TRUE，失败返回FALSE
 ********************************************************************/
-void ST_GPIO_SetPin(INT8U id, INT8U direction, INT8U pull, INT8U level);
+void ST_GPIO_SetPin(INT8U id, INT8U direction, INT8U mode, INT8U level);
 
 /*******************************************************************
 ** 函数名称: ST_GPIO_WritePin

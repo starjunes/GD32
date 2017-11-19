@@ -10,8 +10,8 @@
 **| 2014/03/09 | 叶德焰 |  创建文件
 *******************************************************************************/
 #include "yx_include.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_conf.h"
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "st_uart_reg.h"
 
 /*
@@ -33,8 +33,8 @@
 
 #define BEGIN_UART_CFG
 
-#define UART_DEF(_COM_, _ENABLE, _PIN_TX, _PIN_RX,  _DMA_TX_BASE, _DMA_RX_BASE, _UART_BASE, _GPIO_BASE, _RCC, _REMAP) \
-   {(INT8U)_COM_, _ENABLE, (INT32U)_PIN_TX, (INT32U)_PIN_RX,  (INT32U)_DMA_TX_BASE, (INT32U)_DMA_RX_BASE, (INT32U)_UART_BASE, (INT32U)_GPIO_BASE, (INT32U)_RCC, (INT32U)_REMAP},
+#define UART_DEF(_COM_, _ENABLE, _PIN_TX, _PIN_RX,  _DMA_TX_BASE, _DMA_RX_BASE, _UART_BASE, _GPIO_BASE, _RCC, _ISREMAP, _REMAP) \
+   {(INT8U)_COM_, _ENABLE, (INT8U)_ISREMAP, (INT32U)_PIN_TX, (INT32U)_PIN_RX,  (INT32U)_DMA_TX_BASE, (INT32U)_DMA_RX_BASE, (INT32U)_UART_BASE, (INT32U)_GPIO_BASE, (INT32U)_RCC, (INT32U)_REMAP},
 
 #define END_UART_CFG
 

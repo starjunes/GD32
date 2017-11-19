@@ -17,7 +17,6 @@
 #include "yx_debug.h"
 
 
-
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -36,6 +35,38 @@ GPIO_InitTypeDef GPIO_InitStructure;
   * @retval None
   */
   
+
+
+/**************************************************************************************************
+**  函数名称:  special_io_config
+**  功能描述:  特殊IO配置,使其上电部分特殊io口能正常使用
+**  输入参数:  
+**  返回参数:  
+**************************************************************************************************/
+static void special_io_config(void)
+{
+    PWR_BackupAccessCmd(ENABLE);  /* 允许修改RTC 和后备寄存器 */
+    //RCC_LSEConfig(RCC_LSE_OFF);   /* 关闭外部低速外部时钟信号功能 后，PC13 PC14 PC15 才可以当普通IO用 */ 
+    BKP_TamperPinCmd(DISABLE);    /* 关闭入侵检测功能，也就是 PC13，也可以当普通IO 使用 */
+    BKP_ITConfig(DISABLE); 
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB, ENABLE); 
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+}
+/**************************************************************************************************
+**  函数名称:  nvic_configuration
+**  功能描述:  系统中断向量优先级配置
+**  输入参数:  
+**  返回参数:  
+**  注意事项:  此处配置的中断优先级，将影响Man_IRQ.H中的枚举取值，修改时请注意关联
+**************************************************************************************************/
+static void nvic_configuration(void)
+{
+    NVIC_SetVectorTable(NVIC_VectTab_RAM, 0);                        /* Set the Vector Table base location */
+    
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);                  /* Configure priority */
+}
+
+  
 BOOLEAN printf_com(const char *fmt, ...);
 int main(void)
 {
@@ -48,7 +79,7 @@ int main(void)
      */
      
      
-  SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
+  //SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
 		 
        
   /* Initialize Leds mounted on STM32F0-discovery */
@@ -95,6 +126,25 @@ int main(void)
   //RCC_GetClocksFreq(&RCC_Clocks);
   //SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
     
+    //GPIO_InitTypeDef  GPIO_InitStructure;
+    
+    //NVIC_SetVectorTable(NVIC_VectTab_RAM, 0);                        /* Set the Vector Table base location */
+    //GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
+    //GPIO_PinRemapConfig(GPIO_Remap_SWJ_NoJTRST, ENABLE); 
+    //RCC_Configuration();
+    //RCC_Configuration();
+
+    RCC_ClocksTypeDef RCC_Clocks;
+    
+    RCC_GetClocksFreq(&RCC_Clocks);  
+    
+    nvic_configuration();
+    special_io_config(); 
+
+    GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable, ENABLE);  
+    //GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
+    //GPIO_PinRemapConfig(GPIO_Remap_SWJ_NoJTRST, ENABLE);  
+     
     DAL_GPIO_InitWatchdog();
     ClearWatchdog();
     
@@ -103,7 +153,9 @@ int main(void)
     OS_InitQMsg();
     
     #if DEBUG_SYS > 0
-    printf_com("<-------------system start------------->\r\n");
+    
+    printf_com("<-------------system start SystemClock:%d PCLK1_Frequency:%d------------->\r\n", RCC_Clocks.SYSCLK_Frequency, RCC_Clocks.PCLK1_Frequency);
+
     #endif
     
     //系统线程循环

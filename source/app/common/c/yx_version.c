@@ -28,6 +28,9 @@
 ********************************************************************************
 */
 
+typedef struct {
+    char *info;
+} VER_CODE_INFO_T;
 
 
 /*
@@ -36,6 +39,8 @@
 ********************************************************************************
 */
 static char s_version[MAX_VERSION_LEN];
+VER_CODE_INFO_T const g_code_time = {__DATE__" "__TIME__};
+
 
 
 /*******************************************************************
@@ -46,13 +51,15 @@ static char s_version[MAX_VERSION_LEN];
 ********************************************************************/
 char *YX_GetVersion(void)
 {
+    /* boot还未做,先屏蔽 */
+
     INT32U pos, entry_info;
     char const *version;
     APP_HEAD_T *p_head;
     CODE_INFO_T *pinfo;
-    
+ 
     YX_STRCPY(s_version, YX_VERSION_STR);
-    
+
     p_head = (APP_HEAD_T *)(FLASH_BOOT_HEAD_BASE);                             /* 头信息 */
     memcpy(&entry_info, p_head->entry, sizeof(entry_info));
     pinfo = (CODE_INFO_T *)(FLASH_BOOT_HEAD_BASE + entry_info + T_OFFSET(APP_HEAD_T, entry));/* 固件信息 */
@@ -63,6 +70,7 @@ char *YX_GetVersion(void)
     } else {
         YX_STRCAT(s_version, "-x.x");
     }
+
     
     return s_version;
 }

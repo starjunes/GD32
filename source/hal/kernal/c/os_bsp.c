@@ -11,8 +11,8 @@
 *******************************************************************************/
 #include "os_include.h"
 #include "os_timer.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_conf.h"
+#include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "st_irq_drv.h"
 
 /*
@@ -55,12 +55,21 @@ __attribute__ ((section ("IRQ_HANDLE"))) void SysTickHandler(void)
 ********************************************************************/
 void OS_SysTickStartup(void)
 {
-    SysTick->CTRL &= ~(SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk);    /* 关闭中断和定时器 */
+    INT32U tick;
+    RCC_ClocksTypeDef RCC_Clocks;
+    
+    RCC_GetClocksFreq(&RCC_Clocks);  
+    //SysTick->CTRL &= ~(SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk);    /* 关闭中断和定时器 */
+    //SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);
     ST_IRQ_ConfigIrqPriority(SysTick_IRQn, IRQ_PRIOTITY_SYSTICK);               /* 配置中断优先级 */
     ST_IRQ_InstallIrqHandler(SysTick_IRQn, (IRQ_SERVICE_FUNC)SysTickHandler);
-    SysTick->LOAD  = ((SystemCoreClock / (8 * 1000)) * PERTICK)- 1;            /* set reload register */
-    SysTick->VAL   = 0;                                                        /* Load the SysTick Counter Value */
-    SysTick->CTRL |= (SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk);     /* Enable SysTick IRQ and SysTick Timer */
+    tick = ((RCC_Clocks.SYSCLK_Frequency / 1000) * PERTICK);
+    SysTick_Config(tick);  
+    
+    
+    //SysTick->LOAD  = ((SystemCoreClock / (8 * 1000)) * PERTICK)- 1;            /* set reload register */
+    //SysTick->VAL   = 0;                                                        /* Load the SysTick Counter Value */
+    //SysTick->CTRL |= (SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk);     /* Enable SysTick IRQ and SysTick Timer */
   
 #if 0
 	 SysTick_CounterCmd(SysTick_Counter_Disable);         /* Disable SysTick Counter    */

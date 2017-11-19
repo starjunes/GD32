@@ -53,28 +53,31 @@ BOOLEAN ST_EXTI_OpenExtiFunction(INT8U pinid, INT8U trig, void (*callback)(void)
 BOOLEAN ST_EXTI_CloseExtiFunction(INT8U pinid);
 
 /*******************************************************************
-** 函数名称: EXTI0_1_IrqHandle
+** 函数名称: EXTI0_IrqHandle
 ** 函数描述: 中断服务程序
 ** 参数:     无
 ** 返回:     无
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void EXTI0_1_IrqHandle(void);
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI0_IrqHandle(void);
+
 
 /*******************************************************************
-** 函数名称: EXTI2_3_IrqHandle
+** 函数名称: EXTI1_IrqHandle
 ** 函数描述: 中断服务程序
 ** 参数:     无
 ** 返回:     无
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void EXTI2_3_IrqHandle(void);
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI1_IrqHandle(void);
+
 
 /*******************************************************************
-** 函数名称: EXTI4_15_IrqHandle
+** 函数名称: EXTI0_3_IrqHandle
 ** 函数描述: 中断服务程序
 ** 参数:     无
 ** 返回:     无
 ********************************************************************/
-__attribute__ ((section ("IRQ_HANDLE"))) void EXTI4_15_IrqHandle(void);
+__attribute__ ((section ("IRQ_HANDLE"))) void EXTI3_IrqHandle(void);
+
 
 #endif
 

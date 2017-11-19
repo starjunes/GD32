@@ -12,7 +12,7 @@
 **| 2014/04/09 | 叶德焰 |  创建第一版本
 *********************************************************************************/
 #include "yx_include.h"
-#include "stm32f0xx.h"
+#include "stm32f10x.h"
 #include "st_gpio_drv.h"
 #include "st_adc_reg.h"
 #include "st_adc_drv.h"
@@ -35,7 +35,7 @@
 */
 typedef struct {
     INT8U  status;
-    INT16U value[ADC_CH_MAX + 3];
+    INT16U value[ADC_CH_MAX];
 } ADC_T;
 
 /*
@@ -66,10 +66,8 @@ static void ADC_PinsConfig(const ADC_REG_T *pinfo)
     /* Configure gpio */
     gpio_initstruct.GPIO_Pin   = (INT16U)(1 << pinfo->pin_adc);
     gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_initstruct.GPIO_Mode  = GPIO_Mode_AN;
-    gpio_initstruct.GPIO_OType = GPIO_OType_OD;
-    gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    
+    gpio_initstruct.GPIO_Mode  = GPIO_Mode_AIN;
+ 
     GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
 }
 
@@ -93,7 +91,7 @@ static void ADC_DMAConfig(const ADC_REG_T *pinfo)
     dma_initstruct.DMA_PeripheralBaseAddr = (INT32U)&(((ADC_TypeDef *)pinfo->adc_base)->DR);
     dma_initstruct.DMA_MemoryBaseAddr     = (INT32U)s_dcb.value;
     dma_initstruct.DMA_DIR                = DMA_DIR_PeripheralSRC;
-    dma_initstruct.DMA_BufferSize         = ADC_CH_MAX + 3;
+    dma_initstruct.DMA_BufferSize         = ADC_CH_MAX;
     dma_initstruct.DMA_PeripheralInc      = DMA_PeripheralInc_Disable;
     dma_initstruct.DMA_MemoryInc          = DMA_MemoryInc_Enable;
     dma_initstruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
@@ -131,31 +129,34 @@ static void ADC_AdcConfig(void)
     /* Configure the ADC1 in continous mode withe a resolutuion equal to 12 bits  */
     ADC_DeInit((ADC_TypeDef *)pinfo->adc_base);                                /* ADC DeInit */
     ADC_StructInit(&adc_initstructure);
-    adc_initstructure.ADC_Resolution           = ADC_Resolution_12b;
-    adc_initstructure.ADC_ContinuousConvMode   = ENABLE;
-    adc_initstructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
-    //adc_initstructure.ADC_ExternalTrigConv     = ADC_ExternalTrigConv_T1_TRGO;
-    adc_initstructure.ADC_DataAlign            = ADC_DataAlign_Right;
-    adc_initstructure.ADC_ScanDirection        = ADC_ScanDirection_Upward;
+
+    adc_initstructure.ADC_Mode = ADC_Mode_Independent;
+    adc_initstructure.ADC_ScanConvMode = ENABLE;
+    adc_initstructure.ADC_ContinuousConvMode = ENABLE;
+    adc_initstructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
+    adc_initstructure.ADC_DataAlign = ADC_DataAlign_Right;
+    adc_initstructure.ADC_NbrOfChannel = ADC_CH_MAX;
     ADC_Init((ADC_TypeDef *)pinfo->adc_base, &adc_initstructure); 
     
     for (i = 0; i < nreg; i++) {
         pinfo = ST_ADC_GetRegTblInfo(i);
         ADC_PinsConfig(pinfo);
-        ADC_ChannelConfig((ADC_TypeDef *)pinfo->adc_base, pinfo->channel, ADC_SampleTime_55_5Cycles);
+        ADC_RegularChannelConfig((ADC_TypeDef *)pinfo->adc_base, pinfo->channel, i+1,  ADC_SampleTime_55Cycles5);
     }
-    
+
+    #if 0
     /* Convert the ADC1 temperature sensor  with 55.5 Cycles as sampling time */ 
-    ADC_ChannelConfig((ADC_TypeDef *)pinfo->adc_base, ADC_Channel_TempSensor , ADC_SampleTime_55_5Cycles);  
-    ADC_TempSensorCmd(ENABLE);
+    ADC_RegularChannelConfig((ADC_TypeDef *)pinfo->adc_base, ADC_Channel_TempSensor , 1,  ADC_SampleTime_55Cycles5);  
+    
     
     /* Convert the ADC1 Vref  with 55.5 Cycles as sampling time */ 
-    ADC_ChannelConfig(ADC1, ADC_Channel_Vrefint , ADC_SampleTime_55_5Cycles); 
-    ADC_VrefintCmd(ENABLE);
-    
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_Vrefint , 1, ADC_SampleTime_55Cycles5); 
+    //ADC_VrefintCmd(ENABLE);
+    ADC_TempSensorVrefintCmd(ENABLE);
+    #endif
     /* Convert the ADC1 Vbat with 55.5 Cycles as sampling time */ 
-    ADC_ChannelConfig(ADC1, ADC_Channel_Vbat , ADC_SampleTime_55_5Cycles);  
-    ADC_VbatCmd(ENABLE);
+    //ADC_RegularChannelConfig(ADC1, ADC_Channel_Vbat, 1, ADC_SampleTime_55Cycles5);  
+    //ADC_VbatCmd(ENABLE);
 }
 
 /*******************************************************************
@@ -167,7 +168,7 @@ static void ADC_AdcConfig(void)
 static void ADC_StartConvert(void)
 {
     INT8U nreg;
-    INT32U ct_delay;
+    //INT32U ct_delay;
     const ADC_REG_T *pinfo;
     
     nreg = ST_ADC_GetCfgTblMax();
@@ -179,11 +180,22 @@ static void ADC_StartConvert(void)
     ADC_DMAConfig(pinfo);
     ADC_AdcConfig();
     
-    ADC_GetCalibrationFactor((ADC_TypeDef *)pinfo->adc_base);                  /* ADC Calibration */
-    ADC_DMARequestModeConfig((ADC_TypeDef *)pinfo->adc_base, ADC_DMAMode_Circular);/* ADC DMA request in circular mode */
+    //ADC_GetCalibrationFactor((ADC_TypeDef *)pinfo->adc_base);                  /* ADC Calibration */
+    //ADC_DMARequestModeConfig((ADC_TypeDef *)pinfo->adc_base, ADC_DMAMode_Circular);/* ADC DMA request in circular mode */
     ADC_DMACmd((ADC_TypeDef *)pinfo->adc_base, ENABLE);                        /* Enable ADC_DMA */
     ADC_Cmd((ADC_TypeDef *)pinfo->adc_base, ENABLE);                           /* Enable ADC1 */
-    
+
+    /* Enable ADC1 reset calibration register */   
+    ADC_ResetCalibration((ADC_TypeDef *)pinfo->adc_base);
+    /* Check the end of ADC1 reset calibration register */
+    while(ADC_GetResetCalibrationStatus((ADC_TypeDef *)pinfo->adc_base));
+
+    /* Start ADC1 calibration */
+    ADC_StartCalibration((ADC_TypeDef *)pinfo->adc_base);
+    /* Check the end of ADC1 calibration */
+    while(ADC_GetCalibrationStatus((ADC_TypeDef *)pinfo->adc_base));
+
+    #if 0
     ct_delay = 0;
     while (++ct_delay < 0x1000) {
         ClearWatchdog();
@@ -192,8 +204,9 @@ static void ADC_StartConvert(void)
         }
     }
     OS_ASSERT((ct_delay < 0x1000), RETURN_VOID);
+    #endif
     
-    ADC_StartOfConversion((ADC_TypeDef *)pinfo->adc_base);                     /* ADC1 regular Software Start Conv */
+    ADC_SoftwareStartConvCmd((ADC_TypeDef *)pinfo->adc_base, ENABLE);                     /* ADC1 regular Software Start Conv */
 }
 
 /*******************************************************************
@@ -217,7 +230,7 @@ void ST_ADC_InitDrv(void)
 ********************************************************************/
 INT32S ST_ADC_GetValue(INT8U ch)
 {
-    if (ch < ADC_CH_MAX + 3) {
+    if (ch < ADC_CH_MAX) {
         return ((3300 * s_dcb.value[ch]) >> 12);
     } else {
         return 0;

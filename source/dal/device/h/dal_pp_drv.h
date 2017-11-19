@@ -32,7 +32,7 @@ typedef enum {
     PP_REASON_MAX
 } PP_REASON_E;
 
-#define MAX_PP_NUM           18       /* 最大参数个数 */
+#define MAX_PP_NUM           20       /* 最大参数个数 */
 #define MAX_PP_CLASS_NUM     1         /* 最大数据区个数 */
 
 #define MAX_PP_INFORM        1        /* 最大注册参数变化通知函数个数 */

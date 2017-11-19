@@ -195,7 +195,7 @@ BOOLEAN DAL_PULSE_OpenClockOutput(void)
     if (!s_dcb.clock) {
         s_dcb.clock = TRUE;
         DAL_PULSE_ClosePulseCalFunction();
-        ST_GPIO_SetPin(GPIO_PIN_B3, GPIO_DIR_OUT, GPIO_PULL_NULL, 0);
+        ST_GPIO_SetPin(GPIO_PIN_B3, GPIO_DIR_OUT, GPIO_MODE_PP, 0);
     }
 
     return true;

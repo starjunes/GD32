@@ -162,12 +162,12 @@ static void HdlMsg_DN_PE_CMD_SET_REALCLOCK(INT8U cmd, INT8U *data, INT16U datale
         return;
     }
     
-    #if DEBUG_MMI > 0
+    #if EN_DEBUG > 0
     printf_com("<主机设置实时时钟:");
     printf_hex(data, datalen);
     printf_com(">\r\n");
     #endif
-    
+
     YX_InitStrm(&rstrm, data, datalen);
     
     systime.date.year   = YX_ReadBYTE_Strm(&rstrm);
