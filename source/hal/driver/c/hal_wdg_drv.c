@@ -21,14 +21,21 @@
 ** 参数:     void
 ** 返回:     无
 ********************************************************************/
-static BOOLEAN stm32_wdg_init(void)
+static BOOLEAN stm32_wdg_init(INT8U time)
 {
+    INT32U rlr;
+
+    /* 看门狗12位分频,频率为32kHZ/256 = 0.008s */
+    rlr = time / 0.008;
+    rlr = rlr > 4096 ? 4096 : rlr;
+    
     IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);                    /* Enable write access to registers */
-    IWDG_SetPrescaler(IWDG_Prescaler_32);                            /* overtime is 2s*/
-    IWDG_SetReload(0x9c4);
+    IWDG_SetPrescaler(IWDG_Prescaler_256);                            /* overtime is 2s*/
+    IWDG_SetReload(rlr);
     IWDG_ReloadCounter();                                            /* Reload IWDG counter */
     IWDG_Enable();                                                   /* Enable IWDG */
-    return TRUE;
+    return TRUE;                                                     /* Enable IWDG */
+
 }
 
 
@@ -40,7 +47,7 @@ static BOOLEAN stm32_wdg_init(void)
 ********************************************************************/
 void HAL_WDG_InitDrv(void)
 {
-    stm32_wdg_init();
+    stm32_wdg_init(5);
 
 }
 
