@@ -308,22 +308,33 @@ static BOOLEAN RTC_GetSystime(DATE_T *date, TIME_T *time, INT8U *weekday, INT32U
     INT32U timemap;
     struct tm *timetm;
     
-    if((date == NULL) || (time == NULL) || (weekday == NULL)) {
-        return FALSE;
-    }
+    //if((date == NULL) || (time == NULL) || (weekday == NULL)) {
+    //    return FALSE;
+    //}
 
-    subsecond = subsecond;
+    if(subsecond != 0) {
+        subsecond = subsecond;
+    } 
     
     timemap = RTC_GetCounter();
     timetm = localtime(&timemap);
 
-    date->year      = (timetm->tm_year - 100);
-    date->month     = (timetm->tm_mon + 1);                                    /* c库月份0~11代表1到12月份 */
-    date->day       = timetm->tm_mday;                                   
-    time->hour      = timetm->tm_hour;
-    time->minute    = timetm->tm_min;
-    time->second    = timetm->tm_sec;
-    (*weekday)      = (timetm->tm_wday == 0) ? 7 : (timetm->tm_wday);          /* C库0为周天 */
+    if(date != 0) {
+        date->year      = (timetm->tm_year - 100);
+        date->month     = (timetm->tm_mon + 1);                                    /* c库月份0~11代表1到12月份 */
+        date->day       = timetm->tm_mday;  
+    }
+
+    if(weekday) {
+        time->hour      = timetm->tm_hour;
+        time->minute    = timetm->tm_min;
+        time->second    = timetm->tm_sec;
+    }
+
+    if(weekday != 0) {
+        (*weekday)      = (timetm->tm_wday == 0) ? 7 : (timetm->tm_wday);          /* C库0为周天 */
+    }
+    
 
     return TRUE;
     #if 0
