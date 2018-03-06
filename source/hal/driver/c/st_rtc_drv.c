@@ -148,8 +148,11 @@ static BOOLEAN RTC_ClockConfig(INT8U clock)
         
         RCC_RTCCLKConfig(RCC_RTCCLKSource_LSI);                                /* 把RTC 时钟源配置为LSI */
     } else if (clock == RTC_CLOCK_LSE) {                                       /* 当使用LSE 最为RTC 时钟源*/
+
+        if(!ST_RTC_ClockIsOpen(clock)) {
+            RCC_LSEConfig(RCC_LSE_ON);                                             /* 使能LSE 振荡*/
+        }
         
-        RCC_LSEConfig(RCC_LSE_ON);                                             /* 使能LSE 振荡*/
         //RCC_LSEDriveConfig(RCC_LSEDrive_High);
         ct_delay = 0;
 
@@ -166,7 +169,6 @@ static BOOLEAN RTC_ClockConfig(INT8U clock)
         ;
     }
     
-    printf_com("wait time:s%d\r\n", ct_delay);
     if (ct_delay < 0x4f000) {
         RCC_RTCCLKCmd(ENABLE);                                                 /* 使能RTC 时钟*/
         if(!RTC_WaitForSynchro2()) {                                            /* Wait for RTC APB registers synchronisation */
@@ -385,7 +387,15 @@ void ST_RTC_InitDrv(void)
 BOOLEAN ST_RTC_OpenRtcFunction(INT8U clock)
 {
     BOOLEAN result;
+    INT8U curclock;
 
+    printf_com("start tick:%d\r\n", OS_GetSysTick(0));
+    /* 只有当被设置时钟源与当前时钟源不一致才复位 */
+    curclock = ST_RTC_GetClock();
+    if((curclock != clock) && (curclock != RTC_CLOCK_MAX)) {
+        BKP_DeInit();                                                              /* Reset Backup Domain */
+    }
+    
     if (BKP_ReadBackupRegister(BKP_DR1) == RTC_CONFIG) {
         if (s_rtc.status == 0x00) {
             s_rtc.status = 0x01;
@@ -404,7 +414,7 @@ BOOLEAN ST_RTC_OpenRtcFunction(INT8U clock)
 
     RTC_PwrConfig();
     //RTC_DeInit();                                                              /* 恢复RTC寄存器 */
-    BKP_DeInit();                                                              /* Reset Backup Domain */
+    
     //RCC_BackupResetCmd(ENABLE);                                                /* 复位备份区和时钟配置 */
     //RCC_BackupResetCmd(DISABLE);                                               /* 不复位 */
     
@@ -505,6 +515,104 @@ BOOLEAN ST_RTC_BattleIsNormal(void)
 {
     return s_rtc.battle;
 }
+
+/*******************************************************************
+** 函数名称: ST_RTC_GetTimeMap
+** 函数描述: 获取时间计数器
+** 参数:     void
+** 返回:     timemap
+********************************************************************/
+INT32U ST_RTC_GetTimeMap(void)
+{
+    return RTC_GetCounter();
+}
+
+/*******************************************************************
+** 函数名称: ST_RTC_ClockIsOpen
+** 函数描述: 检测RTC时钟是否开启
+** 参数:     [in] clock: 时钟源.见.RTC_CLOCK_E
+** 返回:     正常返回TRUE,否则返回FALSE
+********************************************************************/
+BOOLEAN ST_RTC_ClockIsOpen(INT8U clock)
+{
+    if(clock == RTC_CLOCK_LSI) {
+        if (RCC_GetFlagStatus(RCC_FLAG_LSIRDY) == SET) {
+            return TRUE;
+        }
+    } else if(clock == RTC_CLOCK_LSE) {
+        if (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == SET) {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*******************************************************************
+** 函数名称: ST_RTC_ClockIsOpen
+** 函数描述: 检测RTC时钟是否开启
+** 参数:     [in] clock: 时钟源.见.RTC_CLOCK_E
+** 返回:     正常返回TRUE,否则返回FALSE
+********************************************************************/
+BOOLEAN ST_RTC_OpenClock(INT8U clock)
+{
+    #if 0
+    if(ST_RTC_ClockIsOpen(clock)) {
+        return TRUE;
+    }
+    #endif
+    
+    if(clock == RTC_CLOCK_LSI) {
+        RCC_LSICmd(ENABLE);
+    }else if (clock == RTC_CLOCK_LSE){
+        RCC_LSEConfig(RCC_LSE_ON);  
+    }
+
+    return TRUE;
+}
+
+/*******************************************************************
+** 函数名称: ST_RTC_CloseClock
+** 函数描述: 关闭时钟源
+** 参数:     [in] clock: 时钟源.见.RTC_CLOCK_E
+** 返回:     正常返回TRUE,否则返回FALSE
+********************************************************************/
+BOOLEAN ST_RTC_CloseClock(INT8U clock)
+{
+    
+    if(clock == RTC_CLOCK_LSI) {
+        RCC_LSICmd(DISABLE);
+    }else if (clock == RTC_CLOCK_LSE){
+        RCC_LSEConfig(RCC_LSE_OFF);  
+    }
+
+    return TRUE;
+}
+
+/*******************************************************************
+** 函数名称: ST_RTC_GetClock
+** 函数描述: 获取RTC当前时钟源
+** 参数:     void
+** 返回:     见RTC_CLOCK_E
+********************************************************************/
+INT8U ST_RTC_GetClock(void)
+{
+    INT32U value;
+
+    value = RCC->BDCR;
+    value = ((value & 0x300) >> 8);
+
+    if(value == 1) {
+        return RTC_CLOCK_LSE;
+    } else if(value == 2) {
+        return RTC_CLOCK_LSI;
+    } else if(value == 3) {
+        return RTC_CLOCK_HSE_DIV32;
+    }
+
+    return RTC_CLOCK_MAX;
+}
+
 
 
 /**************************** (C) COPYRIGHT 2012  XIAMEN YAXON.LTD **************END OF FILE******/
