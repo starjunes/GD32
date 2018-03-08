@@ -327,7 +327,7 @@ static BOOLEAN RTC_GetSystime(DATE_T *date, TIME_T *time, INT8U *weekday, INT32U
         date->day       = timetm->tm_mday;  
     }
 
-    if(weekday) {
+    if(time != 0) {
         time->hour      = timetm->tm_hour;
         time->minute    = timetm->tm_min;
         time->second    = timetm->tm_sec;
@@ -389,7 +389,6 @@ BOOLEAN ST_RTC_OpenRtcFunction(INT8U clock)
     BOOLEAN result;
     INT8U curclock;
 
-    printf_com("start tick:%d\r\n", OS_GetSysTick(0));
     /* 只有当被设置时钟源与当前时钟源不一致才复位 */
     curclock = ST_RTC_GetClock();
     if((curclock != clock) && (curclock != RTC_CLOCK_MAX)) {
