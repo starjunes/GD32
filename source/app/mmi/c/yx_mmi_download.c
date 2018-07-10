@@ -16,7 +16,6 @@
 #include "hal_flash_drv.h"
 #include "dal_gpio_cfg.h"
 #include "dal_input_drv.h"
-#include "dal_ic_drv.h"
 #include "yx_bootmain.h"
 #include "yx_debug.h"
 

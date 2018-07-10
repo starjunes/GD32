@@ -15,7 +15,6 @@
 #include "yx_dym_drv.h"
 #include "st_rtc_drv.h"
 #include "dal_gpio_cfg.h"
-#include "dal_pulse_drv.h"
 #include "yx_debug.h"
 
 #if EN_MMI > 0

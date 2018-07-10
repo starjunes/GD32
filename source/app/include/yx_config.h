@@ -25,10 +25,10 @@
 
 #define EN_APP               1                   /* 0表示BOOT程序,1表示应用程序 */
 #define EN_FREECONST         1
-#define EN_ICCARD            1                   /* IC卡刷卡 */
+#define EN_ICCARD           0                   /* IC卡刷卡 */
 #define EN_ICCARD_PASER      0                   /* IC卡刷卡,解析数据 */
 #define EN_MMI               1                   /* 与主机通信驱动 */
-#define EN_GSENSOR           1                   /* 重力传感器 */
+#define EN_GSENSOR           0                   /* 重力传感器 */
 #define EN_CAN               1                   /* CAN总线通信 */
 #define EN_UARTEXT           1                   /* UART3串口扩展与AD1/AD2共用 */
 

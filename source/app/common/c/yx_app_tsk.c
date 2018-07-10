@@ -68,7 +68,6 @@ void Hdl_MSG_APP_OVERTIME(INT16U tskid, INT16U msgid, INT32U para1, INT32U para2
 ********************************************************************/
 #include "yx_dym_cfg.h"
 #include "st_rtc_drv.h"
-#include "hal_hit_drv.h"
 #include "st_adc_drv.h"
 #include "hal_can_drv.h"
 INT32U DAL_PULSE_GetTotalPulse(void);

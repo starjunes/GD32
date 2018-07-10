@@ -167,7 +167,7 @@
             <Capability>1</Capability>
             <DriverSelection>4096</DriverSelection>
           </Flash1>
-          <bUseTDR>0</bUseTDR>
+          <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2CM3.DLL</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
@@ -540,16 +540,6 @@
               <FilePath>..\source\app\mmi\c\yx_mmi_gps.c</FilePath>
             </File>
             <File>
-              <FileName>yx_mmi_sensor.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\app\mmi\c\yx_mmi_sensor.c</FilePath>
-            </File>
-            <File>
-              <FileName>yx_mmi_tr.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\app\mmi\c\yx_mmi_tr.c</FilePath>
-            </File>
-            <File>
               <FileName>yx_mmi_power.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\app\mmi\c\yx_mmi_power.c</FilePath>
@@ -595,11 +585,6 @@
               <FilePath>..\source\dal\device\c\dal_gpio_cfg.c</FilePath>
             </File>
             <File>
-              <FileName>dal_ic_drv.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\dal\device\c\dal_ic_drv.c</FilePath>
-            </File>
-            <File>
               <FileName>dal_input_drv.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\dal\device\c\dal_input_drv.c</FilePath>
@@ -620,11 +605,6 @@
               <FilePath>..\source\dal\device\c\dal_output_reg.c</FilePath>
             </File>
             <File>
-              <FileName>dal_pulse_drv.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\dal\device\c\dal_pulse_drv.c</FilePath>
-            </File>
-            <File>
               <FileName>yx_dal_tsk.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\dal\device\c\yx_dal_tsk.c</FilePath>
@@ -638,11 +618,6 @@
               <FileName>dal_pp_drv.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\dal\device\c\dal_pp_drv.c</FilePath>
-            </File>
-            <File>
-              <FileName>dal_hit_drv.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\dal\device\c\dal_hit_drv.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -860,11 +835,6 @@
               <FilePath>..\source\hal\driver\c\hal_sflash_drv.c</FilePath>
             </File>
             <File>
-              <FileName>hal_hit_drv.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\hal\driver\c\hal_hit_drv.c</FilePath>
-            </File>
-            <File>
               <FileName>hal_can_reg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\hal\driver\c\hal_can_reg.c</FilePath>
@@ -873,11 +843,6 @@
               <FileName>hal_can_drv.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\hal\driver\c\hal_can_drv.c</FilePath>
-            </File>
-            <File>
-              <FileName>hal_ic_drv.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\source\hal\driver\c\hal_ic_drv.c</FilePath>
             </File>
             <File>
               <FileName>hal_wdg_drv.c</FileName>

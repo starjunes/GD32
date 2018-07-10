@@ -23,8 +23,6 @@
 #include "yx_mmi_common.h"
 #include "yx_mmi_can.h"
 #include "yx_mmi_gps.h"
-#include "yx_mmi_sensor.h"
-#include "yx_mmi_tr.h"
 #include "yx_mmi_download.h"
 #include "yx_mmi_uartext.h"
 

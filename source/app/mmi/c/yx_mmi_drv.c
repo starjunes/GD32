@@ -15,7 +15,6 @@
 #include "yx_dym_drv.h"
 #include "st_rtc_drv.h"
 #include "dal_pp_drv.h"
-#include "dal_hit_drv.h"
 #include "yx_debug.h"
 #include "dal_pp_drv.h"
 
@@ -124,7 +123,7 @@ static void HdlMsg_DN_PE_ACK_LINK_REQ(INT8U cmd, INT8U *data, INT16U datalen)
         YX_MMI_ListAck(UP_PE_CMD_LINK_REQ, _SUCCESS);
         SendBeatCommand();
         YX_MMI_SendRealClock();
-        YX_MMI_SendGsensorInfo(DAL_HIT_GetGsensorStatus());                    /* 上报重力传感器状态 */
+        //YX_MMI_SendGsensorInfo(DAL_HIT_GetGsensorStatus());                    /* 上报重力传感器状态 */
         //YX_MMI_SendIccardInfo();
     }
 }
@@ -563,8 +562,8 @@ void YX_MMI_InitDrv(void)
     YX_MMI_InitCan();
     //YX_MMI_InitUart();
     YX_MMI_InitGps();
-    YX_MMI_InitSensor();
-    YX_MMI_InitTr();
+    //YX_MMI_InitSensor();
+    //YX_MMI_InitTr();
     YX_MMI_InitDownload();
 #if EN_UARTEXT > 0
     YX_MMI_InitUartext();

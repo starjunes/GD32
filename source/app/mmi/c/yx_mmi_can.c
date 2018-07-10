@@ -16,9 +16,7 @@
 #include "st_rtc_drv.h"
 #include "hal_can_drv.h"
 #include "dal_gpio_cfg.h"
-#include "dal_pulse_drv.h"
 #include "dal_pp_drv.h"
-#include "dal_ic_drv.h"
 #include "yx_debug.h"
 
 
@@ -898,9 +896,9 @@ static void HdlMsg_DN_PE_CMD_CTL_FUNCTION(INT8U cmd, INT8U *data, INT16U datalen
         {
         case 0x01:                                                             /* DB9时钟脉冲(1HZ)*/
             if (onoff == 0x01) {
-                DAL_PULSE_OpenClockOutput();                                   /* 打开1HZ脉冲输出 */
+                //DAL_PULSE_OpenClockOutput();                                   /* 打开1HZ脉冲输出 */
             } else {
-                DAL_PULSE_CloseClockOutput();                                  /* 关闭1HZ脉冲输出 */
+                //DAL_PULSE_CloseClockOutput();                                  /* 关闭1HZ脉冲输出 */
             }
             break;
         default:
@@ -1327,6 +1325,10 @@ static void ScanTmrProc(void *pdata)
                     
                     YX_WriteBYTE_Strm(wstrm, candata.dlc);                     /* 数据长度 */
                     YX_WriteDATA_Strm(wstrm, candata.data, candata.dlc);       /* 数据 */
+
+                    printf_com("收到can(%d) id:%08x dlc:%d", i, candata.id, candata.dlc);
+                    printf_hex(candata.data, candata.dlc);
+                    printf_com("\r\n");
                 }
             }
             YX_MMI_DirSend(UP_PE_CMD_CAN_DATA_REPORT, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
@@ -1363,10 +1365,33 @@ static void ScanTmrProc(void *pdata)
 ********************************************************************/
 void YX_MMI_InitCan(void)
 {
+    CAN_CFG_T can;
+     
     YX_MMI_Register(DN_PE_CMD_CAN_TRANS_DATA, MsgHandler);
     
     s_scantmr  = OS_CreateTmr(TSK_ID_APP, (void *)0, ScanTmrProc);
     OS_StartTmr(s_scantmr,  PERIOD_SCAN);
+
+    can.baud = 250000;
+    can.com = CAN_COM_0;
+    can.idtype = CAN_ID_TYPE_EXT;
+    can.mode = CAN_WORK_MODE_NORMAL;
+    if(HAL_CAN_OpenCan(&can)) {
+        printf_com("can1打开成功\r\n");
+    } else {
+        printf_com("can1打开失败\r\n");
+    }
+
+    can.com = CAN_COM_1;
+    
+    if(HAL_CAN_OpenCan(&can)) {
+        printf_com("can2打开成功\r\n");
+    } else {
+        printf_com("can2打开失败\r\n");
+    }
+
+    HAL_CAN_SetFilterParaByMask(CAN_COM_0, CAN_ID_TYPE_EXT, 0, 0, 0);
+    HAL_CAN_SetFilterParaByMask(CAN_COM_1, CAN_ID_TYPE_EXT, 0, 0, 0);
 }
 
 #endif
