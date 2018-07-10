@@ -97,6 +97,16 @@ void DAL_GPIO_PullupPowerSave(void);
 void DAL_GPIO_PulldownPowerSave(void);
 
 /*******************************************************************
+** 函数名:     DAL_GPIO_InitCapCharge
+** 函数描述:   法拉电容充电控制
+** 参数:       无
+** 返回:       无
+********************************************************************/
+void DAL_GPIO_InitCapCharge(void);
+void DAL_GPIO_PullupCapCharge(void);
+void DAL_GPIO_PulldownCapCharge(void);
+
+/*******************************************************************
 ** 函数名:     DAL_GPIO_PullupGpsPower
 ** 函数描述:   控制GPS电源
 ** 参数:       无
@@ -218,6 +228,7 @@ BOOLEAN DAL_GPIO_ReadPowDect(INT8U port);
 void DAL_GPIO_InitLowVol(INT8U port);
 BOOLEAN DAL_GPIO_ReadLowVol(INT8U port);
 
+
 /*******************************************************************
 ** 函数名:     ReadValue_VINLOW
 ** 函数描述:   读取ADC值
@@ -233,15 +244,6 @@ INT32U ReadValue_VINLOW(void);
 ** 返回:       返回ADC值
 ********************************************************************/
 INT32U ReadValue_ADC2(void);
-
-/*******************************************************************
-** 函数名:     DAL_GPIO_RegistReadAdValue
-** 函数描述:   读取app AD值函数
-** 参数:       [in] handler: 处理器
-** 返回:        成功返回TRUE,无效返回false
-********************************************************************/
-BOOLEAN DAL_GPIO_RegistReadAdValue( INT16U (* handler)(INT8U ch));
-
 
 #endif
 

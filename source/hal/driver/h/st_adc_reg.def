@@ -26,10 +26,9 @@
 
 
 BEGIN_ADC_CFG
-    ADC_DEF(ADC_CH_0, GPIO_PinSource7,  ADC_Channel_7,  DMA1_Channel1_BASE,  ADC1_BASE, GPIOA_BASE, RCC_APB2Periph_ADC1) /* 主电源电压检测 */
-#if EN_UARTEXT == 0
-    ADC_DEF(ADC_CH_1, GPIO_PinSource4,  ADC_Channel_14, DMA1_Channel1_BASE,  ADC1_BASE, GPIOC_BASE, RCC_APB2Periph_ADC1) /* ADC1 */
-    ADC_DEF(ADC_CH_2, GPIO_PinSource5,  ADC_Channel_15, DMA1_Channel1_BASE,  ADC1_BASE, GPIOC_BASE, RCC_APB2Periph_ADC1) /* ADC2 */
-#endif
+    ADC_DEF(ADC_CH_0, GPIO_PinSource0,  ADC_Channel_10,  DMA1_Channel1_BASE,  ADC1_BASE, GPIOC_BASE, RCC_APB2Periph_ADC1) /* 主电源电压检测 */
+
+    ADC_DEF(ADC_CH_1, GPIO_PinSource2,  ADC_Channel_12,  DMA1_Channel1_BASE,  ADC1_BASE, GPIOC_BASE, RCC_APB2Periph_ADC1) /* can数据电平采集 */
+	
 END_ADC_CFG
 

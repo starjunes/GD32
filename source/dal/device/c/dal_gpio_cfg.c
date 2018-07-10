@@ -17,6 +17,9 @@
 #include "dal_input_drv.h"
 #include "dal_output_drv.h"
 #include "dal_gpio_cfg.h"
+#include "dal_gsm_power.h"
+#include "st_i2c_reg.h"
+#include "st_i2c_simu.h"
 
 
 /*
@@ -25,41 +28,36 @@
 ********************************************************************************
 */
 #define PIN_WATCHDOG         GPIO_PIN_MAX        /* 看门狗清狗 */
-#define PIN_MMIPOWER         GPIO_PIN_B4         /* MMI电源控制 */
-#define PIN_MMIRESET         GPIO_PIN_A0         /* MMI复位控制 */
-#define PIN_POWERSAVE        GPIO_PIN_A12        /* 外围电路省电功能控制 */
-#define PIN_GPSPOWER         GPIO_PIN_A4         /* GPS电源控制 */
-#define PIN_GPSBAT           GPIO_PIN_A1         /* GPS备用电源控制 */
-#define PIN_GSMPOWER         GPIO_PIN_A15        /* GSM电源控制 */
-#define PIN_GSMONOFF         GPIO_PIN_A8         /* GSM开关机控制 */
-#define PIN_PULSE1           GPIO_PIN_C10        /* 脉冲通道控制 */
-#define PIN_PULSE2           GPIO_PIN_C11        /* 脉冲通道控制 */
+#define PIN_MMIPOWER         GPIO_PIN_D2         /* MMI电源控制 节油产品指 MU9600C */
+#define PIN_MMIRESET         GPIO_PIN_B3         /* MMI复位控制 节油产品值 MU9600C */
 
-/*
-********************************************************************************
-* 定义ad值
-********************************************************************************
-*/
-#define AD_POWER_CH 0
+#define PIN_CANSLEEP         GPIO_PIN_B7         /* can休眠 */
+#define PIN_CAN2SLEEP        GPIO_PIN_B4         /* can休眠 */
+#define PIN_POWERSAVE        GPIO_PIN_MAX         /* 外围电路省电功能控制*/
+#define PIN_CAP_SLEEP        GPIO_PIN_C6         /* 法拉电容防反灌控制脚 */
+#define PIN_CAP_CHARGE       GPIO_PIN_C12         /* 法拉电容充电使能控制 */
+
+#define PIN_GPSPOWER         GPIO_PIN_MAX         /* GPS电源控制 */
+#define PIN_GPSBAT           GPIO_PIN_MAX         /* GPS备用电源控制 */
+#define PIN_GSMPOWER         GPIO_PIN_MAX        /* GSM电源控制 */
+#define PIN_GSMONOFF         GPIO_PIN_A8         /* GSM开关机控制 节油产品指 MU9600C */
+#define PIN_PULSE1           GPIO_PIN_MAX        /* 脉冲通道控制 */
+#define PIN_PULSE2           GPIO_PIN_MAX        /* 脉冲通道控制 */
 
 /*
 ********************************************************************************
 * 定义模块变量
 ********************************************************************************
 */
-
-typedef struct {
-    INT16U (* get_ad_values)(INT8U ch);
-}DAL_GPIO_DCB_T;
 //static INT32U s_advalue, ct_readvin, s_type;
-static DAL_GPIO_DCB_T s_dal_gpio_dcb = {0};
-        
 
+       
 /*
 ********************************************************************************
 *  看门狗
 ********************************************************************************
 */
+
 void DAL_GPIO_InitWatchdog(void)
 {
     ST_GPIO_SetPin(PIN_WATCHDOG, GPIO_DIR_OUT, GPIO_MODE_PP, 0);
@@ -214,19 +212,56 @@ void DAL_GPIO_PulldownDvrReset(void)
 ********************************************************************/
 void DAL_GPIO_InitPowerSave(void)
 {
+
+    //  #define PIN_CANSLEEP         GPIO_PIN_B3         /* can休眠 */
+    //  #define PIN_POWERSAVE        GPIO_PIN_C8         /* 外围电路省电功能控制*/
+    //  #define PIN_CAP_SLEEP        GPIO_PIN_C6         /* 法拉电容防反灌控制脚 */
+
     ST_GPIO_SetPin(PIN_POWERSAVE, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
+    ST_GPIO_SetPin(PIN_CANSLEEP, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
+    ST_GPIO_SetPin(PIN_CAN2SLEEP, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
+    ST_GPIO_SetPin(PIN_CAP_SLEEP, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
 }
 
 void DAL_GPIO_PullupPowerSave(void)
 {
     DAL_GPIO_InitPowerSave();
     ST_GPIO_WritePin(PIN_POWERSAVE, TRUE);
+    ST_GPIO_WritePin(PIN_CANSLEEP, TRUE);
+    ST_GPIO_WritePin(PIN_CAN2SLEEP, TRUE);
+    ST_GPIO_WritePin(PIN_CAP_SLEEP, TRUE);
 }
 
 void DAL_GPIO_PulldownPowerSave(void)
 {
     DAL_GPIO_InitPowerSave();
     ST_GPIO_WritePin(PIN_POWERSAVE, FALSE);
+    ST_GPIO_WritePin(PIN_CANSLEEP, FALSE);
+    ST_GPIO_WritePin(PIN_CAN2SLEEP, FALSE);
+    ST_GPIO_WritePin(PIN_CAP_SLEEP, FALSE);
+}
+
+/*******************************************************************
+** 函数名:     DAL_GPIO_InitCapCharge
+** 函数描述:   法拉电容充电控制
+** 参数:       无
+** 返回:       无
+********************************************************************/
+void DAL_GPIO_InitCapCharge(void)
+{
+    ST_GPIO_SetPin(PIN_CAP_CHARGE, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
+}
+
+void DAL_GPIO_PullupCapCharge(void)
+{
+    DAL_GPIO_InitCapCharge();
+    ST_GPIO_WritePin(PIN_CAP_CHARGE, TRUE);
+}
+
+void DAL_GPIO_PulldownCapCharge(void)
+{
+    DAL_GPIO_InitCapCharge();
+    ST_GPIO_WritePin(PIN_CAP_CHARGE, FALSE);
 }
 
 /*******************************************************************
@@ -475,11 +510,8 @@ BOOLEAN DAL_GPIO_ReadPowDect(INT8U port)
 {
     INT32S value;
 
-    if(s_dal_gpio_dcb.get_ad_values == 0) {
-        return FALSE;
-    }
-    value = s_dal_gpio_dcb.get_ad_values(AD_POWER_CH);
-    if (value < 5000 && value != 0) {
+    value = ST_ADC_GetValue(ADC_CH_0);
+    if (value < 300) {
         return true;
     } else {
         return false;
@@ -500,22 +532,15 @@ void DAL_GPIO_InitLowVol(INT8U port)
 BOOLEAN DAL_GPIO_ReadLowVol(INT8U port)
 {
     INT32S value;
-    
+
+    #if 0
     if (DAL_GPIO_ReadPowDect(port)) {                                          /* 已发生断电 */ 
         return false;
     }
-
-    if(s_dal_gpio_dcb.get_ad_values == 0) {
-        return FALSE;
-    }
-
-    value = s_dal_gpio_dcb.get_ad_values(AD_POWER_CH);
-    if(value == 0) {
-        return FALSE;
-    }
+    #endif
 
 #if VERSION_HW == VERSION_HW_OLD
-    //value = ST_ADC_GetValue(ADC_CH_0);
+    value = ST_ADC_GetValue(ADC_CH_0);
     if (value > 1513) {                                                        /* 读出的电压值〉18V认为是24V系统 */
         if (value > 1929) {                                                    /* 比较基准电压为22.6V:1929,22.2V:1896,23V:1968 */
             return false;
@@ -527,36 +552,17 @@ BOOLEAN DAL_GPIO_ReadLowVol(INT8U port)
     }
     return true;
 #else
-    //value = ST_ADC_GetValue(ADC_CH_0);
-    if (value > 18000) {                                                        /* 读出的电压值〉18V认为是24V系统 */
-        if (value > 22600) {                                                     /* 比较基准电压为22.6V:1990,22.2V:1960,23V:2031 */
+    value = ST_ADC_GetValue(ADC_CH_0);
+
+    if(value > 890) {
+        if(value > 1014) {
             return false;
         }
-    } else if (value > 8000) {                                                  /* 读出的电压值>8V，认为是12V系统 */
-        if (value > 10600) {                                                     /* 比较基准电压为10.6V:897,10.2V:859,11V:932 */
-            return false;
-        }
+    } else if(value > 480) {
+        return false;
     }
+    
     return true;
 #endif
 }
-
-
-/*******************************************************************
-** 函数名:     DAL_GPIO_RegistReadAdValue
-** 函数描述:   读取app
-** 参数:       [in] handler: 处理器
-** 返回:        成功返回TRUE,无效返回false
-********************************************************************/
-BOOLEAN DAL_GPIO_RegistReadAdValue( INT16U (* handler)(INT8U ch))
-{
-    if(handler == NULL) {
-        return FALSE;
-    }
-
-    s_dal_gpio_dcb.get_ad_values = handler;
-
-    return TRUE;
-}
-    
 

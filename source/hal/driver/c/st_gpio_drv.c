@@ -164,12 +164,12 @@ void ST_GPIO_SetPinEx(INT8U id, INT8U direction, INT8U mode,INT8U speed, INT8U l
 
     switch (speed) {
         case GPIO_SPEED_LOW:
-            GPIO_InitStructure.GPIO_Speed = speed + 1;
+            GPIO_InitStructure.GPIO_Speed = (GPIOSpeed_TypeDef)(speed + 1);
             break;
         case GPIO_SPEED_MEDI:
         case GPIO_SPEED_FAST:
         case GPIO_SPEED_HIGH:
-            GPIO_InitStructure.GPIO_Speed = speed;
+            GPIO_InitStructure.GPIO_Speed = (GPIOSpeed_TypeDef)speed;
             break;
     }
     

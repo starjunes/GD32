@@ -44,12 +44,15 @@ typedef struct {
     INT8U       p_dma_rx1[DMA_RX_LEN];
     INT8U      *p_rx;
     INT8U      *p_tx;
+    INT8U       pause;
 
 	INT32U      tx_len;
 	INT32U      rx_len;
     
     LOOP_BUF_T  r_round;
     LOOP_BUF_T  s_round;
+    UART_CFG_T  uartcfg;
+    BOOLEAN (*receive_callback)(INT8U com, INT8U *ptr, INT16U length);
 } UART_T;
 
 /*
@@ -112,9 +115,9 @@ static void STM32_UART_PinsConfig(const UART_TBL_T *pinfo, INT8U onoff)
         }
         #endif
     } else {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_PP;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AIN;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
-        GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->uart_pin_tx));
+        //GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->uart_pin_tx));
     }
     
     /* Configure USARTx_Rx as input floating */
@@ -133,9 +136,9 @@ static void STM32_UART_PinsConfig(const UART_TBL_T *pinfo, INT8U onoff)
         }
         #endif
     } else {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_PP;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AIN;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
-        GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->uart_pin_rx));
+        //GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->uart_pin_rx));
     }
 }
 
@@ -567,7 +570,8 @@ BOOLEAN ST_UART_OpenUart(UART_CFG_T *cfg)
     STM32_UART_PinsConfig(pinfo, TRUE);                                        /* configure the rx & tx pins */
     STM32_UART_DMAConfig(pinfo);                                               /* config uart1-4 tx DMA mode */
     STM32_UART_Init(cfg);                                                      /* 通信参数配置 */
-    
+
+    YX_MEMCPY(&s_uart[com].uartcfg, sizeof(s_uart[com].uartcfg), cfg, sizeof(UART_CFG_T));
     s_uart[com].status = _OPEN;
     return true;
 }
@@ -815,6 +819,87 @@ INT32U ST_UART_LeftOfSendbuf(INT8U com)
 }
 
 /*******************************************************************
+** 函数名称: ST_UART_Pause
+** 函数描述: 串口暂停工作,用于省电
+** 参数:     [in] com: 通道编号,见UART_COM_E
+**           [in] tx:  配置发送管脚电平
+**           [in] rx:  配置接收管脚电平
+** 返回:     剩余空间字节数
+********************************************************************/
+BOOLEAN ST_UART_Pause(INT8U com, INT8U tx, INT8U rx)
+{
+    OS_ASSERT((com < UART_COM_MAX), RETURN_FALSE);
+    
+    if((s_uart[com].status & _OPEN) == 0) {
+        return TRUE;
+    }
+
+    if(ST_UART_CloseUart(com))  {
+        s_uart[com].pause = TRUE;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/*******************************************************************
+** 函数名称: ST_UART_Restart
+** 函数描述: 按上次暂停配置重新开始
+** 参数:     [in] com: 通道编号,见UART_COM_E
+** 返回:     剩余空间字节数
+********************************************************************/
+BOOLEAN ST_UART_Restart(INT8U com)
+{
+    OS_ASSERT((com < UART_COM_MAX), RETURN_FALSE);
+
+    if((s_uart[com].status & _OPEN) != 0) {
+        return TRUE;
+    }
+    
+    if(!s_uart[com].pause) {
+        return FALSE;
+    }
+
+    s_uart[com].pause = FALSE;
+
+    ST_UART_OpenUart(&s_uart[com].uartcfg);
+
+    return TRUE;
+}
+
+/*******************************************************************
+** 函数名称: ST_UART_GetLastCfg
+** 函数描述: 获取上次配置参数
+** 参数:     [in] com: 通道编号,见UART_COM_E
+** 返回:     UART_CFG_T
+********************************************************************/
+UART_CFG_T * ST_UART_GetLastCfg(INT8U com)
+{
+    OS_ASSERT((com < UART_COM_MAX), RETURN_FALSE);
+
+    if(s_uart[com].uartcfg.tx_len == 0 || s_uart[com].uartcfg.rx_len == 0 ) {
+        return 0;
+    }
+
+    return &s_uart[com].uartcfg;
+}
+
+/*******************************************************************
+** 函数名称: ST_UART_RegeditReceive
+** 函数描述: 注册串口数据接收
+** 参数:     [in] com: 通道编号,见UART_COM_E
+**           [in] fp:  处理回调
+** 返回:     结果
+注意:        注册的处理器由中断函数直接调用,不可处理耗时长的函数
+********************************************************************/
+BOOLEAN ST_UART_RegeditReceive(INT8U com, BOOLEAN (*fp)(INT8U com, INT8U *ptr, INT16U length))
+{
+   s_uart[com].receive_callback = fp;
+
+    return TRUE;
+}
+
+/*******************************************************************
 ** 函数名称: UARTx_TxDMAIrqService
 ** 函数描述: DMA发送中断处理
 ** 参数:     [in] com: 通道编号,见UART_COM_E
@@ -948,6 +1033,12 @@ __attribute__ ((section ("IRQ_HANDLE"))) void Uartx_RxIrqService(INT8U com, INT3
 	
 	if ((s_uart[com].status & _OPEN) != 0) {
 	    YX_WriteLoopBuffer_INT(&s_uart[com].r_round, data);
+
+        /* 分发给其他处理器 */
+        if(s_uart[com].receive_callback != 0) {
+            s_uart[com].receive_callback(com, (INT8U *)&data, 1);
+        }
+        
 	} else {
 	    USART_ITConfig((USART_TypeDef *)uart_base, USART_IT_RXNE, DISABLE);
 	}
