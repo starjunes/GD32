@@ -27,6 +27,6 @@
 
 BEGIN_I2C_CFG
     I2C_DEF(I2C_COM_0, 1, GPIO_PinSource10, GPIO_PinSource11,  I2C2_BASE, GPIOB_BASE, RCC_APB1Periph_I2C2)
-    I2C_DEF(I2C_COM_1, 1, GPIO_PinSource8,  GPIO_PinSource6,   0,         GPIOC_BASE, 0)
+    I2C_DEF(I2C_COM_1, 0, GPIO_PinSource8,  GPIO_PinSource6,   0,         GPIOC_BASE, 0)
 END_I2C_CFG
 

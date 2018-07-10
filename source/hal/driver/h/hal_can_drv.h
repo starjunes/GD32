@@ -81,6 +81,7 @@ typedef enum {
 * define struct
 ********************************************************************************
 */
+
 /* 接收结构体 */
 typedef struct {
     INT32U id;               /* 帧ID,标准帧则取值0~0x7FF,扩展帧则取值0~0x1FFFFFFF. */
@@ -108,6 +109,12 @@ typedef struct {
     INT8U  rec;              /* 接收错误计数器 */
 } CAN_STATUS_T;
 
+typedef struct {
+    INT8U       pos;
+    INT8U       used;
+    INT8U       max;
+    CAN_DATA_T *pmsg;
+} CAN_DATA_Q_T;
 
 /*******************************************************************
 ** 函数名称: HAL_CAN_InitDrv
@@ -206,6 +213,41 @@ INT32U HAL_CAN_UsedOfRecvbuf(INT8U com);
 ** 返回:     剩余数据帧数
 ********************************************************************/
 INT32U HAL_CAN_LeftOfSendbuf(INT8U com);
+
+/*******************************************************************
+** 函数名称:   HAL_CAN_WriteLoopData
+** 函数描述:   往循环缓冲区中写入一帧数据
+** 参数:       [in]  loop:   循环缓冲区管理结构体
+**             [in]  data:   写入数据
+** 返回:       成功返回true,失败返回false
+********************************************************************/
+BOOLEAN HAL_CAN_WriteLoopData(CAN_DATA_Q_T *loop, CAN_DATA_T *data);
+
+/*******************************************************************
+** 函数名称:   ReadLoopData_INT
+** 函数描述:   从循环缓冲区中读取一帧数据
+** 参数:       [in]  loop:    循环缓冲区管理结构体
+**             [out] data:    读取数据
+** 返回:       成功返回TRUE,失败返回FALSE
+********************************************************************/
+BOOLEAN HAL_CAN_ReadLoopData(CAN_DATA_Q_T *loop, CAN_DATA_T *data);
+
+/*******************************************************************
+** 函数名称:   HAL_CAN_UsedOfLoopBuffer_INT
+** 函数描述:   获取循环缓冲区中已使用空间
+** 参数:       [in]  loop:    循环缓冲区管理结构体
+** 返回:       已使用空间字节数
+********************************************************************/
+INT32U HAL_CAN_UsedOfLoopBuffer(CAN_DATA_Q_T *loop);
+
+/*******************************************************************
+** 函数名称:   ReadLoopData_INT
+** 函数描述:   从循环缓冲区中读取一帧数据
+** 参数:       [in]  loop:    循环缓冲区管理结构体
+**             [out] data:    读取数据
+** 返回:       成功返回TRUE,失败返回FALSE
+********************************************************************/
+BOOLEAN HAL_CAN_InitLoopData(CAN_DATA_Q_T *loop, CAN_DATA_T * initloop, INT8U cnt);
 
 
 __attribute__ ((section ("IRQ_HANDLE"))) void CAN1_Rx_IrqHandle(void);

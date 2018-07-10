@@ -487,8 +487,8 @@ void ST_UART_InitDrv(void)
     
     //ST_UART_OpenUart(&cfg);
     
-    cfg.com     = UART_COM_1;
-    cfg.baud    = 9600;
+    cfg.com     = UART_COM_3;
+    cfg.baud    = 115200;
     cfg.rx_len  = 128;               /* 配置平台接收缓存长度 */
     cfg.tx_len  = 512;               /* 配置平台发送缓存长度 */
     ST_UART_OpenUart(&cfg);

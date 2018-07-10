@@ -29,19 +29,13 @@
 #define _OPEN                0x80
 
 #define MAX_CAN_SEND         50
-#define MAX_CAN_RECV         100
+#define MAX_CAN_RECV         30
 
 /*
 ********************************************************************************
 * 数据结构定义
 ********************************************************************************
 */
-typedef struct {
-    INT8U       pos;
-    INT8U       used;
-    INT8U       max;
-    CAN_DATA_T *pmsg;
-} CAN_DATA_Q_T;
 
 typedef struct {
     INT8U        status;
@@ -247,6 +241,14 @@ static void STM32_CAN_PinsConfig(const CAN_REG_T *pinfo, INT8U onoff)
     
     RCC_AHBPeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOB, ENABLE);                        /* 开启GPIO系统时钟 */
 
+    switch(pinfo->can_base) {
+        case CAN1_BASE:
+            GPIO_PinRemapConfig(GPIO_Remap1_CAN1 , ENABLE);
+            break;
+        case CAN2_BASE:
+            GPIO_PinRemapConfig(GPIO_Remap_CAN2, ENABLE);
+            break;
+    }
     
     /* Configure USARTx_Tx as alternate function push-pull */
     gpio_initstruct.GPIO_Pin   = (INT16U)(1 << pinfo->pin_tx);
@@ -258,9 +260,9 @@ static void STM32_CAN_PinsConfig(const CAN_REG_T *pinfo, INT8U onoff)
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
         //GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->pin_tx, GPIO_AF_4);
     } else {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_PP;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AIN;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
-        GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->pin_tx));
+        //GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->pin_tx));
     }
     
     /* Configure USARTx_Rx as input floating */
@@ -273,21 +275,16 @@ static void STM32_CAN_PinsConfig(const CAN_REG_T *pinfo, INT8U onoff)
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
         //GPIO_PinAFConfig((GPIO_TypeDef *)pinfo->gpio_base, pinfo->pin_rx, GPIO_AF_4);
     } else {
-        gpio_initstruct.GPIO_Mode  = GPIO_Mode_Out_PP;
+        gpio_initstruct.GPIO_Mode  = GPIO_Mode_AIN;
         GPIO_Init((GPIO_TypeDef *)pinfo->gpio_base, &gpio_initstruct);
-        GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->pin_rx));
+        //GPIO_ResetBits((GPIO_TypeDef *)pinfo->gpio_base, (INT16U)(1 << pinfo->pin_rx));
     }
 
-    #if 0
-    switch(pinfo->can_base) {
-        case CAN1_BASE:
-            GPIO_PinRemapConfig(GPIO_Remap1_CAN1 , ENABLE);
-            break;
-        case CAN2_BASE:
-            //GPIO_PinRemapConfig(GPIO_Remap_CAN2, ENABLE);
-            break;
-    }
-    #endif
+     
+
+    //#if 0
+
+    //#endif
 
 }
 
@@ -424,11 +421,39 @@ static BOOLEAN STM32_CAN_Init(CAN_CFG_T *cfg)
    // can_initstruct.CAN_BS2 = CAN_BS2_8tq;                                      /* Segment 2 */
    // can_initstruct.CAN_Prescaler = 2 * (1000000 / baud);                       /* Specifies the length of a time quantum. It ranges from 1 to 1024. */
 
+    #if 0
     can_initstruct.CAN_SJW = CAN_SJW_1tq;                                      /* bit to perform resynchronization */
     can_initstruct.CAN_BS1 = CAN_BS1_3tq;                                     /* Segment 1 */
     can_initstruct.CAN_BS2 = CAN_BS2_2tq;                                     /* Segment 2 */
     can_initstruct.CAN_Prescaler = (36000000 / (baud * (1 + 3 + 2)));       /* Specifies the length of a time quantum. It ranges from 1 to 1024. */
-	
+	#endif
+
+    /* 采样点(1 + BS1)/(1 + BS1 + BS2) */
+    /* 网上说法: <=500K 87.5% >500K  80% >800K  75% */
+    /* 此处程序参照老m3 BS1 BS2*/
+    
+    if(baud <= 250000) {
+        can_initstruct.CAN_SJW = CAN_SJW_2tq;                                       /* bit to perform resynchronization */
+        can_initstruct.CAN_BS1 = CAN_BS1_13tq;                                      /* Segment 1 */
+        can_initstruct.CAN_BS2 = CAN_BS2_2tq;                                       /* Segment 2 */
+        can_initstruct.CAN_Prescaler = (36000000 / (baud * (1 + 13 + 2)));          /* Specifies the length of a time quantum. It ranges from 1 to 1024. */
+    }else if(baud <= 800000) {
+        can_initstruct.CAN_SJW = CAN_SJW_1tq;
+        can_initstruct.CAN_BS1 = CAN_BS1_7tq;
+        can_initstruct.CAN_BS2 = CAN_BS2_4tq;
+        can_initstruct.CAN_Prescaler = (36000000 / (baud * (1 + 7 + 4)));
+    }else if(baud <= 1000000) {
+         can_initstruct.CAN_SJW = CAN_SJW_1tq;
+        can_initstruct.CAN_BS1 = CAN_BS1_5tq; 
+        can_initstruct.CAN_BS2 = CAN_BS2_3tq;
+        can_initstruct.CAN_Prescaler = (36000000 / (baud * (1 + 5 + 3))); 
+    }else {
+        can_initstruct.CAN_SJW = CAN_SJW_1tq;
+        can_initstruct.CAN_BS1 = CAN_BS1_13tq;
+        can_initstruct.CAN_BS2 = CAN_BS2_4tq;
+        can_initstruct.CAN_Prescaler = (36000000 / (baud * (1 + 13 + 4)));
+    }
+    
 	/* configure can */
     result = CAN_Init((CAN_TypeDef *)pinfo->can_base, &can_initstruct);
     if (result == CAN_InitStatus_Success) {
@@ -895,6 +920,59 @@ INT32U HAL_CAN_LeftOfSendbuf(INT8U com)
     
     return LeftOfLoopBuffer(&s_can[com].sendloop);
 }
+
+/*******************************************************************
+** 函数名称:   HAL_CAN_WriteLoopData
+** 函数描述:   往循环缓冲区中写入一帧数据
+** 参数:       [in]  loop:   循环缓冲区管理结构体
+**             [in]  data:   写入数据
+** 返回:       成功返回true,失败返回false
+********************************************************************/
+BOOLEAN HAL_CAN_WriteLoopData(CAN_DATA_Q_T *loop, CAN_DATA_T *data)
+{
+   return WriteLoopData_INT(loop, data);
+}
+
+/*******************************************************************
+** 函数名称:   ReadLoopData_INT
+** 函数描述:   从循环缓冲区中读取一帧数据
+** 参数:       [in]  loop:    循环缓冲区管理结构体
+**             [out] data:    读取数据
+** 返回:       成功返回TRUE,失败返回FALSE
+********************************************************************/
+BOOLEAN HAL_CAN_ReadLoopData(CAN_DATA_Q_T *loop, CAN_DATA_T *data)
+{
+   return ReadLoopData_INT(loop, data);
+}
+
+/*******************************************************************
+** 函数名称:   HAL_CAN_UsedOfLoopBuffer_INT
+** 函数描述:   获取循环缓冲区中已使用空间
+** 参数:       [in]  loop:    循环缓冲区管理结构体
+** 返回:       已使用空间字节数
+********************************************************************/
+INT32U HAL_CAN_UsedOfLoopBuffer(CAN_DATA_Q_T *loop)
+{
+    return UsedOfLoopBuffer_INT(loop);
+}
+
+/*******************************************************************
+** 函数名称:   ReadLoopData_INT
+** 函数描述:   从循环缓冲区中读取一帧数据
+** 参数:       [in]  loop:    循环缓冲区管理结构体
+**             [out] data:    读取数据
+** 返回:       成功返回TRUE,失败返回FALSE
+********************************************************************/
+BOOLEAN HAL_CAN_InitLoopData(CAN_DATA_Q_T *loop, CAN_DATA_T * initloop, INT8U cnt)
+{
+    loop->pmsg = initloop;                         
+    loop->used = 0;
+    loop->pos  = 0;
+    loop->max  = cnt;
+
+    return TRUE;
+}
+
 
 /*******************************************************************
 ** 函数名称: CAN1_IrqHandle
