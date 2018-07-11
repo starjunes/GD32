@@ -38,26 +38,9 @@
  参数1区：不经常改动，重要参数注册到该区 
  ***********************************************************/
 BEGIN_PP_DEF(PP_TYPE_CRITICAL, 2, "ppcri")
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_DEVICEID,     sizeof(DEVICE_ID_T),           PP_BK,     0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_SMSPSW,       sizeof(SMS_PASSWORD_T),        PP_NBK,    &i_sms_password)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_MYTEL,        sizeof(TEL_T),                 PP_BK,     0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_SMSCTEL,      sizeof(TEL_T),                 PP_BK,     0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_ALARMTEL,     sizeof(TEL_T),                 PP_BK,     0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_GPRSPARA1,    sizeof(GPRS_PARA_T),           PP_BK,     &i_gprspara)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_GPRSPARA2,    sizeof(GPRS_PARA_T),           PP_BK,     &i_gprspara)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_AUTHCODE1,    sizeof(AUTH_CODE_T),           PP_NBK,    0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_AUTHCODE2,    sizeof(AUTH_CODE_T),           PP_NBK,    0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_LINKPARA1,    sizeof(LINK_PARA_T),           PP_NBK,    0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_LINKPARA2,    sizeof(LINK_PARA_T),           PP_NBK,    0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_DEVICE,       sizeof(DEVICE_INFO_T),         PP_NBK,    0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_VEHICHE,      sizeof(VEHICLE_INFO_T),        PP_NBK,    0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_SLEEP,        sizeof(SLEEP_PARA_T),          PP_NBK,    0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_AUTOREPT,     sizeof(AUTOREPT_PARA_T),       PP_NBK,    0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_GPSDATA,      sizeof(GPS_DATA_T),            PP_NBK,    0)
-    
+    PP_DEF(PP_TYPE_CRITICAL, PP_ID_DEVICEID,     sizeof(DEVICE_ID_T),           PP_BK,     0)   
     PP_DEF(PP_TYPE_CRITICAL, PP_RESET_,          sizeof(RESET_RECORD_T),        PP_NBK,    0)
-    //PP_DEF(PP_TYPE_CRITICAL, PP_GSENSOR_,    sizeof(GSENSOR_CALIBRATION_T), PP_NBK,    0)
-
+    PP_DEF(PP_TYPE_CRITICAL, PP_ID_SLEEP,        sizeof(SLEEP_PARA_T),          PP_NBK,    0)
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_LOG,          sizeof(LOG_FLAG_T),            PP_NBK,    &i_log_flag)
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_HOST_RESET,   sizeof(HOST_RESET_STATUS_T),   PP_NBK,    0)
 

@@ -12,7 +12,6 @@
 #include "yx_include.h"
 #include "dal_output_drv.h"
 #include "dal_pp_drv.h"
-#include "at_drv.h"
 #include "yx_debug.h"
 
 
@@ -73,31 +72,7 @@ void Hdl_MSG_APP_OVERTIME(INT16U tskid, INT16U msgid, INT32U para1, INT32U para2
 INT32U DAL_PULSE_GetTotalPulse(void);
 static void AppTmrProc(void *index)
 {
-    INT8U rssi, ber, simcard, creg, cgreg;
-    
-    ADP_NET_GetNetworkState(&simcard, &creg, &cgreg, &rssi, &ber);
-    if (creg == NETWORK_STATE_HOME || creg == NETWORK_STATE_ROAMING) {
-        s_dcb.ct_nonetwork = 0;
-        if (!s_dcb.creg) {
-            s_dcb.creg = TRUE;
-            DAL_OUTPUT_StartPermentFlash(OPT_LEDRED, 2, 20);
-            DAL_OUTPUT_StartPermentFlash(OPT_LEDGREEN, 2, 20);
-        }
-    } else {
-        if (rssi > 5) {
-            if (++s_dcb.ct_nonetwork >= MAX_NONETWORK) {                       /* 超过时间未搜索到网络,则复位模块 */
-                s_dcb.ct_nonetwork = 0;
-                AT_POWER_PowerReset();
-            }
-        }
-        
-        if (s_dcb.creg) {
-            s_dcb.creg = FALSE;
-            DAL_OUTPUT_StartPermentFlash(OPT_LEDRED, 2, 50);
-            DAL_OUTPUT_StartPermentFlash(OPT_LEDGREEN, 2, 50);
-        }
-    }
-    
+  
 #if DEBUG_SYS > 0
 #if 0
     INT32U pfilterid, pmaskid;

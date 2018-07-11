@@ -507,10 +507,10 @@ static void MemTmrProc(void *pdata)
 static void ResetInform(INT8U event, char *file, INT32U line)
 {
 #if EN_APP > 0
-    INT8U weekday;
-    INT32U subsecond;
-    GPS_DATA_T gpsdata;
-    SYSTIME_T systime;
+    //INT8U weekday;
+    //INT32U subsecond;
+    //GPS_DATA_T gpsdata;
+    //SYSTIME_T systime;
     
     if (event == RESET_EVENT_INITIATE) {
         YX_MMI_SendPeResetInform(MMI_RESET_EVENT_NORMAL);
@@ -522,11 +522,13 @@ static void ResetInform(INT8U event, char *file, INT32U line)
         ;
     }
     
+		#if 0
     if (ST_RTC_GetSystime(&systime.date, &systime.time, &weekday, &subsecond)) {
         DAL_PP_ReadParaByID(PP_ID_GPSDATA, (INT8U *)&gpsdata, sizeof(gpsdata));
         YX_MEMCPY(&gpsdata.systime, sizeof(gpsdata.systime), &systime, sizeof(systime));
         DAL_PP_StoreParaByID(PP_ID_GPSDATA, (INT8U *)&gpsdata, sizeof(gpsdata));
     }
+		#endif
 #else
     if (event == RESET_EVENT_INITIATE) {
         YX_MMI_SendPeResetInform(MMI_RESET_EVENT_NORMAL);
