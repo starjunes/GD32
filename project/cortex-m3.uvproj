@@ -357,7 +357,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,STM32F10X_CL,YX_RCC_CONFIG</Define>
               <Undefine></Undefine>
-              <IncludePath>..\;..\source\hal\main\h;..\source\hal\kernal\h;..\source\hal\toolbox\h;..\source\hal\debug\h;..\source\hal\driver\h;..\source\dal\device\h;..\source\dal\at\h;..\source\app\include;..\source\app\mmi\h;..\source\app\common\h;..\source\app\link\h;..\source\hal\M3Lib\CMSIS\CM3\CoreSupport;..\source\hal\M3Lib\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\source\hal\M3Lib\STM32F10x_StdPeriph_Driver\inc</IncludePath>
+              <IncludePath>..\;..\source\hal\main\h;..\source\hal\kernal\h;..\source\hal\toolbox\h;..\source\hal\debug\h;..\source\hal\driver\h;..\source\dal\device\h;..\source\dal\at\h;..\source\app\include;..\source\app\mmi\h;..\source\app\common\h;..\source\app\link\h;..\source\app\jieyou\h;..\source\hal\M3Lib\CMSIS\CM3\CoreSupport;..\source\hal\M3Lib\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\source\hal\M3Lib\STM32F10x_StdPeriph_Driver\inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -573,6 +573,16 @@
               <FileName>yx_mmi_com.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\app\mmi\c\yx_mmi_com.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>app_jieyou</GroupName>
+          <Files>
+            <File>
+              <FileName>yx_jieyou_cancheck.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\app\jieyou\c\yx_jieyou_cancheck.c</FilePath>
             </File>
           </Files>
         </Group>
