@@ -63,7 +63,14 @@ typedef struct {
 typedef struct {
     INT8U status;
 }HOST_RESET_STATUS_T;
-    
+
+/* can适配信息 */
+typedef struct {
+    BOOLEAN can1;       /* can1是否能接收数据 */
+    INT8U   can2_high;  /* can2 高引脚编号 */
+    INT8U   cam2_low;   /* can2低引脚编号 */
+} CAN_ADAPTER_INTO_T;
+   
 /*
 ********************************************************************************
 *                        默认PP参数定义
@@ -75,6 +82,7 @@ typedef struct {
 
 static LOG_FLAG_T               i_log_flag = {0};
 
+static CAN_ADAPTER_INTO_T        i_can_adapter_info = {0, 0, 0};
 
 #endif
 
