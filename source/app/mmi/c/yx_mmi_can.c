@@ -18,6 +18,7 @@
 #include "dal_gpio_cfg.h"
 #include "dal_pp_drv.h"
 #include "yx_debug.h"
+#include "yx_sleep.h"
 
 
 #if EN_MMI > 0
@@ -658,6 +659,7 @@ static void ScanTmrProc(void *pdata)
                     YX_WriteBYTE_Strm(wstrm, candata.dlc);                     /* 数据长度 */
                     YX_WriteDATA_Strm(wstrm, candata.data, candata.dlc);       /* 数据 */
 
+                    YX_SLEEP_ConfirmRecCan((INT8U*)&candata);
                     printf_com("收到can(%d) id:%08x dlc:%d", i, candata.id, candata.dlc);
                     printf_hex(candata.data, candata.dlc);
                     printf_com("\r\n");

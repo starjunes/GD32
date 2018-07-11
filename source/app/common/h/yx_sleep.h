@@ -50,4 +50,12 @@ void YX_SLEEP_Wakeup(INT8U waketime, INT8U event);
 ********************************************************************/
 INT8U YX_SLEEP_GetWakeupEvent(void);
 
+/*******************************************************************
+** 函数名:     YX_SLEEP_ConfirmRecCan
+** 函数描述:   确认收到can消息
+** 参数:       无
+** 返回:       见 void
+********************************************************************/
+void YX_SLEEP_ConfirmRecCan(INT8U *candata);
+
 #endif
