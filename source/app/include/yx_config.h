@@ -45,11 +45,11 @@
 
 
 #if EN_DEBUG > 0
-#define DEBUG_MMI            1                   /* 调试外设通信 */
+#define DEBUG_MMI            0                   /* 调试外设通信 */
 #define DEBUG_ICCARD         0                   /* 调试IC卡刷卡功能 */
 #define DEBUG_PP             0                   /* 调试PP 存储驱动 */
 #define DEBUG_KEYBOARD       0                   /* 调试按键 */
-#define DEBUG_ADC            1                   /* ADC采样 */
+#define DEBUG_ADC            0                   /* ADC采样 */
 #define DEBUG_GSENSOR        0                   /* 重力传感器 */
 #define DEBUG_AT             0                   /* AT指令驱动 */
 #define DEBUG_TLINK          0                   /* 调试与服务器通信链路 */
