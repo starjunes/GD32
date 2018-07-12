@@ -70,7 +70,17 @@ typedef struct {
     INT8U   can2_high;  /* can2 高引脚编号 */
     INT8U   cam2_low;   /* can2低引脚编号 */
 } CAN_ADAPTER_INTO_T;
-   
+
+
+/* can配置信息 */
+
+typedef struct {
+    INT8U isvaild;
+    INT8U  mode;       /* 工作模式,见 CAN_WORK_MODE_E */
+    INT8U  idtype;     /* 帧ID类型,见 CAN_ID_TYPE_E */
+    INT32U baud;       /* 波特率 */
+} CAN_CFG_INFO_T;
+
 /*
 ********************************************************************************
 *                        默认PP参数定义
@@ -83,6 +93,8 @@ typedef struct {
 static LOG_FLAG_T               i_log_flag = {0};
 
 static CAN_ADAPTER_INTO_T        i_can_adapter_info = {0, 0, 0};
+
+static CAN_CFG_INFO_T            i_can_cfg_info = {TRUE, 0, 1, 250000};
 
 #endif
 

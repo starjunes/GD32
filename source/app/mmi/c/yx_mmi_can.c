@@ -297,6 +297,7 @@ static void HdlMsg_DN_PE_CMD_CAN_SET_PARA(INT8U cmd, INT8U *data, INT16U datalen
 {
     INT8U result, com, idtype;
     CAN_CFG_T cfg;
+    CAN_CFG_INFO_T pp_cfg;
     STREAM_T rstrm;
     
     YX_InitStrm(&rstrm, data, datalen);
@@ -316,11 +317,25 @@ static void HdlMsg_DN_PE_CMD_CAN_SET_PARA(INT8U cmd, INT8U *data, INT16U datalen
     #if DEBUG_MMI > 0
     printf_com("<CAN通信参数设置(%d)(%d)(%d)(%d)>\r\n", cfg.com, cfg.baud, cfg.idtype, cfg.mode);
     #endif
-    
-    if (HAL_CAN_OpenCan(&cfg)) {
+
+    if(!DAL_PP_ReadParaByID(PP_ID_CAN_CFG, (INT8U *)&pp_cfg, sizeof(pp_cfg))) {
+        YX_MEMSET(&pp_cfg, 0, sizeof(pp_cfg));
+    }
+
+    if(pp_cfg.isvaild && (pp_cfg.idtype == cfg.idtype) && (pp_cfg.mode == cfg.mode) && (pp_cfg.baud == cfg.baud)) {
         result = PE_ACK_MMI;
     } else {
-        result = PE_NAK_MMI;
+        if (HAL_CAN_OpenCan(&cfg)) {
+            result = PE_ACK_MMI;
+        } else {
+            result = PE_NAK_MMI;
+        }
+
+        pp_cfg.isvaild = TRUE;
+        pp_cfg.idtype = cfg.idtype;
+        pp_cfg.mode = cfg.mode;
+        pp_cfg.baud = cfg.baud;
+        DAL_PP_StoreParaByID(PP_ID_CAN_CFG, (INT8U *)&pp_cfg, sizeof(pp_cfg));
     }
     
     SendAck(UP_PE_ACK_CAN_SET_PARA, com, result);
@@ -699,33 +714,12 @@ static void ScanTmrProc(void *pdata)
 ********************************************************************/
 void YX_MMI_InitCan(void)
 {
-    CAN_CFG_T can;
-     
+         
     YX_MMI_Register(DN_PE_CMD_CAN_TRANS_DATA, MsgHandler);
     
     s_scantmr  = OS_CreateTmr(TSK_ID_APP, (void *)0, ScanTmrProc);
     OS_StartTmr(s_scantmr,  PERIOD_SCAN);
 
-    can.baud = 250000;
-    can.com = CAN_COM_0;
-    can.idtype = CAN_ID_TYPE_EXT;
-    can.mode = CAN_WORK_MODE_NORMAL;
-    if(HAL_CAN_OpenCan(&can)) {
-        printf_com("can1打开成功\r\n");
-    } else {
-        printf_com("can1打开失败\r\n");
-    }
-
-    can.com = CAN_COM_1;
-    
-    if(HAL_CAN_OpenCan(&can)) {
-        printf_com("can2打开成功\r\n");
-    } else {
-        printf_com("can2打开失败\r\n");
-    }
-
-    HAL_CAN_SetFilterParaByMask(CAN_COM_0, CAN_ID_TYPE_EXT, 0, 0, 0);
-    HAL_CAN_SetFilterParaByMask(CAN_COM_1, CAN_ID_TYPE_EXT, 0, 0, 0);
 }
 
 #endif

@@ -43,7 +43,8 @@ BEGIN_PP_DEF(PP_TYPE_CRITICAL, 2, "ppcri")
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_SLEEP,        sizeof(SLEEP_PARA_T),          PP_NBK,    0)
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_LOG,          sizeof(LOG_FLAG_T),            PP_NBK,    &i_log_flag)
     PP_DEF(PP_TYPE_CRITICAL, PP_ID_HOST_RESET,   sizeof(HOST_RESET_STATUS_T),   PP_NBK,    0)
-    PP_DEF(PP_TYPE_CRITICAL, PP_ID_CAN_ADAPTER,   sizeof(CAN_ADAPTER_INTO_T),   PP_NBK,    &i_can_adapter_info)
+    PP_DEF(PP_TYPE_CRITICAL, PP_ID_CAN_ADAPTER,  sizeof(CAN_ADAPTER_INTO_T),    PP_NBK,    &i_can_adapter_info)
+    PP_DEF(PP_TYPE_CRITICAL, PP_ID_CAN_CFG,   	 sizeof(CAN_CFG_INFO_T),   		PP_NBK,    &i_can_cfg_info)
 
 END_PP_DEF(PP_TYPE_CRITICAL)
 
