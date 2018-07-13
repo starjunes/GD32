@@ -59,8 +59,8 @@ BEGIN_GPIO_CFG(GPIO_B, GPIOB_BASE, RCC_APB2Periph_GPIOB)
     GPIO_DEF(GPIO_B, GPIO_PIN_B2,  TRUE,  GPIO_Pin_2,   GPIO_Mode_Out_PP,  	GPIO_OType_PP, GPIO_PuPd_UP, 0)  		/* SAD0 */
     GPIO_DEF(GPIO_B, GPIO_PIN_B3,  TRUE,  GPIO_Pin_3,   GPIO_Mode_Out_PP, 	GPIO_OType_PP, GPIO_PuPd_UP, 1)  		/* MU9600C¸´Î» */
     GPIO_DEF(GPIO_B, GPIO_PIN_B4,  TRUE,  GPIO_Pin_4,   GPIO_Mode_Out_PP, 	GPIO_OType_PP, GPIO_PuPd_UP, 1)  		/* can1ÐÝÃß */
-    GPIO_DEF(GPIO_B, GPIO_PIN_B5,  TRUE,  GPIO_Pin_5,   GPIO_Mode_Out_PP, 	GPIO_OType_PP, GPIO_PuPd_UP, 1)  		/* can2_RX */
-    GPIO_DEF(GPIO_B, GPIO_PIN_B6,  TRUE,  GPIO_Pin_6,   GPIO_Mode_Out_PP, 	GPIO_OType_PP, GPIO_PuPd_UP, 0)  		/* can2_TX */
+    GPIO_DEF(GPIO_B, GPIO_PIN_B5,  FALSE,  GPIO_Pin_5,   GPIO_Mode_Out_PP, 	GPIO_OType_PP, GPIO_PuPd_UP, 1)  		/* can2_RX */
+    GPIO_DEF(GPIO_B, GPIO_PIN_B6,  FALSE,  GPIO_Pin_6,   GPIO_Mode_Out_PP, 	GPIO_OType_PP, GPIO_PuPd_UP, 0)  		/* can2_TX */
     GPIO_DEF(GPIO_B, GPIO_PIN_B7,  TRUE,  GPIO_Pin_7,   GPIO_Mode_Out_PP, 	GPIO_OType_PP, GPIO_PuPd_UP, 1)  		/* can2ÐÝÃß */
     GPIO_DEF(GPIO_B, GPIO_PIN_B8,  FALSE, GPIO_Pin_8,   GPIO_Mode_AIN, 		GPIO_OType_PP, GPIO_PuPd_NOPULL, 1)  	/* CAN1 RX */
     GPIO_DEF(GPIO_B, GPIO_PIN_B9,  FALSE, GPIO_Pin_9,   GPIO_Mode_AIN, 		GPIO_OType_PP, GPIO_PuPd_NOPULL, 1)  	/* CAN1 TX */
