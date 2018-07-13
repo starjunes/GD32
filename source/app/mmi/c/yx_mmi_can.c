@@ -19,6 +19,7 @@
 #include "dal_pp_drv.h"
 #include "yx_debug.h"
 #include "yx_sleep.h"
+#include "yx_jieyou_drv.h"
 
 
 #if EN_MMI > 0
@@ -427,11 +428,17 @@ static void HdlMsg_DN_PE_CMD_CAN_SET_FILTER_ID_LIST(INT8U cmd, INT8U *data, INT1
     for (i = 0; i < idnum; i++) {
         memptr[i] = YX_ReadLONG_Strm(&rstrm);                                  /* 滤波ID */
     }
-    
-    if (HAL_CAN_SetFilterParaByList(com - 1, idtype - 1, idnum, memptr)) {
-        result = PE_ACK_MMI;
+
+    YX_JieYou_SetCanFilterByList(idtype - 1, idnum, memptr);
+    /* can通道确认后,才进行滤波配置,未确认，则确认完后节油模块会配置 */
+    if(YX_JieYou_IsConfirm()) {
+        if (HAL_CAN_SetFilterParaByList(com - 1, idtype - 1, idnum, memptr)) {
+            result = PE_ACK_MMI;
+        } else {
+            result = PE_NAK_MMI;
+        }
     } else {
-        result = PE_NAK_MMI;
+        result = PE_ACK_MMI;
     }
     
     YX_DYM_Free(memptr);
@@ -476,11 +483,16 @@ static void HdlMsg_DN_PE_CMD_CAN_SET_FILTER_ID_MASK(INT8U cmd, INT8U *data, INT1
         memptr[i]         = YX_ReadLONG_Strm(&rstrm);                          /* 滤波ID */
         memptr[idnum + i] = YX_ReadLONG_Strm(&rstrm);                          /* 掩码ID */
     }
-    
-    if (HAL_CAN_SetFilterParaByMask(com - 1, idtype - 1, idnum, memptr, &memptr[idnum])) {
+
+    YX_JieYou_SetCanFilterByMask(idtype - 1, idnum, memptr, &memptr[idnum]);
+    if(YX_JieYou_IsConfirm()) {
+        if (HAL_CAN_SetFilterParaByMask(com - 1, idtype - 1, idnum, memptr, &memptr[idnum])) {
+            result = PE_ACK_MMI;
+        } else {
+            result = PE_NAK_MMI;
+        }
+    }else {
         result = PE_ACK_MMI;
-    } else {
-        result = PE_NAK_MMI;
     }
     
     YX_DYM_Free(memptr);
@@ -675,12 +687,19 @@ static void ScanTmrProc(void *pdata)
                     YX_WriteDATA_Strm(wstrm, candata.data, candata.dlc);       /* 数据 */
 
                     YX_SLEEP_ConfirmRecCan((INT8U*)&candata);
+                    YX_JieYou_Confirm(i, &candata);
+
                     printf_com("收到can(%d) id:%08x dlc:%d", i, candata.id, candata.dlc);
                     printf_hex(candata.data, candata.dlc);
                     printf_com("\r\n");
                 }
             }
-            YX_MMI_DirSend(UP_PE_CMD_CAN_DATA_REPORT, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
+
+            /* 等can通道确认完后,再往主机发送can数据 */
+            if(YX_JieYou_IsConfirm()) {
+                YX_MMI_DirSend(UP_PE_CMD_CAN_DATA_REPORT, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
+            }
+            
         }
     }
     
