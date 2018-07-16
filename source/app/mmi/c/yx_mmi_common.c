@@ -182,7 +182,7 @@ static void HdlMsg_DN_PE_CMD_SET_REALCLOCK(INT8U cmd, INT8U *data, INT16U datale
         weekday = 1;
     }
     
-    result = ST_RTC_OpenRtcFunction(RTC_CLOCK_LSE);
+    result = ST_RTC_OpenRtcFunction(RTC_CLOCK_LSI);
     if (result) {
         result = ST_RTC_SetSystime(&systime.date, &systime.time, weekday);
     }

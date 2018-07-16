@@ -77,7 +77,7 @@ static void AppTmrProc(void *index)
   
     /* rtc外部时钟开启需要时间,定时开启，直到启动成功 */
     if(!s_dcb.is_set_rtc) {
-        s_dcb.is_set_rtc = ST_RTC_OpenRtcFunction(RTC_CLOCK_LSE);
+        s_dcb.is_set_rtc = ST_RTC_OpenRtcFunction(RTC_CLOCK_LSI);
     }
     
 #if DEBUG_SYS > 0
