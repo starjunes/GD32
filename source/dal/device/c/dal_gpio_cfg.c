@@ -33,7 +33,8 @@
 
 #define PIN_CANSLEEP         GPIO_PIN_B7         /* can休眠 */
 #define PIN_CAN2SLEEP        GPIO_PIN_B4         /* can休眠 */
-#define PIN_POWERSAVE        GPIO_PIN_MAX         /* 外围电路省电功能控制*/
+#define PIN_POWERSAVE        GPIO_PIN_C8         /* 外围电路省电功能控制*/
+#define PIN_POWERSAVE_3_3V   GPIO_PIN_C9         /* 3.3外围电路省电功能控制*/
 #define PIN_CAP_SLEEP        GPIO_PIN_C6         /* 法拉电容防反灌控制脚 */
 #define PIN_CAP_CHARGE       GPIO_PIN_C12         /* 法拉电容充电使能控制 */
 
@@ -218,6 +219,7 @@ void DAL_GPIO_InitPowerSave(void)
     //  #define PIN_CAP_SLEEP        GPIO_PIN_C6         /* 法拉电容防反灌控制脚 */
 
     ST_GPIO_SetPin(PIN_POWERSAVE, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
+    ST_GPIO_SetPin(PIN_POWERSAVE_3_3V, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
     ST_GPIO_SetPin(PIN_CANSLEEP, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
     ST_GPIO_SetPin(PIN_CAN2SLEEP, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
     ST_GPIO_SetPin(PIN_CAP_SLEEP, GPIO_DIR_OUT, GPIO_MODE_PP, FALSE);
@@ -227,6 +229,7 @@ void DAL_GPIO_PullupPowerSave(void)
 {
     DAL_GPIO_InitPowerSave();
     ST_GPIO_WritePin(PIN_POWERSAVE, TRUE);
+    ST_GPIO_WritePin(PIN_POWERSAVE_3_3V, TRUE);
     ST_GPIO_WritePin(PIN_CANSLEEP, TRUE);
     ST_GPIO_WritePin(PIN_CAN2SLEEP, TRUE);
     ST_GPIO_WritePin(PIN_CAP_SLEEP, TRUE);
@@ -236,6 +239,7 @@ void DAL_GPIO_PulldownPowerSave(void)
 {
     DAL_GPIO_InitPowerSave();
     ST_GPIO_WritePin(PIN_POWERSAVE, FALSE);
+    ST_GPIO_WritePin(PIN_POWERSAVE_3_3V, FALSE);
     ST_GPIO_WritePin(PIN_CANSLEEP, FALSE);
     ST_GPIO_WritePin(PIN_CAN2SLEEP, FALSE);
     ST_GPIO_WritePin(PIN_CAP_SLEEP, FALSE);
