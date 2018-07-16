@@ -251,6 +251,9 @@ static void SleepTmrProc(void *pdata)
         s_dcb.step++ ;
         OS_StopTmr(s_sleeptmr);
         #endif
+        YX_MMI_PullDown(); 
+        YX_MMI_Sleep();
+        
         DAL_GPIO_PulldownPowerSave();
         s_dcb.step++ ;
         OS_StopTmr(s_sleeptmr);
