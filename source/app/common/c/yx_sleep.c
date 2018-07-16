@@ -109,8 +109,10 @@ static void Wakeup(void)
 static void CanTmrProc(void *pdata)
 {
     //printf_com("canrec_cnt:%d ad:%d ad1:%d ad2:%d\r\n", s_dcb.canrec_cnt,ST_ADC_GetValue(ADC_CH_0), ST_ADC_GetValue(ADC_CH_2), ST_ADC_GetValue(ADC_CH_1));
-    
-    //printf_com("canrec_cnt:%d ad:%d \r\n", s_dcb.canrec_cnt,ST_ADC_GetValue(ADC_CH_0));
+
+    #if EN_DEBUG > 0
+    printf_com("canrec_cnt:%d ad:%d \r\n", s_dcb.canrec_cnt,ST_ADC_GetValue(ADC_CH_0));
+    #endif
     if(++s_dcb.canrec_cnt > CAN_TIMEOUT) {
         s_dcb.canrec_cnt = 0;
 
