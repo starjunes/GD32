@@ -28,6 +28,8 @@ BEGIN_TSK_DEF(TSK_ID_HAL)
     #if EN_CAN > 0
     TSK_INIT_DEF(TSK_ID_HAL, HAL_CAN_InitDrv)
     #endif
+
+    TSK_INIT_DEF(TSK_ID_HAL, HAL_LowPower_InitDrv)
      
 END_TSK_DEF(TSK_ID_HAL)
 
