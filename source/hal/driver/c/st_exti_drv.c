@@ -99,7 +99,7 @@ static void EXTI_PinsConfig(const GPIO_REG_T *pinfo, const GPIO_CLASS_T *pclass)
     /* Configure gpio SCL */
     gpio_initstruct.GPIO_Pin   = pinfo->pin;
     gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_initstruct.GPIO_Mode  = GPIO_Mode_IN_FLOATING;
+    gpio_initstruct.GPIO_Mode  = GPIO_Mode_IPU;
     //gpio_initstruct.GPIO_OType = GPIO_OType_OD;
     //gpio_initstruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     
