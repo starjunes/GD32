@@ -24,8 +24,8 @@
 #define SLEEP_MODE_STOP_MASK    0xAAAA
 #define SLEEP_MODE_STANDBY_MASK 0xCCCC
 
-#define WKUP_PIN_ACC GPIO_PIN_A5
-#define WKUP_PIN_GSM GPIO_PIN_B0
+#define WKUP_PIN_ACC GPIO_PIN_C3
+#define WKUP_PIN_GSM GPIO_PIN_A0
 #define BKP_SLEEP_FLAG  BKP_DR4
 
 typedef struct {
@@ -33,6 +33,7 @@ typedef struct {
     BOOLEAN rtc;
     BOOLEAN gsm;
     BOOLEAN rtcwake;
+    INT16U wakecnt;
     INT32U sleeptime;
 }TCB_T;
 
@@ -83,30 +84,29 @@ static void config_sleep_rcc(void)
 ********************************************************************/
 static void config_sleep_gpio(INT8U onoff)
 {
+    
     if(onoff) {
 
-        #if 0
-       /* 关闭串口 */
-       //ST_UART_CloseUart(UART_COM_0);
-       //ST_UART_CloseUart(UART_COM_1);
-       //ST_UART_CloseUart(UART_COM_2);
-       //ST_UART_CloseUart(UART_COM_3);
-       ST_UART_Pause(UART_COM_0, 0, 0);
-       ST_UART_Pause(UART_COM_1, 0, 0);
-       ST_UART_Pause(UART_COM_2, 0, 0);
-       ST_UART_Pause(UART_COM_3, 0, 0);
-       /* 关闭led */
-       ST_GPIO_WritePin(GPIO_PIN_A13, TRUE);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, DISABLE);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, DISABLE);
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, DISABLE);
 
-        ST_GPIO_SetPin(GPIO_PIN_A14, GPIO_DIR_IN, GPIO_MODE_ANALOG, 0);  /* IC卡复位脚 */
-        ST_GPIO_SetPin(GPIO_PIN_A10, GPIO_DIR_IN, GPIO_MODE_ANALOG, 0);  /* 4G RX */
-        ST_GPIO_SetPin(GPIO_PIN_A9,  GPIO_DIR_IN, GPIO_MODE_ANALOG, 0);  /* 4G TX */
-        ST_GPIO_SetPin(GPIO_PIN_C8,  GPIO_DIR_IN, GPIO_MODE_ANALOG, 0);  /* IC CLK */
-        ST_GPIO_SetPin(GPIO_PIN_C0,  GPIO_DIR_IN, GPIO_MODE_ANALOG, 0);  /* 按键_确认 */
-        ST_GPIO_SetPin(GPIO_PIN_C1,  GPIO_DIR_IN, GPIO_MODE_ANALOG, 0);  /* 按键_上 */
-        ST_GPIO_SetPin(GPIO_PIN_C2,  GPIO_DIR_IN, GPIO_MODE_ANALOG, 0);  /* 按键_下 */
-        ST_GPIO_SetPin(GPIO_PIN_C3,  GPIO_DIR_IN, GPIO_MODE_ANALOG, 0);  /* 按键_菜单 */
-        #endif
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, DISABLE);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, DISABLE);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, DISABLE);
+
+        /* can2 IO */
+        ST_GPIO_SetPin(GPIO_PIN_B5,  GPIO_DIR_IN, GPIO_MODE_UP, 0);
+        ST_GPIO_SetPin(GPIO_PIN_B6,  GPIO_DIR_IN, GPIO_MODE_UP, 0);
+
+        /* can1 IO */
+        ST_GPIO_SetPin(GPIO_PIN_B8,  GPIO_DIR_IN, GPIO_MODE_UP, 0);
+        ST_GPIO_SetPin(GPIO_PIN_B9,  GPIO_DIR_IN, GPIO_MODE_UP, 0);
+
+        /* can2电源 */
+        ST_GPIO_SetPin(GPIO_PIN_C7,  GPIO_DIR_OUT, GPIO_MODE_OD, 0);
+
+
     }else {
 
         #if 0
@@ -185,9 +185,18 @@ static void enter_standby_mode(void)
 static __attribute__ ((section ("IRQ_HANDLE"))) void wakeup_exti_int_callback(void)
 {
     s_tcb.acc = TRUE;
-    if(EXTI_GetITStatus(EXTI_Line5) != RESET) {
-        EXTI_ClearITPendingBit(EXTI_Line5);
+    if(EXTI_GetITStatus(EXTI_Line3) != RESET) {
+        EXTI_ClearITPendingBit(EXTI_Line3);
+        
     }
+
+    s_tcb.wakecnt++;
+
+    if(s_tcb.wakecnt > 10) {
+        NVIC_SystemReset();
+    }
+    
+    
 }
 
 /*******************************************************************
@@ -203,6 +212,14 @@ static __attribute__ ((section ("IRQ_HANDLE"))) void wakeup_gsm_exti_int_callbac
     if(EXTI_GetITStatus(EXTI_Line0) != RESET) {
         EXTI_ClearITPendingBit(EXTI_Line0);
     }
+
+    s_tcb.wakecnt++;
+
+    if(s_tcb.wakecnt > 10) {
+        NVIC_SystemReset();
+    }
+
+    
 }
 
 /*******************************************************************
@@ -328,7 +345,7 @@ static BOOLEAN wakeup_config_rtc(INT8U time)
     //ST_BKP_ClearAll();
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
     PWR_BackupAccessCmd(ENABLE);	
-    result = ST_RTC_OpenRtcFunction(RTC_CLOCK_LSE);
+    result = ST_RTC_OpenRtcFunction(RTC_CLOCK_LSI);
     if(!result) {
         return FALSE;
     }
@@ -442,7 +459,8 @@ void HAL_LowPower_Enter(INT8U mode, INT32U time)
             
             BKP_WriteBackupRegister(BKP_SLEEP_FLAG, SLEEP_MODE_STOP_MASK);
             do {
-                
+
+                s_tcb.wakecnt = 0;
                 ClearWatchdog();
                 wakeup_config_rtc(2);
                 
