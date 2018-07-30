@@ -63,8 +63,6 @@ static void ScanTmrProc(void *pdata)
     INT32U canid = 0xffffffff;
     INT8U com = 0xff;
     INT8U i;
-
-    s_tcb.checkcnt++;
     
     for(i = 0; i < CAN_COM_MAX; i++) {
         if(s_tcb.isrec[i]) {
@@ -109,11 +107,14 @@ static void ScanTmrProc(void *pdata)
     } 
 
     /* 10s都没检测到can数据,则开启can2检测 */
-    if((s_tcb.checkcnt == 10) && (com == 0xff)) {
+    if(s_tcb.checkcnt < 10) {
+        s_tcb.checkcnt++;
+    } else if((s_tcb.checkcnt == 10) && (com == 0xff)) {
         #if EN_DEBUG > 0
         printf_com("超时未收到can数据,进行can2检测\r\n");
         #endif
         YX_JieYou_StartCanCheck();
+        s_tcb.checkcnt++;
     }
 }
 
