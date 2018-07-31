@@ -534,6 +534,11 @@
               <FileType>1</FileType>
               <FilePath>..\source\app\jieyou\c\yx_jieyou_drv.c</FilePath>
             </File>
+            <File>
+              <FileName>yx_jieyou_adcheck.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\app\jieyou\c\yx_jieyou_adcheck.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
