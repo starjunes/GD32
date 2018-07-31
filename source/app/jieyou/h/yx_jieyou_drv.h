@@ -12,6 +12,9 @@
 #ifndef _yx_jieyou_drv_h_
 #define _yx_jieyou_drv_h_
 
+#include "yx_jieyou_cancheck.h"
+#include "yx_jieyou_adcheck.h"
+
 /*******************************************************************
 ** 函数名:     YX_JieYou_InitCanCheck
 ** 函数描述:   节油can检测初始化

@@ -247,6 +247,9 @@ typedef enum {
     
     UP_PE_CMD_CAN_BUS_STATUS_REPORT     = 0x9A,                /* 主动上报CAN总线状态?UP) */
     DN_PE_ACK_CAN_BUS_STATUS_REPORT     = 0x9A,                /* 主动上报CAN总线状态的应答(DOWN) */
+
+    DN_PE_CMD_CAN_AD_CHECK              = 0x9F,                /* CAN AD值检测(UP) */
+    UP_PE_ACK_CAN_AD_CHECK              = 0x9F,                /* CAN AD值检测(DOWN) */
     
 
     /* 碰撞侧翻 */

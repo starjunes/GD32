@@ -135,6 +135,27 @@ static void PaserCommonData(STREAM_T *wstrm, INT8U *sptr, INT32U slen)
 }
 
 /*******************************************************************
+** 函数名:     CheckCanAdResult
+** 函数描述:   节油CAN AD检测结果
+** 参数:       [in] 
+** 返回:       无
+********************************************************************/
+static void CheckCanAdResult(INT16U *ad, INT8U count)
+{
+    INT8U i;
+    STREAM_T *wstrm;
+    
+    wstrm = YX_STREAM_GetBufferStream();
+
+    YX_WriteBYTE_Strm(wstrm, count);
+    for(i = 0; i < count; i++) {
+        YX_WriteHWORD_Strm(wstrm, ad[i]);
+    }
+
+    YX_MMI_ListSend(UP_PE_ACK_CAN_AD_CHECK, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm), 0, 0, 0);
+}
+
+/*******************************************************************
 ** 函数名:     HdlMsg_DN_PE_ACK_SLAVE_GET_PARA
 ** 函数描述:   从机查询通用参数请求应答
 ** 参数:       [in] cmd:     命令编码
@@ -570,6 +591,20 @@ static void HdlMsg_DN_PE_ACK_CAN_BUS_STATUS_REPORT(INT8U cmd, INT8U *data, INT16
 {
     YX_MMI_ListAck(UP_PE_CMD_CAN_BUS_STATUS_REPORT, _SUCCESS);
 }
+
+/*******************************************************************
+** 函数名:     HdlMsg_DN_PE_ACK_CAN_AD_CHECK
+** 函数描述:   CAN总线AD检测
+** 参数:       [in] cmd:     命令编码
+**             [in] data:    数据指针
+**             [in] datalen: 数据长度
+** 返回:       无
+********************************************************************/
+static void HdlMsg_DN_PE_ACK_CAN_AD_CHECK(INT8U cmd, INT8U *data, INT16U datalen)
+{
+    YX_JieYou_StartADCheck(CheckCanAdResult);
+}
+
 #endif
 
 
@@ -594,6 +629,7 @@ static FUNCENTRY_MMI_T s_functionentry[] = {
     ,{DN_PE_ACK_CAN_DATA_REPORT,             HdlMsg_DN_PE_ACK_CAN_DATA_REPORT}          // 主动上报CAN数据请求的应答
     ,{DN_PE_CMD_CAN_SEND_DATA,               HdlMsg_DN_PE_CMD_CAN_SEND_DATA}            // 发送CAN数据请求
     ,{DN_PE_ACK_CAN_BUS_STATUS_REPORT,       HdlMsg_DN_PE_ACK_CAN_BUS_STATUS_REPORT}    /* 主动上报CAN总线状态的应答(DOWN) */
+    ,{DN_PE_CMD_CAN_AD_CHECK,                HdlMsg_DN_PE_ACK_CAN_AD_CHECK}             /* CAN总线AD检测 */
 #endif
 };
 

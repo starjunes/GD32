@@ -133,6 +133,7 @@ void YX_JieYou_InitDrv(void)
     YX_MEMSET(&s_tcb, 0, sizeof(s_tcb));
 
     YX_JieYou_InitCanCheck();
+    YX_JieYou_InitADCheck();
        
     if(!DAL_PP_ReadParaByID(PP_ID_CAN_CFG, (INT8U *)&can_pp, sizeof(can_pp))) {
         YX_MEMSET(&can_pp, 0, sizeof(can_pp));
