@@ -36,7 +36,7 @@
 #define PIN_POWERSAVE        GPIO_PIN_C8         /* 外围电路省电功能控制*/
 #define PIN_POWERSAVE_3_3V   GPIO_PIN_C9         /* 3.3外围电路省电功能控制*/
 #define PIN_CAP_SLEEP        GPIO_PIN_C6         /* 法拉电容防反灌控制脚 */
-#define PIN_CAP_CHARGE       GPIO_PIN_C12         /* 法拉电容充电使能控制 */
+#define PIN_CAP_CHARGE       GPIO_PIN_C7         /* 法拉电容充电使能控制 */
 
 #define PIN_GPSPOWER         GPIO_PIN_MAX         /* GPS电源控制 */
 #define PIN_GPSBAT           GPIO_PIN_MAX         /* GPS备用电源控制 */

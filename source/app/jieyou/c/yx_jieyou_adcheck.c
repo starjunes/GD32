@@ -18,7 +18,7 @@
 
 #define MAX_AD_IO 7
 #define CAN_AD_CH   ADC_CH_1
-#define CAN2_POWER_IO GPIO_PIN_C7
+#define CAN2_POWER_IO GPIO_PIN_B15
 
 #define SWITCH_AD_IO0  GPIO_PIN_B2
 #define SWITCH_AD_IO1  GPIO_PIN_A2

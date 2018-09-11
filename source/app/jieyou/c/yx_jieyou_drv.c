@@ -47,7 +47,7 @@ typedef struct {
 #define CAN_FILTER_MASK 1
 #define CAN_FILTER_LIST 2
 
-#define CAN2_POWER_IO GPIO_PIN_C7
+#define CAN2_POWER_IO GPIO_PIN_B15
 
 
 static INT8U s_tmr_scan;

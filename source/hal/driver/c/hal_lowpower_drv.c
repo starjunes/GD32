@@ -104,7 +104,7 @@ static void config_sleep_gpio(INT8U onoff)
         ST_GPIO_SetPin(GPIO_PIN_B9,  GPIO_DIR_IN, GPIO_MODE_UP, 0);
 
         /* can2µÁ‘¥ */
-        ST_GPIO_SetPin(GPIO_PIN_C7,  GPIO_DIR_OUT, GPIO_MODE_OD, 0);
+        ST_GPIO_SetPin(GPIO_PIN_B15,  GPIO_DIR_OUT, GPIO_MODE_OD, 0);
 
 
     }else {
