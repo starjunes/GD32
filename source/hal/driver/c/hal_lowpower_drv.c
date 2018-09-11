@@ -184,7 +184,7 @@ static void enter_standby_mode(void)
 ********************************************************************/
 static __attribute__ ((section ("IRQ_HANDLE"))) void wakeup_exti_int_callback(void)
 {
-    s_tcb.acc = TRUE;
+    //s_tcb.acc = TRUE;
     if(EXTI_GetITStatus(EXTI_Line3) != RESET) {
         EXTI_ClearITPendingBit(EXTI_Line3);
         
@@ -192,7 +192,7 @@ static __attribute__ ((section ("IRQ_HANDLE"))) void wakeup_exti_int_callback(vo
 
     s_tcb.wakecnt++;
 
-    if(s_tcb.wakecnt > 10) {
+    if(s_tcb.wakecnt > 3) {
         NVIC_SystemReset();
     }
     
@@ -207,7 +207,7 @@ static __attribute__ ((section ("IRQ_HANDLE"))) void wakeup_exti_int_callback(vo
 ********************************************************************/
 static __attribute__ ((section ("IRQ_HANDLE"))) void wakeup_gsm_exti_int_callback(void)
 {
-    s_tcb.gsm = TRUE;
+    //s_tcb.gsm = TRUE;
 
     if(EXTI_GetITStatus(EXTI_Line0) != RESET) {
         EXTI_ClearITPendingBit(EXTI_Line0);
@@ -215,7 +215,7 @@ static __attribute__ ((section ("IRQ_HANDLE"))) void wakeup_gsm_exti_int_callbac
 
     s_tcb.wakecnt++;
 
-    if(s_tcb.wakecnt > 10) {
+    if(s_tcb.wakecnt > 3) {
         NVIC_SystemReset();
     }
 
