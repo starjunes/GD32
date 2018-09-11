@@ -16,6 +16,7 @@
 #include "hal_can_drv.h"
 #include "yx_jieyou_cancheck.h"
 #include "yx_debug.h"
+#include "yx_jieyou_drv.h"
 
 /* canÂË²¨ĞÅÏ¢ */
 typedef struct {
