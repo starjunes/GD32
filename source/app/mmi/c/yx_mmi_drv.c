@@ -32,7 +32,7 @@
 
 #define MAX_QUERY             20                 /* 链路发送周期 */
 #define MAX_OVERTIME          600               /* 监控超时周期 */
-#define MAX_WATCHDOG          30                /* 看门狗溢出时间 */
+#define MAX_WATCHDOG          90                /* 看门狗溢出时间 */
 #define MAX_VER               41
 
 #define PERIOD_LINK           _SECOND, 1
