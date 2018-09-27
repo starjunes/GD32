@@ -20,7 +20,7 @@
 */
 #define EN_I2C_SIMU          1
 
-#define EN_DEBUG             1
+#define EN_DEBUG             0
 #define UART_COM_DEBUG       UART_COM_3
 
 
