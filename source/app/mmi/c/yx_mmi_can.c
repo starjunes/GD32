@@ -30,7 +30,7 @@
 *∫Í∂®“Â
 ********************************************************************************
 */
-#define PERIOD_SCAN          _TICK, 4
+#define PERIOD_SCAN          _TICK, 1
 
 /*
 ********************************************************************************
@@ -693,8 +693,8 @@ static void ScanTmrProc(void *pdata)
     for (i = 0; i < CAN_COM_MAX; i++) {
         num = HAL_CAN_UsedOfRecvbuf(i);
         
-        if (num > 5) {
-            num = 5;
+        if (num > 35) {
+            num = 35;
         }
         
         if (num > 0) {
