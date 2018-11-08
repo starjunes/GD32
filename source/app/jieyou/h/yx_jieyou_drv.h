@@ -40,6 +40,14 @@ INT8U YX_JieYou_Confirm(INT8U com, CAN_DATA_T * candata);
 BOOLEAN YX_JieYou_IsConfirm(void);
 
 /*******************************************************************
+** 函数名:     YX_JieYou_GetCanCom
+** 函数描述:   获取确认的can通道
+** 参数:       无
+** 返回:       无
+********************************************************************/
+INT8U YX_JieYou_GetCanCom(void);
+
+/*******************************************************************
 ** 函数名:     YX_JieYou_SetCanFilterByMask
 ** 函数描述:   设置can滤波
 ** 参数:       无

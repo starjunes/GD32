@@ -453,7 +453,7 @@ static void HdlMsg_DN_PE_CMD_CAN_SET_FILTER_ID_LIST(INT8U cmd, INT8U *data, INT1
     YX_JieYou_SetCanFilterByList(idtype - 1, idnum, memptr);
     /* can通道确认后,才进行滤波配置,未确认，则确认完后节油模块会配置 */
     if(YX_JieYou_IsConfirm()) {
-        if (HAL_CAN_SetFilterParaByList(com - 1, idtype - 1, idnum, memptr)) {
+        if (HAL_CAN_SetFilterParaByList(YX_JieYou_GetCanCom(), idtype - 1, idnum, memptr)) {
             result = PE_ACK_MMI;
         } else {
             result = PE_NAK_MMI;
@@ -507,7 +507,7 @@ static void HdlMsg_DN_PE_CMD_CAN_SET_FILTER_ID_MASK(INT8U cmd, INT8U *data, INT1
 
     YX_JieYou_SetCanFilterByMask(idtype - 1, idnum, memptr, &memptr[idnum]);
     if(YX_JieYou_IsConfirm()) {
-        if (HAL_CAN_SetFilterParaByMask(com - 1, idtype - 1, idnum, memptr, &memptr[idnum])) {
+        if (HAL_CAN_SetFilterParaByMask(YX_JieYou_GetCanCom(), idtype - 1, idnum, memptr, &memptr[idnum])) {
             result = PE_ACK_MMI;
         } else {
             result = PE_NAK_MMI;
@@ -559,19 +559,25 @@ static void HdlMsg_DN_PE_CMD_CAN_SEND_DATA(INT8U cmd, INT8U *data, INT16U datale
     INT8U com, result;
     CAN_DATA_T candata;
     STREAM_T rstrm;
-    
+
     YX_InitStrm(&rstrm, data, datalen);
     
     com = YX_ReadBYTE_Strm(&rstrm);                                            /* 通道 */
-    candata.id       = YX_ReadLONG_Strm(&rstrm);                               /* 帧ID,标准帧则取值0~0x7FF,扩展帧则取值0~0x1FFFFFFF. */
-    candata.idtype   = YX_ReadBYTE_Strm(&rstrm) - 1;                           /* 帧ID类型,见 CAN_ID_TYPE_E */
-    candata.datatype = YX_ReadBYTE_Strm(&rstrm) - 1;                           /* 帧数据类型,见 CAN_RTR_TYPE_E */
-    candata.dlc      = YX_ReadBYTE_Strm(&rstrm);                               /* 数据长度,取值0~8 */
-    
-    YX_ReadDATA_Strm(&rstrm, candata.data, candata.dlc > 8 ? 8 : candata.dlc);
-    
-    if (HAL_CAN_SendData(com - 1, &candata)) {
-        result = PE_ACK_MMI;
+
+    if(YX_JieYou_IsConfirm()) {
+        
+        candata.id       = YX_ReadLONG_Strm(&rstrm);                               /* 帧ID,标准帧则取值0~0x7FF,扩展帧则取值0~0x1FFFFFFF. */
+        candata.idtype   = YX_ReadBYTE_Strm(&rstrm) - 1;                           /* 帧ID类型,见 CAN_ID_TYPE_E */
+        candata.datatype = YX_ReadBYTE_Strm(&rstrm) - 1;                           /* 帧数据类型,见 CAN_RTR_TYPE_E */
+        candata.dlc      = YX_ReadBYTE_Strm(&rstrm);                               /* 数据长度,取值0~8 */
+        
+        YX_ReadDATA_Strm(&rstrm, candata.data, candata.dlc > 8 ? 8 : candata.dlc);
+        
+        if (HAL_CAN_SendData(YX_JieYou_GetCanCom(), &candata)) {
+            result = PE_ACK_MMI;
+        } else {
+            result = PE_NAK_MMI;
+        }
     } else {
         result = PE_NAK_MMI;
     }

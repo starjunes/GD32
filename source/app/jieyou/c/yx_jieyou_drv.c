@@ -38,6 +38,7 @@ typedef struct {
 
 
 typedef struct {
+    INT8U   com;            /* 确认后的can通道 */
     INT8U isconfirm;
     INT16U checkcnt;
     INT8U isrec[CAN_COM_MAX];
@@ -75,6 +76,10 @@ static void ScanTmrProc(void *pdata)
 
     /* 已经有通道接收到数据,则停止检测 */
     if(com != 0xff) {
+        
+        /* 保持确认后的can通道 */
+        s_tcb.com = com;
+        
         s_tcb.isconfirm = TRUE;
         YX_JieYou_StopCanCheck();
         OS_StopTmr(s_tmr_scan);
@@ -86,6 +91,8 @@ static void ScanTmrProc(void *pdata)
             HAL_CAN_SetFilterParaByList(CAN_COM_0, CAN_ID_TYPE_EXT, 1, &canid);
         }
 
+        
+        
         if(s_tcb.can_filter.isvaild) {
             if(s_tcb.can_filter.filtertype == CAN_FILTER_MASK) {
                 HAL_CAN_SetFilterParaByMask(com
@@ -219,6 +226,17 @@ INT8U YX_JieYou_Confirm(INT8U com, CAN_DATA_T * candata)
 BOOLEAN YX_JieYou_IsConfirm(void)
 {
     return s_tcb.isconfirm;
+}
+
+/*******************************************************************
+** 函数名:     YX_JieYou_GetCanCom
+** 函数描述:   获取确认的can通道
+** 参数:       无
+** 返回:       无
+********************************************************************/
+INT8U YX_JieYou_GetCanCom(void)
+{
+    return s_tcb.com;
 }
 
 /*******************************************************************
