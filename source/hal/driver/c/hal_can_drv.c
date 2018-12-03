@@ -621,6 +621,7 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
     INT8U i;
     INT8U ch_offset; 
     INT32U filterid;
+    volatile INT32U cpu_sr;
     CAN_FilterInitTypeDef  can_filterinitstructure;
     const CAN_REG_T *pinfo;
     
@@ -713,6 +714,15 @@ BOOLEAN HAL_CAN_SetFilterParaByList(INT8U com, INT8U idtype, INT8U idnum, INT32U
         can_filterinitstructure.CAN_FilterNumber     = 0 + ch_offset;
         CAN_FilterInit(&can_filterinitstructure);
     }
+
+    /* 重新设置滤波后，应该清以前缓存 */
+    OS_ENTER_CRITICAL();                            /* 关中断 */
+    s_can[com].recvloop.pmsg = &s_can_recv[com][0];                            /* 接收缓存 */
+    s_can[com].recvloop.used = 0;
+    s_can[com].recvloop.pos  = 0;
+    s_can[com].recvloop.max  = MAX_CAN_RECV;
+    OS_EXIT_CRITICAL();                             /* 开中断 */
+
     return true;
 }
 
@@ -731,6 +741,7 @@ BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U
     INT8U i;
     INT8U ch_offset;                                                           /* 通道偏移 */
     INT32U filterid, maskid;
+    volatile INT32U cpu_sr;
     CAN_FilterInitTypeDef  can_filterinitstructure;
     const CAN_REG_T *pinfo;
     
@@ -812,6 +823,15 @@ BOOLEAN HAL_CAN_SetFilterParaByMask(INT8U com, INT8U idtype, INT8U idnum, INT32U
         can_filterinitstructure.CAN_FilterNumber     = 0 + ch_offset;
         CAN_FilterInit(&can_filterinitstructure);
     }
+
+    /* 重新设置滤波后，应该清以前缓存 */
+    OS_ENTER_CRITICAL();                            /* 关中断 */
+    s_can[com].recvloop.pmsg = &s_can_recv[com][0];                            /* 接收缓存 */
+    s_can[com].recvloop.used = 0;
+    s_can[com].recvloop.pos  = 0;
+    s_can[com].recvloop.max  = MAX_CAN_RECV;
+    OS_EXIT_CRITICAL();                             /* 开中断 */
+    
     return true;
 }
 
