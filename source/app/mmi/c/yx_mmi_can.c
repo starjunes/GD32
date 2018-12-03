@@ -731,9 +731,11 @@ static void ScanTmrProc(void *pdata)
                     YX_SLEEP_ConfirmRecCan((INT8U*)&candata);
                     YX_JieYou_Confirm(i, &candata);
 
+                    #if EN_DEBUG > 0
                     printf_com(" ’µΩcan(%d) id:%08x dlc:%d", i, candata.id, candata.dlc);
                     printf_hex(candata.data, candata.dlc);
                     printf_com("\r\n");
+                    #endif
                 }
             }
 
