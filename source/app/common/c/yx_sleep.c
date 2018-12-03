@@ -22,6 +22,7 @@
 #include "dal_pp_drv.h"
 #include "yx_mmi_drv.h"
 #include "yx_sleep.h"
+#include "yx_jieyou_cancheck.h"
 
 
 
@@ -110,6 +111,10 @@ static void CanTmrProc(void *pdata)
 {
     //printf_com("canrec_cnt:%d ad:%d ad1:%d ad2:%d\r\n", s_dcb.canrec_cnt,ST_ADC_GetValue(ADC_CH_0), ST_ADC_GetValue(ADC_CH_2), ST_ADC_GetValue(ADC_CH_1));
 
+    if(YX_JieYou_IsChecking()) {
+        return;
+    }
+    
     #if EN_DEBUG > 0
     printf_com("canrec_cnt:%d ad:%d \r\n", s_dcb.canrec_cnt,ST_ADC_GetValue(ADC_CH_0));
     #endif
@@ -143,14 +148,15 @@ static void SleepTmrProc(void *pdata)
         DAL_PP_ReadParaByID(PP_ID_SLEEP, (INT8U *)&sleeppara, sizeof(sleeppara));
         poweroff = DAL_INPUT_ReadFilterStatus(IPT_POWDECT);
         powervin = DAL_INPUT_ReadFilterStatus(IPT_VINLOW);
-            
-        accon = 1;
+        accon = DAL_INPUT_ReadFilterStatus(IPT_CAN_DECT);
+        //accon = 1;
         poweroff = 0;
         
         #if DEBUG_SYS > 0
         printf_com("<省电,初始化,ACC(%d),POWERON(%d), VINLOW:(%d) ONOFF(%d)>\r\n", accon, !poweroff, !powervin, sleeppara.onoff);
         #endif
-        
+
+        //DAL_GPIO_PullupPowerSave();
         if ((accon) && !poweroff && !powervin) {
         //if (1) {
             YX_MMI_PullUp();
@@ -167,8 +173,15 @@ static void SleepTmrProc(void *pdata)
             } 
             DAL_PP_StoreParaInstantByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
         } else {
-            s_dcb.step = STEP_POWERDOWNHOST;
-            OS_StartTmr(s_sleeptmr, PERIOD_DELAY);
+            if(!powervin) {
+                DAL_GPIO_PullupPowerSave();
+                OS_StopTmr(s_sleeptmr);
+            } else {
+                s_dcb.step = STEP_POWERDOWNHOST;
+                OS_StartTmr(s_sleeptmr, PERIOD_DELAY);
+
+            }
+            
             if (!poweroff) {
                 reset_info.status = MMI_RESET_EVENT_SLEEP;
                 DAL_PP_StoreParaInstantByID(PP_ID_HOST_RESET, (INT8U *)&reset_info, sizeof(HOST_RESET_STATUS_T));
@@ -387,6 +400,21 @@ static void SignalChangeInformer_VINLOW(INT8U port, INT8U mode)
 
 
 /*******************************************************************
+** 函数名:     SignalChangeInformer_CANDECT
+** 函数描述:   信号跳变通知处理
+** 参数:       [in] port: 输入口编号，见INPUT_IO_E
+**             [in] mode: 信号跳变触发模式,INPUT_TRIG_E
+** 返回:       无
+********************************************************************/
+static void SignalChangeInformer_CANDECT(INT8U port, INT8U mode)
+{
+    if (mode == INPUT_TRIG_POSITIVE) {
+        DAL_GPIO_PullupCapCharge();
+        Wakeup();
+    }
+}
+
+/*******************************************************************
 ** 函数名:     YX_SLEEP_Init
 ** 函数描述:   初始化函数
 ** 参数:       无
@@ -402,6 +430,7 @@ void YX_SLEEP_Init(void)
     OS_StartTmr(s_cantmr, PERIOD_CAN_TIMEOUT);
 
     DAL_INPUT_InstallTriggerProc(IPT_VINLOW, INPUT_TRIG_POSITIVE | INPUT_TRIG_NEGATIVE, SignalChangeInformer_VINLOW);
+    DAL_INPUT_InstallTriggerProc(IPT_CAN_DECT, INPUT_TRIG_POSITIVE | INPUT_TRIG_NEGATIVE, SignalChangeInformer_CANDECT);
     //DAL_INPUT_InstallTriggerProc(IPT_ACC, INPUT_TRIG_POSITIVE | INPUT_TRIG_NEGATIVE, SignalChangeInformer_ACC);
     //DAL_INPUT_InstallTriggerProc(IPT_POWDECT, INPUT_TRIG_POSITIVE | INPUT_TRIG_NEGATIVE, SignalChangeInformer_POWDECT);
 }

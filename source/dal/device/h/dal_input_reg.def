@@ -59,6 +59,8 @@ BEGIN_INPUT_DEF(PE_TYPE_NULL, DAL_INPUT_SetFilterPara)
     INPUT_DEF(PE_TYPE_NULL, IPT_KEYNAK,   GPIO_PIN_MAX,  80,     10,    DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)     /* È¡Ïû¼ü */
     
     INPUT_DEF(PE_TYPE_NULL, IPT_ICDECT,   GPIO_PIN_MAX,  1000,   1000,  DAL_GPIO_InitInput,    DAL_GPIO_ReadPortN)    /* IC¿¨²åÈë¼ì²â */
+
+    INPUT_DEF(PE_TYPE_NULL, IPT_CAN_DECT, GPIO_PIN_MAX,  20000,   200,  DAL_GPIO_InitInput,    YX_JieYou_IsCanRec) 
 END_INPUT_DEF(PE_TYPE_NULL)
 
 

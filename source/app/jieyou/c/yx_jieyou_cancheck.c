@@ -66,6 +66,7 @@ typedef struct {
 
 typedef struct {
     INT8U cur;                  /* 当前检测io */
+    INT8U ischecking;           /* 是否在检测中 */
     INT16U cnt;                 /* 当前io检测次数 */
     INT8U can_lowpin;
     INT8U can_highpin;
@@ -163,6 +164,8 @@ static BOOLEAN check_start(void)
     switch_canl_io(0);
     switch_canh_io(0);
 
+    s_tcb.ischecking ++;
+
     return TRUE;
 }
 
@@ -179,6 +182,8 @@ static BOOLEAN check_stop(void)
     if(OS_TmrIsRun(s_tmr_scan)) {
         OS_StopTmr(s_tmr_scan);
     }
+
+    s_tcb.ischecking = 0;
 
     return TRUE;
 }
@@ -214,6 +219,8 @@ static BOOLEAN start_over(void)
     /* 完毕后,将AD切换脚置位为0 */
     switch_ad_io(0);
 
+    YX_MEMSET(&can_pin_info, 0, sizeof(can_pin_info));
+    
     if(high != 0xff && low != 0xff && high != low) {
         switch_canl_io(low+1);
         switch_canh_io(high+1);
@@ -231,7 +238,28 @@ static BOOLEAN start_over(void)
         #endif
         
         /* 未发现can设备，则持续检测 */
-        check_start();
+        if(s_tcb.ischecking < 5) {
+            check_start();
+        } else {
+
+            s_tcb.ischecking = 0;
+            
+            DAL_PP_ReadParaByID(PP_ID_CAN_ADAPTER, (INT8U*)&can_pin_info, sizeof(can_pin_info));
+
+            if(can_pin_info.cam2_low!=0 && can_pin_info.can2_high != 0) {
+                switch_canh_io(can_pin_info.can2_high);
+                switch_canl_io(can_pin_info.cam2_low);
+                #if EN_DEBUG > 0
+                printf_com("多次测量无效，使用原先适配的can high:%d low:%d\r\n", can_pin_info.can2_high, can_pin_info.cam2_low);
+                #endif
+            } else if(can_pin_info.can1 == TRUE) {
+                /* 曾经确认过can1通道,也不再重新开始 */
+                ;
+            } else {
+                check_start();
+            }
+        }
+        
     }
 
     
@@ -365,5 +393,15 @@ BOOLEAN YX_JieYou_SetCanLowIo(INT8U pin)
     return switch_canl_io(pin);
 }
 
+/*******************************************************************
+** 函数名:     YX_JieYou_IsChecking
+** 函数描述:   是否在检测中
+** 参数:       无
+** 返回:       无
+********************************************************************/
+BOOLEAN YX_JieYou_IsChecking(void)
+{
+    return s_tcb.ischecking;
+}
 
 

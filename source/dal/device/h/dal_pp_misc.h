@@ -81,6 +81,26 @@ typedef struct {
     INT32U baud;       /* 波特率 */
 } CAN_CFG_INFO_T;
 
+
+/* can滤波信息 */
+typedef struct {
+    INT8U isvaild;      /* 是否有效 */
+    INT8U filtertype;   /* 滤波类型 */
+    INT8U idtype;       /* id类型 */
+    INT8U idnum;        /* id数量 */
+    union {
+        struct {
+            INT32U canid[56];
+        } list;
+
+        struct {
+            INT32U id[14];
+            INT32U mask[14];
+        } mask;
+    }filter;    
+} CAN_FILTER_INFO_T;
+
+
 /*
 ********************************************************************************
 *                        默认PP参数定义
