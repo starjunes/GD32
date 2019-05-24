@@ -16,6 +16,7 @@
 #include "hal_can_drv.h"
 #include "yx_jieyou_cancheck.h"
 #include "yx_debug.h"
+#include "yx_mmi_drv.h"
 #include "yx_jieyou_drv.h"
 
 
@@ -293,6 +294,10 @@ BOOLEAN YX_JieYou_IsConfirm(void)
 ********************************************************************/
 BOOLEAN YX_JieYou_IsCanRec(INT8U port)
 {
+    if(YX_JieYou_IsChecking()) {
+        return TRUE;
+    }
+    
     return s_tcb.is960can;
 }
 
@@ -356,5 +361,31 @@ BOOLEAN YX_JieYou_SetCanFilterByList(INT8U idtype, INT8U idnum, INT32U *pfilteri
     DAL_PP_StoreParaByID(PP_ID_CAN_FILTER, (INT8U*)&s_tcb.can_filter, sizeof(CAN_FILTER_INFO_T));
     
     return TRUE;
+}
+
+/*******************************************************************
+** 函数名:     YX_JieYou_SendStatus
+** 函数描述:   can标定状态发送
+** 参数:       [in] 
+** 返回:       无
+********************************************************************/
+BOOLEAN YX_JieYou_SendStatus(INT8U status, INT8U result)
+{
+    #if EN_MMI > 0
+    
+    STREAM_T *wstrm;
+    
+    wstrm = YX_STREAM_GetBufferStream();
+
+    YX_WriteBYTE_Strm(wstrm, status);
+    YX_WriteBYTE_Strm(wstrm, result);
+
+    return YX_MMI_DirSend(UP_PE_CMD_CAN_AD_CHECK, YX_GetStrmStartPtr(wstrm), YX_GetStrmLen(wstrm));
+    
+    #else
+    
+    return FALSE;
+    
+    #endif
 }
 

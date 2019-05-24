@@ -14,6 +14,7 @@
 #include "st_gpio_drv.h"
 #include "st_adc_drv.h"
 #include "yx_debug.h"
+#include "yx_jieyou_drv.h"
 
 #define MAX_IO_STATE 7
 #define MAX_CHECKCNT 5000
@@ -68,6 +69,7 @@ typedef struct {
     INT8U cur;                  /* 当前检测io */
     INT8U ischecking;           /* 是否在检测中 */
     INT16U cnt;                 /* 当前io检测次数 */
+    INT16U sendcnt;             /* 发送计数器 */
     INT8U can_lowpin;
     INT8U can_highpin;
     CAN_STATE_T state[MAX_IO_STATE];
@@ -231,6 +233,7 @@ static BOOLEAN start_over(void)
         #if EN_DEBUG > 0
         printf_com("当前can2为 高:%d 低:%d\r\n", can_pin_info.can2_high, can_pin_info.cam2_low);
         #endif
+        YX_JieYou_SendStatus(0x02, 0x01);
     } else {
 
         #if EN_DEBUG > 0
@@ -240,6 +243,7 @@ static BOOLEAN start_over(void)
         /* 未发现can设备，则持续检测 */
         if(s_tcb.ischecking < 5) {
             check_start();
+            YX_JieYou_SendStatus(0x02, 0x02);
         } else {
 
             s_tcb.ischecking = 0;
@@ -252,10 +256,12 @@ static BOOLEAN start_over(void)
                 #if EN_DEBUG > 0
                 printf_com("多次测量无效，使用原先适配的can high:%d low:%d\r\n", can_pin_info.can2_high, can_pin_info.cam2_low);
                 #endif
+                YX_JieYou_SendStatus(0x02, 0x03);
             } else if(can_pin_info.can1 == TRUE) {
                 /* 曾经确认过can1通道,也不再重新开始 */
-                ;
+                YX_JieYou_SendStatus(0x02, 0x04);;
             } else {
+                YX_JieYou_SendStatus(0x02, 0x02);
                 check_start();
             }
         }
@@ -307,6 +313,11 @@ static void ScanTmrProc(void *pdata)
         s_tcb.state[s_tcb.cur].low++;
     }
 
+    s_tcb.sendcnt++;
+    if(s_tcb.sendcnt >= 1000) {
+        s_tcb.sendcnt = 0;
+        YX_JieYou_SendStatus(0x01, 0x00);
+    }
     //s_tcb.max =  advalue >= s_tcb.max ? advalue : s_tcb.max;
     //s_tcb.min =  advalue <= s_tcb.min ? advalue : s_tcb.min;
     

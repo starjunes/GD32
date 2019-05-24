@@ -252,6 +252,9 @@ typedef enum {
     UP_PE_ACK_CAN_AD_CHECK              = 0x9F,                /* CAN AD值检测(DOWN) */
     
 
+    UP_PE_CMD_CAN_AD_CHECK              = 0x9E,                /* CAN 标定状态通知(UP) */
+    DN_PE_ACK_CAN_AD_CHECK              = 0x9E,                /* CAN 标定状态通知应答(DOWN) */
+
     /* 碰撞侧翻 */
     DN_PE_CMD_HITCK_DMC_START           = 0xA1,                 /* 启动碰撞检测标定请求(DOWN) */
     UP_PE_ACK_HITCK_DMC_START           = 0xA1,                 /* 启动碰撞检测标定应答(UP) */

@@ -12,6 +12,7 @@
 #ifndef _yx_jieyou_drv_h_
 #define _yx_jieyou_drv_h_
 
+#include "hal_can_drv.h"
 #include "yx_jieyou_cancheck.h"
 #include "yx_jieyou_adcheck.h"
 
@@ -62,6 +63,14 @@ BOOLEAN YX_JieYou_SetCanFilterByMask(INT8U idtype, INT8U idnum, INT32U *pfilteri
 ** 返回:       无
 ********************************************************************/
 BOOLEAN YX_JieYou_SetCanFilterByList(INT8U idtype, INT8U idnum, INT32U *pfilterid);
+
+/*******************************************************************
+** 函数名:     YX_JieYou_SendStatus
+** 函数描述:   can标定状态发送
+** 参数:       [in] 
+** 返回:       无
+********************************************************************/
+BOOLEAN YX_JieYou_SendStatus(INT8U status, INT8U result);
 
 #endif
 
