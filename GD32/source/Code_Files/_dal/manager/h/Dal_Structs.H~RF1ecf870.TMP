@@ -1,0 +1,373 @@
+/**************************************************************************************************
+**                                                                                               **
+**  ÎÄ¼þÃû³Æ:  Dal_Structs.H                                                                     **
+**  °æÈ¨ËùÓÐ:  CopyRight ¡Ñ Xiamen Yaxon NetWork CO.LTD. 2010                                    **
+**  ´´½¨ÐÅÏ¢:  LEON -- 2010Äê12ÔÂ1ÈÕ                                                             **
+**  ÎÄ¼þÃèÊö:  È«¾Ö½á¹¹Ìå¶¨ÒåÍ·ÎÄ¼þ                                                              **
+**  ===========================================================================================  **
+**  ÐÞ¸ÄÐÅÏ¢:  µ¥»÷´Ë´¦Ìí¼Ó....                                                                  **
+**************************************************************************************************/
+#ifndef __DAL_STRUCTS_H
+#define __DAL_STRUCTS_H
+
+#include "stm32f4xx_def.h"
+
+typedef union {
+    INT16U      hword;
+    struct {
+       INT8U    low;
+       INT8U    high;    
+    } bytes;
+} HWORD_UNION;
+
+typedef struct {
+    INT8U       year;
+    INT8U       month;
+    INT8U       day;
+} DATE_T;
+
+typedef struct {
+    INT8U       hour;
+    INT8U       minute;
+    INT8U       second;
+} TIME_T;
+
+typedef struct {
+    DATE_T      date;
+    TIME_T      time;
+} SYSTIME_T;
+
+typedef struct {
+    INT16U      index;
+    void     (* entryproc)(void);    
+} FUNCENTRY_T;
+
+typedef struct {
+	char	    *sstr;                                          /* ×Ö·û´®±êÊ¶ */
+	void        (* entryproc)(void);                            /* ¶ÔÓ¦µÄ´¦Àíº¯Êý */
+} FUNCSTRENTRY_T;
+
+typedef struct {
+    INT8U       c_flags;                /* c_convert0 + c_convert1 = c_flags */
+    INT8U       c_convert0;             /* c_convert0 + c_convert2 = c_convert0 */
+    INT8U       c_convert1;
+    INT8U       c_convert2;
+} ASMRULE_T;
+
+typedef struct
+{
+     /* HBIT = 01A000      A: VALID BIT,   0 ----- VALID    1 ----- INVALID*/
+     INT8U       hbit;
+     INT8U       latitude[4];
+     INT8U       longitude[4];
+     INT8U       vector;
+     INT8U       direction;
+} GPS_STRUCT;
+
+typedef struct
+{
+   INT8U ac_year[2]; 
+   INT8U ac_month[2];
+   INT8U ac_day[2];
+} ASCII_DATE;
+
+typedef struct
+{
+   INT8U  ac_hour[2];
+   INT8U  ac_minute[2];
+   INT8U  ac_second[2];
+} ASCII_TIME;
+
+typedef struct {
+    INT8U  second;
+    INT8U  minute;
+} CLOCKTIME_STRUCT;
+
+typedef struct {
+    BOOLEAN udiskinsert;                         /* UÅÌÊÇ·ñ½ÓÈë */
+    INT8U   udiskinterface;                      /* UÅÌ×ÜÏß½Ó¿Ú¹æ·¶ */
+} para_struct;
+
+typedef struct {
+    INT8U     bright;       //Òº¾§¶Ô±È¶È
+    BOOLEAN   keysound;     //°´¼üÒôÓÐÎÞ
+    INT8U     light;        //±³¹â³ÖÐøÊ±¼ä
+} SETCONFIG_STRUCT;
+
+typedef struct {
+    INT8U   router;
+} ROUTER_STRUCT;             //µç»°±¾Á÷Ë®ºÅ
+
+typedef struct {
+    INT8U     flag;
+    char      code[9];
+    BOOLEAN   BT_power;
+} BT_PIN_STRUCT;             //À¶ÑÀPINÂë
+
+typedef struct {
+    BOOLEAN   CAN_power;    //CAN¹¦ÄÜ×Ü¿ª¹Ø
+    INT8U     buadrate;
+    INT8U     type;
+    BOOLEAN   test_flag;    //²âÊÔ¹¦ÄÜ
+    INT8U     ID_num;
+    INT32U    ID[14];
+} CAN_STRUCT;               //CAN²ÎÊý
+
+/*************************************************************************************************/
+/*                           IC¿¨Ä£¿éÊôÐÔ½á¹¹Ìå                                                  */
+/*************************************************************************************************/
+typedef struct {
+    INT8U       type;                                                /* IC¿¨ÀàÐÍ 0-Î´¶¨£¬1-4442£¬2-24cXX */  
+} ICPARA_T;
+/*************************************************************************************************/
+/*                           IC¿¨ÖÐºÀ»ª°æÓë±ê×¼°æÉèÖÃ½á¹¹Ìå                                                  */
+/*************************************************************************************************/
+typedef struct {
+    INT8U       cantimeen;                                           /* ÍùCAN×ÜÏß·¢ËÍÊ±¼äÊ¹ÄÜ */
+    INT8U       candistnen;                                          /* ÍùCAN×ÜÏß·¢ËÍÀï³ÌÊ¹ÄÜ */
+    INT8U       canspeeden;                                          /* ÍùCAN×ÜÏß·¢ËÍ³µËÙÊ¹ÄÜ */
+    INT8U       candistnresen;                                       /* ÍùCAN×ÜÏßÐ¡¼ÆÀï³Ì¸´Î»Ê¹ÄÜ */
+    INT8U       canoilen;                                            /* ÍùCAN×ÜÏß·¢ËÍÓÍºÄÊ¹ÄÜ */  
+} ICCANPARA_T;
+
+/*************************************************************************************************/
+/*                              ²¨ÌØÂÊÃ¶¾Ù                                                      */
+/*************************************************************************************************/
+typedef enum {
+    CAN_10    = 10,
+    CAN_20    = 20,
+    CAN_50    = 50,
+    CAN_100   = 100,
+    CAN_125   = 125,
+    CAN_250   = 250,
+    CAN_500   = 500,
+    CAN_1000  = 1000    
+} CAN_BAUD_E;
+
+/*************************************************************************************************/
+/*                              Êý¾ÝÖ¡ÀàÐÍ                                                       */
+/*************************************************************************************************/
+typedef enum {
+    _FRAME_STD  = CAN_ID_STD,                                        /* ±ê×¼Ö¡ */
+    _FRAME_EXT  = CAN_ID_EXT                                         /* À©Õ¹Ö¡ */
+} FRAMETYPE_E;
+
+/*************************************************************************************************/
+/*                              Êý¾ÝÖ¡¸ñÊ½                                                       */
+/*************************************************************************************************/
+typedef enum {
+    _FRAME_DATA = CAN_RTR_DATA,                                      /* Êý¾ÝÖ¡ */
+    _FRAME_RMOT = CAN_RTR_REMOTE                                     /* Ô¶³ÌÖ¡ */
+} FRAMEFMAT_E;
+
+/*************************************************************************************************/
+/*                              ¹¤×÷Ä£Ê½                                                         */
+/*************************************************************************************************/
+typedef enum {
+    CAN_MODE_UNSET    = 0x00,                                        /* ÉÐÎ´ÅäÖÃÄ£Ê½ */
+    CAN_MODE_LUCIDLY  = 0x01,                                        /* ÍêÈ«Í¸´«Ä£Ê½ */
+    CAN_MODE_REPORT   = 0x02,                                        /* Ö÷¶¯ÉÏ±¨Ä£Ê½ */   
+    CAN_MODE_QUERY    = 0x03                                         /* ±»¶¯²éÑ¯Ä£Ê½ */
+} CAN_WORKMODE_E;
+
+
+/*************************************************************************************************/
+/*                           CANÂË²¨·½Ê½Ã¶¾Ù                                            */
+/*************************************************************************************************/
+typedef enum {
+    CAN_FILTER_OFF    = 0x00,
+    CAN_FILTER_ON     = 0X01
+}CAN_FILTERCTRL_E;
+
+/*************************************************************************************************/
+/*                           CAN²ÎÊýÉèÖÃÓÐÐ§Óë·ñÃ¶¾Ù                                             */
+/*************************************************************************************************/
+typedef enum {
+    CAN_IS_SET   = 0x01,                                             /* ²ÎÊýÒÑÉèÖÃ */                      
+    CAN_UN_SET   = 0x02,                                             /* ²ÎÊýÎ´ÉèÖÃ */  
+} CAN_PARA_SET_E;
+/*************************************************************************************************/
+/*                           CAN²âÊÔÄ£Ê½·ñÃ¶¾Ù                                             */
+/*************************************************************************************************/
+typedef enum {
+    CAN_NORMAL_MODE    = CAN_Mode_Normal,                            /* Õý³£Ä£Ê½ */                      
+    CAN_LOOPBACK_MODE  = CAN_Mode_LoopBack,                          /* »·»ØÄ£Ê½(Ö»ÄÜÊÕµ½×Ô¼º·¢ËÍµÄÊý¾Ý) */  
+    CAN_SILENT_MODE    = CAN_Mode_Silent,                            /* ¾²Ä¬Ä£Ê½(Ö»ÊÕ²»·¢) */  
+} CAN_TEST_MODE_E;
+
+/*************************************************************************************************/
+/*                             CANÊôÐÔ½á¹¹Ìå                                                     */
+/*************************************************************************************************/
+typedef struct {
+    BOOLEAN         onoff;                                           /* ¹¦ÄÜ¿ª¹Ø */
+    CAN_BAUD_E      baud;                                            /* ²¨ÌØÂÊ */
+    FRAMETYPE_E     type;                                            /* Ö¡ÀàÐÍ */
+    FRAMEFMAT_E     fmat;                                            /* Ö¡¸ñÊ½ */
+    CAN_TEST_MODE_E test_mode;                                       /* ²âÊÔÄ£Ê½ */
+    CAN_PARA_SET_E  comm_effect;                                     /* Í¨ÐÅ²ÎÊýÓÐÐ§Óë·ñ */
+    CAN_WORKMODE_E  mode;                                            /* ¹¤×÷Ä£Ê½ */
+    CAN_PARA_SET_E  mode_effect;                                     /* ¹¤×÷Ä£Ê½ÓÐÐ§Óë·ñ */
+    CAN_PARA_SET_E  id_effect;                                       /* IDÅäÖÃÓÐÐ§Óë·ñ */
+    CAN_FILTERCTRL_E filteronoff;                                    /* ÂË²¨ÊÇ·ñ¿ªÆô */
+} CAN_ATTR_T;
+
+#define  DEF_CANBAUD       CAN_250
+#define  DEF_FTYPE         _FRAME_EXT
+#define  DEF_FMAT          _FRAME_DATA
+
+
+/*************************************************************************************************/
+/*                           ÉÏ²ñËø³µ²ÎÊý½á¹¹Ìå                                                  */
+/*************************************************************************************************/
+typedef struct {
+    INT8U       ecutype;                                             /* ECUÀàÐÍ£¬¾ö¶¨¿ª»ú²ÉÓÃºÎÖÖÎÕÊÖ·½Ê½ */
+    INT8U       firmcodelen;                                         /* ¹Ì¶¨ÃÜÔ¿³¤¶È */
+    INT8U       firmcode[20];                                        /* ¹Ì¶¨ÃÜÔ¿ */
+    INT8U       srlnumberlen;                                        /* GPSID³¤¶È */
+    INT8U       serialnumber[20];                                    /* GPSID */
+    INT8U       unbindstat;                                          /* ½â°ó³É¹¦±êÖ¾ */
+    INT8U       limitfunction;                                       /* Ëø³µÀàÐÍ£¬°üº¬°ó¶¨£¬½â°ó£¬ÏÞÖÆ£¬Ëø³µµÈ */
+    BOOLEAN     configsuccess;                                       /* ÊÇ·ñÅäÖÃ³É¹¦ */
+} SCLOCKPARA_T;
+/*************************************************************************************************/
+/*                           Ëø³µÈÕÖ¾½á¹¹Ìå                                                 */
+/*************************************************************************************************/
+typedef struct{
+    INT8U Year;
+    INT8U Mon;
+    INT8U Day;
+    INT8U Hour;
+    INT8U Min;
+    INT8U Sec;
+} BCD_TIME_T;
+
+typedef struct {
+    BCD_TIME_T locktime;     //Ëø³µÊ±¼ä
+    INT8U      locktype;     //Ëø³µÀàÐÍ
+} LOCK_PARA;
+
+typedef struct {
+    INT8U       storenum;         //´æ´¢ÈÕÖ¾ÊýÄ¿
+    INT8U       storeadd;         //×îÐÂ´æ´¢Î»ÖÃ£¬¸²¸Ç×î¾É
+    LOCK_PARA   lockrecord[10];   //ÈÕÖ¾Êý¾Ý£¬×î´ó10¸öÈÕÖ¾¡£
+} LOCK_RECORD;
+
+/*************************************************************************************************/
+/*                           CAN×ÜÏßÊý¾Ý×ª·¢                                                     */
+/*************************************************************************************************/
+typedef struct {
+    INT8U       source;                                              /* Ô´Í¨µÀ */
+    INT8U       destination;                                         /* Ä¿±êÍ¨µÀ */
+    INT32U      id;                                                  /* ÂË²¨µÄID */ 
+    INT32U      screeid;                                             /* ÆÁ±ÎID */
+} RELAY_T;
+
+typedef struct {
+    INT8U       num;
+    RELAY_T     relay[10];
+} CAN_RELAY_T;
+
+/*************************************************************************************************/
+/*                           ¶¨ÒåÓëÉý¼¶¸üÐÂ³ÌÐòÓÐ¹ØµÄ²ÎÊý¡¢½á¹¹ÌåµÈ                              */
+/*************************************************************************************************/
+#define MAX_VERSION_LEN      30                                      /* program version length */
+#define UP_FILENAME_LEN      30                                      /* file name length */
+#define MAX_TELNUM_LEN       16                                      /* telephone number length */
+
+#define STEP_REQ             0x01                                    /* step:request filelist */
+#define STEP_LOADING         0x02                                    /* step:loading */
+#define STEP_LOADED          0x03                                    /* step:loaded */
+#define STEP_REPLACED        0x04                                    /* step:replaced */
+
+/*************************************************************************************************/
+/*                         ¶¨ÒåÓëÉý¼¶¸üÐÂ³ÌÐòÓÐ¹ØµÄ²ÎÊý¡¢½á¹¹ÌåµÈ                                */
+/*************************************************************************************************/
+typedef struct {
+    BOOLEAN     updated;                        /* flag stand for if update finish */   
+    INT8U       fname_len;                      /* file name length */
+    INT8U       fname[UP_FILENAME_LEN];         /* file name string */
+    INT8U       fsize[4];                       /* file data size */
+    INT8U       fchksum[4];                     /* file data checksum */
+} FILE_INFO_T; 
+
+typedef struct {
+    BOOLEAN     need_update;                    /* flag stand for if need update,TRUE need and FALSE not need */
+    INT8U       ser_ip[4];                      /* ip address of update sever  */
+    INT8U       ser_port[2];                    /* port of update sever */
+    INT8U       verlen;                         /* program version length */
+    INT8U       ver[MAX_VERSION_LEN];           /* program version string */
+    INT8U       tellen;                         /* telephone number length */
+    INT8U       tel[MAX_TELNUM_LEN];            /* telephone number */            
+    INT8U       filenums;                       /* file numbers which for update */
+} UPDATE_BASE_INFO_T;
+
+typedef struct {
+    INT8U       step;                           /* update step */
+    INT8U       file_id;                        /* file id loading */
+    INT32U      fsize_temp;                     /* file data size downloaded */
+} DOWNLOAD_CB_T; 
+
+typedef struct {
+    INT8U               chksum;                 /* total check sum */
+    INT8U               reserved;               /* reserved byte for bytes mutiple of 32 */
+    DOWNLOAD_CB_T       s_dcb;                  /* download control block */
+    UPDATE_BASE_INFO_T  base_info;              /* update base information block */
+    FILE_INFO_T         f_info;                 /* update file information */
+} UPDATE_MAN_T;
+
+/*************************************************************************************************/
+/*                           ¸´Î»Í³¼Æ                                                            */
+/*************************************************************************************************/
+#define MAX_REC_EXT          5                                                 /* ×î¶àÍ³¼Æ×î½ü5¸öÐÅÏ¢ */
+#define FILENAMELEN          16
+#define ERR_ID_INT           0xffff                                             /* ÄÚ²¿¸´Î» */
+#define ERR_ID_EXT           0xfff0                                             /* Íâ²¿¸´Î» */
+#define ERR_ID_ERR           0xff00                                             /* Òì³£´íÎó¸´Î» */
+#define ERR_ID_LINK          0xf000                                             /* Á´Â·³¬Ê±¸´Î» */
+
+typedef struct {
+    SYSTIME_T       start_time;                                                /* Æô¶¯»òÕßÉÏ´Î¸´Î»µÄÊ±¼ä */
+    INT8U           filename[FILENAMELEN];                                     /* ³ö´íÎÄ¼þÃû */
+    INT16U          line;                                                      /* ³ö´íÐÐºÅ */
+    INT32U          err_id;                                                    /* ³ö´í´úÂë */
+    //INT32U          mem_peak;                                                  /* ¸´Î»Ê±µÄÄÚ´æ·åÖµ */
+} REC_EXT_T;
+
+typedef struct {
+    INT16U      rst_total;                                                     /* ¸´Î»×ÜÊý */
+    INT16U      rst_int;                                                       /* ÄÚ²¿¸´Î» */
+    INT16U      rst_ext;                                                       /* Íâ²¿¸´Î» */
+    INT16U      rst_err;                                                       /* Òì³£¸´Î» */
+    INT16U      rst_link;                                                      /* Á´Â·³¬Ê± */
+    REC_EXT_T   rst_rec_ext[MAX_REC_EXT];                                      /* the extra reset record */
+} RESETREC_T;
+
+/* ÖØÁ¦¼ÓËÙ¶È´«¸ÐÆ÷±ê¶¨ */
+typedef struct {
+    INT8U  isvalid;          /* ÊÇ·ñÒÑ±ê¶¨¹ý,TRUE-ÒÑ±ê¶¨,FALSE-Î´±ê¶¨ */
+    INT16S x;                /* xÖáÖØÁ¦¼ÓËÙ¶È,µ¥Î»0.001g */
+    INT16S y;                /* yÖáÖØÁ¦¼ÓËÙ¶È,µ¥Î»0.001g */
+    INT16S z;                /* zÖáÖØÁ¦¼ÓËÙ¶È,µ¥Î»0.001g */
+} GSENSOR_CALIBRATION_T;
+
+#endif
+
+áÖØÁ¦¼ÓËÙ¶È,µ¥Î»0.001g */
+} GSENSOR_CALIBRATION_T;
+
+#endif
+
+                       /* Á´Â·³¬Ê± */
+    REC_EXT_T   rst_rec_ext[MAX_REC_EXT];                                      /* the extra reset record */
+} RESETREC_T;
+
+/* ÖØÁ¦¼ÓËÙ¶È´«¸ÐÆ÷±ê¶¨ */
+typedef struct {
+    INT8U  isvalid;          /* ÊÇ·ñÒÑ±ê¶¨¹ý,TRUE-ÒÑ±ê¶¨,FALSE-Î´±ê¶¨ */
+    INT16S x;                /* xÖáÖØÁ¦¼ÓËÙ¶È,µ¥Î»0.001g */
+    INT16S y;                /* yÖáÖØÁ¦¼ÓËÙ¶È,µ¥Î»0.001g */
+    INT16S z;                /* zÖáÖØÁ¦¼ÓËÙ¶È,µ¥Î»0.001g */
+} GSENSOR_CALIBRATION_T;
+
+#endif
+

@@ -1,0 +1,247 @@
+/*******************************************************************************
+**
+** 文件名:     bal_pp_drv.c
+** 版权所有:   (c) 2007-2008 厦门雅迅网络股份有限公司
+** 文件描述:    该模块主要实现公共参数文件存储驱动管理
+**
+********************************************************************************
+**             修改历史记录
+**==============================================================================
+**| 日期       | 作者   |  修改记录
+**==============================================================================
+**| 2017/06/07 | 谢金成 |  创建第一版本
+*******************************************************************************/
+#include "yx_includes.h"
+#include "bal_pp_drv.h"
+#include "bal_pp_reg.h"
+#include "port_nvrec.h"
+/*
+********************************************************************************
+* 定义模块配置参数
+********************************************************************************
+*/
+#define VALID_               0x08
+#define FALUT_               0x00
+
+/*
+********************************************************************************
+* 定义模块静态变量
+********************************************************************************
+*/
+static    const   PP_REG_T  *s_preg;
+static    INT8U   s_startpos = PP_RECNUM; //计数的起始端从 头 结束 位置开始
+static    INT8U   s_endpos   = PP_RECNUM;
+
+#if DEBUG_PUBPARA >  0
+static INT8U s_testpptmrid;
+static  void test_pp_rw(void *pdata)
+{
+	static AXISCALCONFIG_T  s_ax={-1,-2,-900};
+	static AXISCALCONFIG_T  s_ax1={0x11111111,0x22222222,0x33333333};
+
+	bal_pp_StoreParaByID(AXISCALPARA_,(INT8U *)&s_ax, sizeof(AXISCALCONFIG_T));
+	bal_pp_ReadParaByID(AXISCALPARA_, (INT8U *)&s_ax1, sizeof(AXISCALCONFIG_T));
+	printf_hex((INT8U *)&s_ax1 , sizeof(AXISCALCONFIG_T));
+}
+#endif
+/*******************************************************************************
+** 函数名:      bal_pp_Init
+** 函数描述:    公共参数存储驱动初始化
+** 参数:        无
+** 返回:        无
+*******************************************************************************/
+void bal_pp_Init(void)
+{
+	INT8U *mptr;
+	INT8U i=0,maxid=0,chksum=0;
+	INT8U mrecd=0,nrecd=0;
+
+    #if DEBUG_PUBPARA >  0
+	INT8U testary[10*32]={0};
+    debug_printf("<bal_pp_Init>\r\n");
+    PORT_WriteNvRecord(PP_HEAD_START, 10, testary);
+    #endif
+
+    maxid = bal_pp_GetRegPPMax();
+    if(maxid > MAX_PP_NUM ) { //如果注册的参数大于定义的最大个数，舍去后面的
+    	maxid = MAX_PP_NUM ;
+    }
+
+    mptr = PORT_Malloc(PP_RECNUM * NV_RECORD_LEN);
+    PORT_ReadNvRecord(PP_HEAD_START, PP_RECNUM, mptr);//读出存储表头
+	chksum = bal_u_chksum_1(mptr+1, PP_RECNUM * NV_RECORD_LEN-2);
+
+	if(chksum == mptr[0]) { //头部检验正确
+//		printf_hex(mptr, PP_RECNUM * NV_RECORD_LEN);
+	} else { //头部检验错误，重新写入
+        for(i=0; i <maxid; i++) {
+            s_preg = bal_pp_GetRegInfo(i);
+        	mptr[1 + i*PP_HEAD_LEN] = s_preg->id;
+        	mptr[2 + i*PP_HEAD_LEN] = FALUT_;
+        	mptr[3 + i*PP_HEAD_LEN] = 0;
+
+        	s_startpos = s_endpos;
+        	mrecd = (s_preg->ppsize + NV_RECORD_LEN) / NV_RECORD_LEN ; //除数
+        	nrecd = s_preg->ppsize % NV_RECORD_LEN ;                   //余数
+        	s_endpos += mrecd;
+        	if(nrecd >= (NV_RECORD_LEN -3)) { //如果接近标准记录长度，多开辟一条记录的空间
+        		s_endpos += 1;
+        	}
+        	mptr[4 + i*PP_HEAD_LEN] = s_startpos;
+        	mptr[5 + i*PP_HEAD_LEN] = s_endpos;
+        	mptr[6 + i*PP_HEAD_LEN] = s_preg->ppsize;
+        	mptr[7 + i*PP_HEAD_LEN] = 0; //预留字节
+        }
+        mptr[0] = bal_u_chksum_1(mptr+1, PP_RECNUM * NV_RECORD_LEN-2);
+        PORT_WriteNvRecord(PP_HEAD_START, PP_RECNUM, mptr);
+	}
+	if(mptr != NULL) {
+		PORT_Free(mptr);
+	}
+
+#if DEBUG_PUBPARA >  0
+	s_testpptmrid = OS_InstallTmr(PRIO_COMMONTASK, 0, test_pp_rw);
+    OS_StartTmr(s_testpptmrid, SECOND, 5);
+#endif
+}
+/*******************************************************************************
+** 函数名:      bal_pp_ReadParaByID
+** 函数描述:    读取PP参数，判断PP有效性
+** 参数:        [in] id:  参数编号，见PP_ID_E
+**              [out] dptr:输出缓存
+**              [out] rlen:缓存长度
+** 返回:        有效返回true，无效返回false
+*******************************************************************************/
+BOOLEAN bal_pp_ReadParaByID(INT8U id, INT8U *dptr, INT16U rlen)
+{
+    INT8U *hptr,*rptr;
+	INT8U startpos=0,endpos=0;
+    INT8U hchksum=0;
+
+    if(id >= bal_pp_GetRegPPMax()) {
+    	return false;
+    }
+
+    hptr = PORT_Malloc(PP_RECNUM * NV_RECORD_LEN);
+    if(!PORT_ReadNvRecord(PP_HEAD_START, PP_RECNUM, hptr)) {//读出存储表头
+    	goto ERROR;
+    }
+	hchksum = bal_u_chksum_1(hptr+1, PP_RECNUM * NV_RECORD_LEN-1);
+
+	if(hptr[0] == hchksum) {
+		if(VALID_ == hptr[1 + (id * PP_HEAD_LEN + 1)]) {
+			startpos = hptr[1 + (id * PP_HEAD_LEN + 3)];
+			endpos = hptr[1 + (id * PP_HEAD_LEN + 4)];
+
+			rptr = PORT_Malloc((endpos - startpos) * NV_RECORD_LEN);
+			if(!PORT_ReadNvRecord(startpos, (endpos - startpos), rptr)) {
+				goto ERROR;
+			}
+			if(hptr[1 + (id * PP_HEAD_LEN + 2)]
+					== bal_u_chksum_1(rptr, hptr[1 + (id * PP_HEAD_LEN + 5)])) {
+
+				rlen = hptr[1 + (id * PP_HEAD_LEN + 5)];
+				YX_MEMCPY(dptr, rlen, rptr, rlen);
+				if(hptr != NULL) {
+					PORT_Free(hptr);
+				}
+				if(rptr != NULL) {
+					PORT_Free(rptr);
+				}
+				return true;
+			} else {//校验错误，读出默认参数值
+				s_preg = bal_pp_GetRegInfo(id);
+				if (s_preg->i_ptr != 0) {
+					rlen = s_preg->ppsize;
+					YX_MEMCPY(dptr, rlen, s_preg->i_ptr, rlen);
+					if(hptr != NULL) {
+						PORT_Free(hptr);
+					}
+					return true;
+				} else {
+					goto ERROR;
+				}
+			}
+			if(rptr != NULL) {
+				PORT_Free(rptr);
+			}
+		} else {//参数无效，读出默认参数值
+			s_preg = bal_pp_GetRegInfo(id);
+			if (s_preg->i_ptr != 0) {
+				rlen = s_preg->ppsize;
+				YX_MEMCPY(dptr, rlen, s_preg->i_ptr, rlen);
+				if(hptr != NULL) {
+					PORT_Free(hptr);
+				}
+				return true;
+			} else {
+				goto ERROR;
+			}
+		}
+	} else {
+		goto ERROR;
+	}
+
+ERROR:
+	if(hptr != NULL) {
+		PORT_Free(hptr);
+	}
+	if(rptr != NULL) {
+		PORT_Free(rptr);
+	}
+	return false;
+}
+
+/*******************************************************************
+** 函数名:      bal_pp_StoreParaByID
+** 函数描述:    存储PP参数，延时2秒存储到flash
+** 参数:        [in] id:  参数编号，见PP_ID_E
+**              [in] sptr:输入缓存
+**              [in] slen:缓存长度
+** 返回:        成功返回true，失败返回false
+********************************************************************/
+BOOLEAN bal_pp_StoreParaByID(INT8U id, INT8U *sptr, INT16U slen)
+{
+    INT8U *hptr;
+	INT8U startpos=0,endpos=0;
+
+    if(id >= bal_pp_GetRegPPMax()) {
+    	return false;
+    }
+
+    hptr = PORT_Malloc(PP_RECNUM * NV_RECORD_LEN);
+    if(!PORT_ReadNvRecord(PP_HEAD_START, PP_RECNUM, hptr)) {//读出存储表头
+    	if(hptr != NULL) {
+    		PORT_Free(hptr);
+    	}
+    	return false;
+    }
+
+	startpos = hptr[1 + (id * PP_HEAD_LEN + 3)];
+	endpos = hptr[1 + (id * PP_HEAD_LEN + 4)];
+	if(!PORT_WriteNvRecord(startpos, (endpos-startpos), sptr)) {//写入数据
+		if(hptr != NULL) {
+			PORT_Free(hptr);
+		}
+		return false;
+	}
+
+	hptr[2 + id*PP_HEAD_LEN] = VALID_;
+	hptr[3 + id*PP_HEAD_LEN] = bal_u_chksum_1(sptr, slen);
+//        	hptr[4 + i*PP_HEAD_LEN] = startpos;
+//        	hptr[5 + i*PP_HEAD_LEN] = endpos;
+	hptr[6 + id*PP_HEAD_LEN] = slen;
+	hptr[7 + id*PP_HEAD_LEN] = 0; //预留字节
+
+	hptr[0] = bal_u_chksum_1(hptr+1, PP_RECNUM * NV_RECORD_LEN-1);
+	if(!PORT_WriteNvRecord(PP_HEAD_START, PP_RECNUM, hptr)) {//更改存储表头
+		if(hptr != NULL) {
+			PORT_Free(hptr);
+		}
+		return false;
+	}
+	if(hptr != NULL) {
+		PORT_Free(hptr);
+	}
+	return true;
+}

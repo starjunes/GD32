@@ -1,0 +1,22 @@
+子文件夹介绍：
+CAN                    ---- CAN总线通信应用程序
+dataexport             ---- 数据导出应用程序
+fat                    ---- fat文件系统程序
+ICCard                 ---- IC卡应用程序
+main                   ---- 主程序main、应用程序appmain文件以及一些系统包含的文件
+pm                     ---- 主串口通信协议机程序
+printer                ---- 打印机应用程序
+signal                 ---- 信号采集应用程序
+mileage                ---- 里程脉冲统计应用程序
+update                 ---- U盘升级应用程序
+test                   ---- 测试程序
+lcd                    ---- 液晶显示程序
+interface              ---- 页面菜单程序
+database               ---- 信息存储数据库程序
+mmi_infrared               ---- 红外遥控程序
+phone                  ---- 电话程序
+keyboard               ---- 按键程序
+ring                   ---- 蜂鸣器程序
+mmi_public                 ---- 存放通用函数文件
+drivelog               ---- 司机登录
+bluebooth              ---- 蓝牙模块

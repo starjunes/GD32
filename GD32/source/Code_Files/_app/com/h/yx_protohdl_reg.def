@@ -1,0 +1,75 @@
+/*
+********************************************************************************
+** 文件名:     yx_protohdl_reg.h
+** 版权所有:   (c) 2017 厦门雅迅网络股份有限公司
+** 文件描述:   协议处理接口函数注册表
+** 创建人：        谢金成，2017.5.18
+********************************************************************************
+*/
+
+/* 协议机通用规程 */
+PROTOHDL_REG_DEF(LINK_REQ_ACK, LinkRequstAck_Hdl)                    /* 链接应答指令0x81处理函数     */
+PROTOHDL_REG_DEF(BEAT_REQ_ACK, BeatRequstAck_Hdl)                    /* 链路维护应答指令0x82处理函数 */
+PROTOHDL_REG_DEF(POWER_CONTROL_REQ, PowerControl_Hdl)                /* 设备低功耗处理函数 */
+PROTOHDL_REG_DEF(VERSION_REQ,  VersionNumberReqHdl)                  /* 版本查询指令0x04处理函数 */
+PROTOHDL_REG_DEF(RELINK_REQ, Relink_RequestHdl)                      /* 重新链接指令0x05处理函数 */
+PROTOHDL_REG_DEF(FUNC_QUERY, DeviceConfigurationQueryHdl)            /* 设备功能查询指令0x06处理函数 */
+PROTOHDL_REG_DEF(RESET_REQ, ResetReq_Hdl)                            /* 复位*/
+
+PROTOHDL_REG_DEF(GET_HOSTSTATUS_REQ_ACK, EquipmentStatusReq)         /* 获取主机状态请求处理函数*/
+PROTOHDL_REG_DEF(CHGMCOMBAUD_REQ_ACK, ReqChgMainComBaudAck_Hdl)      /* 更改主串口波特率指令0x43处理函数 */
+
+PROTOHDL_REG_DEF(EQUIPMENT_PARA_REQ_ACK, GprsQueAns)                 /* 查询主机通用参数应答 */
+PROTOHDL_REG_DEF(EQUIPMENT_PARA_SET_ACK, GprsSetAns)                 /* 设置主机通用参数应答 */
+
+PROTOHDL_REG_DEF(SIGFILTER_PARA_CONF, SigFilterParaConfig_ReqHdl)        /* 信号滤波参数配置处理函数 */
+PROTOHDL_REG_DEF(SIG_CHG_INFO_ONFF_REQ, SigChgInfomONOFF_ReqHdl)         /* IO输出控制请求函数处理函数 */
+PROTOHDL_REG_DEF(SIG_CHG_INFO_ACK, SigChgInfom_AckHdl)                   /* IO输出控制请求函数处理函数 */
+PROTOHDL_REG_DEF(RETIM_STATUS_REPORT_AKC, RealTimeStatusReport_AckHdl)   /* 车台对实时状态上报的应答指令 */
+
+/*数据透传*/
+PROTOHDL_REG_DEF(PHYCOM_PARA_CONFIG_REQ, EXUsartParaSetReqHdl)           /* 物理扩展串口参数设置指令0xc0的处理函数 */
+PROTOHDL_REG_DEF(PHYCOM_PARA_QUERY, EXUsartParaQueryHdl)                 /* 物理扩展串口参数查询指令0xc1的处理函数 */
+PROTOHDL_REG_DEF(PHYCOM_POWER_CONTROL_REQ, EXUsartPowerCtrlHdl)          /* 物理扩展串口电源控制指令0xc2的处理函数*/
+PROTOHDL_REG_DEF(DATA_DELIVER_DOWN, ExUartData_Down_Hdl)
+PROTOHDL_REG_DEF(DATA_DELIVER_REQ_ACK, ExUartData_ReqAck_Hdl)
+
+
+/*无线升级*/
+PROTOHDL_REG_DEF(UPDATE_START_REQ, StartUpdateReq_Hdl)
+PROTOHDL_REG_DEF(UPDATE_DATA_RECV, UpdateDadaRecv_Hdl)
+
+PROTOHDL_REG_DEF(BUS_TYPE_SET, BusTypeSetReqHdl)                     /* 总线模式设置指令0x94处理函数 */
+PROTOHDL_REG_DEF(BUS_ONOFF_CTRL, BusOnOffReqHdl)                     /* 总线开关设置指令0x95处理函数 */
+PROTOHDL_REG_DEF(PARA_SET_CAN, CANCommParaSetReqHdl)                 /* CAN通信参数设置指令0xa0处理函数 */
+PROTOHDL_REG_DEF(WORKMODE_SET_CAN, CANWorkModeSetHdl)                /* CAN工作模式设置指令0xa2处理函数 */                      
+PROTOHDL_REG_DEF(WORKMODE_QUERY_CAN, CANWorkModeQueryHdl)            /* CAN工作模式查询指令0xa3处理函数 */
+PROTOHDL_REG_DEF(FILTER_SET_CAN, CANFilterIDSetReqHdl)               /* CAN滤波ID配置指令0xa4处理函数 */
+PROTOHDL_REG_DEF(FILTER_QUERY_CAN, CANFilterIDQueryHdl)              /* CAN滤波ID查询指令0xa5处理函数 */
+PROTOHDL_REG_DEF(DATA_TRANSF_CAN, CANDataTransReqHdl)                /* 主机通过CAN转发数据指令0xa6处理函数 */
+PROTOHDL_REG_DEF(DATA_REPORT_CAN_ACK, CANDataReportAckHdl)           /* CAN主动上报数据后收到应答指令0xa8处理函数 */
+PROTOHDL_REG_DEF(GET_CAN_DATA_REQ, GetCANDataReqHdl)                 /* 车台获取CAN数据指令0xa9处理函数 */
+PROTOHDL_REG_DEF(FILTER_SCREEN_CAN, CANScreenIDSetReqHdl)            /* CAN滤波器组配置指令0xa4处理函数 */
+PROTOHDL_REG_DEF(DATA_LUCIDLY_CAN_ACK, CANDataLucidlyAckHdl)         /* CAN透传数据后收到应答指令0xa7处理函数 */
+
+/*碰撞检测 模块*/
+PROTOHDL_REG_DEF(GSENSOR_BD_REQ, CrashBDHdl)                        /* 车台标定请求 */
+PROTOHDL_REG_DEF(CRASH_SET_PARA, CrashSetParaHdl)                   /* 车台主 */
+PROTOHDL_REG_DEF(CRASH_REPORT_ACK, CrashReportAckHdl)               /* 车台应*/
+
+
+/* ADC相关 */
+PROTOHDL_REG_DEF(AD_SET_REQ, ADCSetReqHdl)                          /* 车台设置ADC */
+PROTOHDL_REG_DEF(ADC_DATA_GET, GetADCDataHdl)                       /* 车台主动获取ADC转换数据 */
+PROTOHDL_REG_DEF(AD_REPORT_REQ_ACK , ADCDataRepAckHdl)              /* 车台应答ADC上报数据 */
+
+PROTOHDL_REG_DEF(GZ_TEST_REQ, GZ_TestReq_Hdl)                       /* 工装测试请求 */
+
+PROTOHDL_REG_DEF(CLIENT_FUNCTION_UP_REQ_ACK, Client_FuntionUpAck_Hdl)    /* 客户特殊功能上行请求应答 */
+PROTOHDL_REG_DEF(CLIENT_FUNCTION_DOWN_REQ, Client_FuntionDown_Hdl)       /* 客户特殊功能下行命令 */
+
+PROTOHDL_REG_DEF(CLEAR_DATA_REQ, ClearDataRequest)                       /* 主机清空调度屏参数请求 */
+
+
+/************************* (C) COPYRIGHT 2010 XIAMEN YAXON.LTD ******************END OF FILE******/
+

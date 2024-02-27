@@ -1,0 +1,39 @@
+/********************************************************************************
+**
+** 文件名:     app_constvar_id.def
+** 版权所有:   (c) 1998-2017 厦门雅迅网络股份有限公司
+** 文件描述:   APP层各应用模块所使用的CONST变量ID定义
+** 创建人：        陈从华
+*********************************************************************************
+**                  修改历史记录
+**===============================================================================
+**| 日期              | 作者        |  修改记录
+**===============================================================================
+**| 2017/05/12 | 黄运峰    |  规范化，修改优化
+********************************************************************************/
+//--------------------------------------------------------------
+//              APP应用业务CONST变量ID定义
+//--------------------------------------------------------------
+//--------------------------报警业务----------------------------
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_POWER_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_VIND_STATICDAT_ID)
+
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_REG_STATICDAT_ID)
+
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_TURNOVER_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_HIT_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_GSENSORFAULT_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_SHACKWAKE_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_IDLINGTOVER_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_OBDFAULT_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_OUTAGE_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_PLUGIN_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_ALARM_VIND_STATICDAT_ID)
+
+//------------------------------------------------------------------------------
+/* End of File */
+
+
+
+
+

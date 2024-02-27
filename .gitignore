@@ -1,3 +1,7 @@
+**/生成烧录文件/
+**/DebugConfig/
+**/Listings/
+**/Objects/
 *.bin
 *.hex
 *.afx
@@ -7,12 +11,10 @@
 *.d
 *.o
 *.jflash
-yx_auto_bulid.h
-cortex-m3.uvgu*
+110r-m4.uvgu*
 JLinkLog.txt
 *.map
 .svn
 object
 tools
 生成发布程序
-

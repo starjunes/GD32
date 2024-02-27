@@ -1,0 +1,80 @@
+/*
+********************************************************************************
+** 文件名:     hal_pio_drv.def
+** 版权所有:   (c) 1998-2018 厦门雅迅网络股份有限公司
+** 文件描述:   定义端口默认配置参数
+** 创建人：        xjc,2018.4.21
+********************************************************************************
+*/
+/*
+    HAL_PIO_DEF(_PIO_ID_, _PORT_ID_, _PIN_POS_, _PIO_DIR_, _DEF_VALUE_, _INT_EN_, _INT_MODE_, _HANDLER_)
+    _PIO_ID_:    映射后的管脚编号；
+    _PORT_ID_:   管脚对应的端口通道号(PORT_ID_E类型)；
+    _PIN_POS_:   在某个端口通道中的序号；
+    _PIO_DIR_:   默认输入输出方向；
+    _DEF_VALUE_: 默认输出值，对于输入脚该值默认为1；
+    _INT_EN_:    对于输入管脚，是否允许中断；
+    _INT_MODE_:  管脚中断模式，上升沿、下降沿、边沿触发、高低电平触发，0表示不允许中断；
+    _HANDLER_:   端口中断处理函数指针
+*/
+//----------------------------------------------------------
+//                  输入管脚定义(17)
+//----------------------------------------------------------
+    HAL_PIO_DEF(PIO_CHGSTAT, PORT_D, 12, DIR_INPUT, 1, FALSE,  INT_MODE_MAX,                    NULL)  // 备用电池充满电检测信号输入
+    HAL_PIO_DEF(PIO_RTCWK,   PORT_D, 10, DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // 外部RTC中断唤醒信号输入，映射到PTD17
+    HAL_PIO_DEF(PIO_GYRINT,  PORT_A, 9,  DIR_INPUT, 1, TRUE,   INT_RISING_EDGE,  hal_sys_WakeupByPio) // 陀螺仪中断信号输入，映射到PTC0
+    HAL_PIO_DEF(PIO_MCUWK,   PORT_A, 11, DIR_INPUT, 1, TRUE,   INT_FALLING_EDGE, hal_sys_WakeupByPio) // GSM唤醒MCU信号输入，映射到PTD4
+    HAL_PIO_DEF(PIO_ACCIN,   PORT_B, 8,  DIR_INPUT, 1, TRUE,   INT_FALLING_EDGE, hal_sys_WakeupByPio) // ACC_ON信号输入，映射到PB8
+    HAL_PIO_DEF(PIO_ECALL,   PORT_E, 8,  DIR_INPUT, 1, FALSE,  INT_RISING_EDGE,  hal_sys_WakeupByPio) // ACC_ON信号输入，映射到PTA1
+    HAL_PIO_DEF(PIO_BCALL,   PORT_E, 9,  DIR_INPUT, 1, FALSE,  INT_RISING_EDGE,  hal_sys_WakeupByPio) // ACC_ON信号输入，映射到PTA1
+    HAL_PIO_DEF(PIO_PWRDECT, PORT_D, 2,  DIR_INPUT, 1, TRUE,   INT_EITHER_EDGE,  hal_sys_WakeupByPio) // 主电掉电/恢复检测信号输入，映射到PTA16
+    HAL_PIO_DEF(PIO_CAN0RXWK,PORT_D, 3,  DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // CAN0RX唤醒
+    HAL_PIO_DEF(PIO_CAN1RXWK,PORT_B, 4,  DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // CAN1RX唤醒
+    HAL_PIO_DEF(PIO_CAN2RXWK,PORT_B, 9,  DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // CAN2RX唤醒
+    HAL_PIO_DEF(PIO_DOWNLDIN,PORT_B, 12, DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // 下载检测，常高，USB插入时降为0
+    HAL_PIO_DEF(PIO_GPSSHORT,PORT_E, 14, DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // 与GPS_ANT_OPEN都为1时开路，都为0时短路（OPEN为0，SHORT为1时正常）
+    HAL_PIO_DEF(PIO_GPSOPEN, PORT_E, 13, DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // 与GPS_ANT_SHORT都为1时开路，都为0时短路（OPEN为0，SHORT为1时正常）
+    HAL_PIO_DEF(PIO_CHGDECT, PORT_E, 7,  DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // 整车充电信号输入，映射到PTA11
+    HAL_PIO_DEF(PIO_AIRBAG,  PORT_B, 1,  DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // EN_GZTEST 工装检测程序，使用IO方式检测安全气囊
+    HAL_PIO_DEF(PIO_ENCINT,  PORT_C, 4,  DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // PTC4，加密芯片处理状态脚,低电平为空闲状态
+    HAL_PIO_DEF(PIO_BATLOW,	 PORT_C, 5,	 DIR_INPUT, 0, FALSE,   INT_FALLING_EDGE, hal_sys_WakeupByPio) // PC5，电池电压过低MCU复位保护电池
+
+
+//----------------------------------------------------------
+//                  输出管脚定义(31)
+//----------------------------------------------------------
+    HAL_PIO_DEF(PIO_VBUSCTL,PORT_B, 13, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // EC20 USB供电控制，用于复位USB，默认输出高
+    HAL_PIO_DEF(PIO_CAN0STB,PORT_C, 3,  DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // CAN0 Standby模式使能控制，输出，映射到PTE8
+    HAL_PIO_DEF(PIO_CAN1STB,PORT_C, 3,  DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // CAN1 Standby模式使能控制，输出，映射到PTE8
+    HAL_PIO_DEF(PIO_CAN2STB,PORT_C, 3,  DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // CAN2 Standby模式使能控制，输出，映射到PTE8
+    HAL_PIO_DEF(PIO_GPSPWR, PORT_E, 12, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // GPS电源芯片使能控制，输出，映射到PTB4
+    HAL_PIO_DEF(PIO_FDWDG,  PORT_C, 0,  DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 外部看门狗喂狗信号输出，映射到PTD5
+    //HAL_PIO_DEF(PIO_232CON, PORT_C, 5,  DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 控制EC20调试串口通道，当输出0时接加密芯片UARTB，输出1时接主接插件串口2
+    HAL_PIO_DEF(PIO_GSMPWR, PORT_D, 15, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // GSMPWR电源芯片使能控制，输出，映射到PTC1
+    HAL_PIO_DEF(PIO_HSMWK,  PORT_E, 11, DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 唤醒加密芯片，上升沿使能(航芯加密芯片)
+    HAL_PIO_DEF(PIO_CHGEN,  PORT_D, 13, DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 备用电池充电使能控制，输出，映射到PTC13
+    HAL_PIO_DEF(PIO_GSM4V,  PORT_D, 7,  DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 备用电池4V供电控制，输出，映射到PTC12(<**** 实际悬空 ****>)
+    HAL_PIO_DEF(PIO_5VEXT,  PORT_B, 2,  DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 外围芯片5V电源使能控制，输出，映射到PTC11
+    HAL_PIO_DEF(PIO_DCEN,   PORT_C, 14, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 主电DC-DC芯片使能控制，输出，映射到PTC10
+    HAL_PIO_DEF(PIO_BATCTL, PORT_D, 7,  DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 备用电池供电切换控制，输出，映射到PTC9(<**** 实际悬空 ****>)
+    HAL_PIO_DEF(PIO_CCVEN,  PORT_B, 14, DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 备用电池CCV测试使能控制，输出，映射到PTC8
+    HAL_PIO_DEF(PIO_EC20WK, PORT_A, 12, DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // GSM模块唤醒信号，输出，映射到PTE7
+    HAL_PIO_DEF(PIO_GPSBAT, PORT_E, 15, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 预留高精度定位模块热启动控制，输出，映射到PTA17
+    HAL_PIO_DEF(PIO_GYRPWR, PORT_A, 10, DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 陀螺仪电源控制，拉高断电，输出，映射到PTD3
+    HAL_PIO_DEF(PIO_EXT1V8, PORT_C, 6,  DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 模块1V8电源控制，输出，映射到PTB10
+    HAL_PIO_DEF(PIO_EXT3V,  PORT_C, 15, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 串口芯片等外围3.3V上拉控制，输出，映射到PTB9
+    HAL_PIO_DEF(PIO_GPSLED, PORT_D, 4,  DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 定位灯
+    HAL_PIO_DEF(PIO_GSMPU,  PORT_B, 15, DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // GSM开机信号，输出，映射到PTA14
+    HAL_PIO_DEF(PIO_HSMPWR, PORT_B, 10, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 加密芯片电源控制，高使能
+    HAL_PIO_DEF(PIO_MUTECON,PORT_B, 1,  DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // TBOX开关量输出：用于TBOX通知大屏进入音频接收准备
+    HAL_PIO_DEF(PIO_CANLED, PORT_D, 5,  DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // CAN灯
+    HAL_PIO_DEF(PIO_ENCCS,  PORT_A, 4,  DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 加密芯片SPI片选信号，输出，映射到PA4
+    HAL_PIO_DEF(PIO_ENCWAKEUP,PORT_C,13,DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 加密芯片唤醒脚，输出，映射到PTD0(华大加密芯片)
+    HAL_PIO_DEF(PIO_PSCTRL, PORT_D, 14, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 高-电源芯片全功能模式    低-电源芯片低功耗模式
+    HAL_PIO_DEF(PIO_BATSHUT,PORT_C,  7, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // 高-开启备用电池          拉-关闭备用电池
+    HAL_PIO_DEF(PIO_215_RST,PORT_B,  7, DIR_OUTPUT,  1,  FALSE, INT_MODE_MAX, NULL) // can 2515复位引脚，低电平复位，正常工作拉高
+    HAL_PIO_DEF(PIO_WIFILED,PORT_D,  6, DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // can2灯，暂时拉低
+    HAL_PIO_DEF(PIO_ECALL_IL_CON,PORT_E, 10, DIR_OUTPUT,  0,  FALSE, INT_MODE_MAX, NULL) // 实际未使用
+//------------------------------------------------------------------------------
+/* End of File */
+

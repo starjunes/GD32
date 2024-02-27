@@ -1,0 +1,51 @@
+/********************************************************************************
+**
+** 文件名:     bal_constvar_id.def
+** 版权所有:   (c) 1998-2017 厦门雅迅网络股份有限公司
+** 文件描述:   BAL层所使用的CONST变量ID定义
+** 创建人：        陈从华
+*********************************************************************************
+**                  修改历史记录
+**===============================================================================
+**| 日期              | 作者        |  修改记录
+**===============================================================================
+**| 2017/05/12 | 黄运峰    |  规范化，修改优化
+********************************************************************************/
+//--------------------------------------------------------------
+//              BAL层各模块CONST变量ID定义
+//--------------------------------------------------------------
+GPS_CONSTVAR_ID_DEF(GPS_OS_REG_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_GPS_CTL_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_GPS_REG_STATICDAT_ID)
+
+
+GPS_CONSTVAR_ID_DEF(GPS_SM_REG_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_PHONE_REG_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_GPRS_REG_STATICDAT_ID)
+
+GPS_CONSTVAR_ID_DEF(GPS_PP_REG_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_REC_REG_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_DB_REG_STATICDAT_ID)
+
+GPS_CONSTVAR_ID_DEF(GPS_INPUT_REG_STATICDAT_ID)
+GPS_CONSTVAR_ID_DEF(GPS_OUTPUT_REG_STATICDAT_ID)
+
+//------------------------------------------------------------------------------
+/* End of File */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
