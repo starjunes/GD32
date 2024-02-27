@@ -29,7 +29,15 @@
 
 #define     CAN_SEND_IDLENOW        0
 #define     CAN_SEND_BUSY           1
+#if EN_CAN > 0
+#define     MAX_ACCESS_SEND_ID_NUM  3
+typedef struct {
+    BOOLEAN access;                       /* 是否需要判断id */
+    INT32U id[MAX_ACCESS_SEND_ID_NUM];    /* 允许发送的id表 */
+} SEND_ID_ACCESS_LIST_T;
 
+static SEND_ID_ACCESS_LIST_T s_send_id_access[MAX_CANCHAN];
+#endif
 /*************************************************************************************************/
 /*                           环形缓冲区控制块                                                    */
 /*************************************************************************************************/
@@ -699,6 +707,50 @@ BOOLEAN DAL_CAN_TxData_Dir(INT8U *data, INT8U channel)
     
     return true;
 }
+#if EN_UDS > 0
+/*******************************************************************
+** 函数名称:   HAL_CAN_SendIdAccessSet
+** 函数描述:   允许发送id设置
+** 参数:       [in] com :  通道编号,见CAN_COM_E
+               [in] set :  TRUE:打开发送id是否允许发送判断
+               [in] id  :  发送id
+               [in] idx :  允许发送id列表下表号:(0 ~ (MAX_ACCESS_SEND_ID_NUM-1))
+** 返回:       剩余空间字节数
+********************************************************************/
+void HAL_CAN_SendIdAccessSet(INT8U com, BOOLEAN set, INT32U id, INT8U idx)
+{
+    if (com >= MAX_CANCHAN) return;
+
+    if (idx >= MAX_ACCESS_SEND_ID_NUM) return;
+
+    s_send_id_access[com].access  = set;
+    s_send_id_access[com].id[idx] = id;
+}
+/*******************************************************************
+** 函数名称:   SendIdAccessCheck
+** 函数描述:   允许发送id检查
+** 参数:       [in] com :  通道编号,见CAN_COM_E
+               [in] id  :  发送id
+** 返回:       剩余空间字节数
+********************************************************************/
+static BOOLEAN SendIdAccessCheck(INT8U com, INT32U id)
+{
+    INT8U idx;
+    if (com >= MAX_CANCHAN) return FALSE;
+
+    if (!s_send_id_access[com].access) {
+        return TRUE;
+    } 
+
+    for (idx = 0; idx < MAX_ACCESS_SEND_ID_NUM; idx++) {
+        if (s_send_id_access[com].id[idx] == id) {
+            return TRUE;
+        }        
+    }
+
+    return FALSE;
+}
+#endif
 
 /*******************************************************************
 ** 函数名:     DAL_CAN_TxData
@@ -712,11 +764,17 @@ BOOLEAN DAL_CAN_TxData(INT8U *data, BOOLEAN wait, INT8U channel)
 {
     INT8U cdata[13],i;
     BOOLEAN res;
-    INT32U CANx;
+    INT32U CANx,tempid;
     
     if (channel >= MAX_CANCHAN) return false;
     if (s_ccbt[channel].onoff == false) return false;
-    
+		
+    #if EN_UDS > 0
+		Chartolong(&tempid, data); 
+    if (!SendIdAccessCheck(channel, tempid)) {
+        return FALSE;
+    }
+    #endif
     memset(cdata, 0,sizeof(cdata));
     if (channel == 0) {
         CANx = CAN0;
@@ -1170,6 +1228,30 @@ BOOLEAN Dal_StopCANMsg_Period(INT32U id, INT8U channel)
         }
     }
     return false;
+}
+/*******************************************************************
+ ** 函数名:        can_Reset_PeriodSendPeriod
+ ** 函数描述:   周期性重新计数
+ ** 参数:        无
+ ** 返回:        无
+ ********************************************************************/
+void dal_CAN_Reset_PeriodSendPeriod(void) 
+{
+    INT8U i, j, k;
+   // CAN_MSG_T tx_msg;
+    
+    for (i = 0; i < MAX_CANCHAN; i++) {
+      	k = 0;
+      	for (j = 0; j < MAX_RXIDOBJ; j++) {
+        		if (k >= s_msg_period[i].sdobjused) {
+        			break;
+        		}
+        		if (s_msg_period[i].idcbt[j].isused) {
+        		    s_msg_period[i].idcbt[j].timecnt = 0; 
+								k++;
+        		}						
+      	}
+    }
 }
 #if 0
 /*******************************************************************

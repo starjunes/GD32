@@ -329,5 +329,19 @@ INT8U bal_DW_BigToLit(INT8U *sptr, INT8U *dptr);
 INT8U bal_HW_BigToLit(INT8U *sptr, INT8U *dptr);
 INT8U bal_CutFromRight(INT8U* ptr, INT8U dat, INT8U len);
 INT8U bal_CutFromLeft(INT8U* ptr, INT8U dat, INT8U datalen);
-
+/*******************************************************************
+** 函数名:      YX_BigEndModeToHWord
+** 函数描述:    将大端存储的2字节数据转换为半字
+** 参数:        [in]  sptr:             源缓冲区
+** 返回:        双字值
+********************************************************************/
+INT16U YX_BigEndModeToHWord(INT8U *sptr);
+/*******************************************************************
+** 函数名:      YX_DWToLitEndMode
+** 函数描述:    将双字转换为小端存储模式
+** 参数:        [out]  dptr:            目的缓冲区
+                [in]  dwvalue:          双字值
+** 返回:        NULL
+********************************************************************/
+void YX_DWToLitEndMode(INT8U *dptr, INT32U dwvalue);
 #endif

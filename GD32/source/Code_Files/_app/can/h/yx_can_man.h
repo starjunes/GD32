@@ -178,7 +178,14 @@ INT8U Can_GetRxStat(void);
 ** 返回:       无
 ********************************************************************/
 void Can_TxMsg(INT8U channel);
-
+/*****************************************************************************
+**  函数名:  YX_MMI_UDS_CanSendMul
+**  函数描述: uds发送多帧数据
+**  参数:    [in] data :
+**           [in] len  :
+**  返回:    FALSE:执行失败 TRUE:执行成功
+*****************************************************************************/
+BOOLEAN YX_MMI_UDS_CanSendMul(INT8U com,INT8U* data, INT16U len);
 
 #ifdef __cplusplus
 }

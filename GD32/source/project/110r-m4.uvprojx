@@ -335,7 +335,7 @@
               <MiscControls>--C99</MiscControls>
               <Define>USE_STDPERIPH_DRIVER,GD32F30X_CL,USE_USB_OTG_FS,__TARGET_FPU_VFP,ARM_MATH_MATRIX_CHECK,ARM_MATH_ROUNDING,ARM_MATH_CM4,__CC_ARM,YX_MPU_SENSOR</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Code_Files\_app\ADC;..\Code_Files\_app\AES128;..\Code_Files\_app\CAN;..\Code_Files\_app\database;..\Code_Files\_app\dataexport;..\Code_Files\_app\driverlogin;..\Code_Files\_app\deliver;..\Code_Files\_app\fat;..\Code_Files\_app\ICcard;..\Code_Files\_app\infrared;..\Code_Files\_app\interface;..\Code_Files\_app\keyboard;..\Code_Files\_app\kline;..\Code_Files\_app\lcd;..\Code_Files\_app\main;..\Code_Files\_app\mileage;..\Code_Files\_app\md5;..\Code_Files\_app\m0_pm;..\Code_Files\_app\printer;..\Code_Files\_app\PhyExUsart;..\Code_Files\_app\phone;..\Code_Files\_app\public;..\Code_Files\_app\pm;..\Code_Files\_app\RFID;..\Code_Files\_app\ring;..\Code_Files\_app\signal;..\Code_Files\_app\update;..\Code_Files\_app\hit;..\Code_Files\_dal\common\h;..\Code_Files\_dal\driver\h;..\Code_Files\_dal\manager\h;..\Code_Files\_dal\usb\core\h;..\Code_Files\_dal\usb\driver\h;..\Code_Files\_dal\usb\MSC\h;..\Code_Files\_dal\usb\user\h;..\Code_Files\_drv\GD32F30x_standard_peripheral\Include;..\Code_Files\_drv\CMSIS;..\Code_Files\_drv\CMSIS\GD\GD32F30x\Include;..\Code_Files\_dal\usb\OTG\h;..\Code_Files\_dal\MPUlib\h;..\Code_Files\_app\exrtc;..\Code_Files\_app\appmain\h;..\Code_Files\_app\balcfg\ioreg\h;..\Code_Files\_app\balcfg\osreg\h;..\Code_Files\_app\balcfg\portreg\h;..\Code_Files\_app\balcfg\ppreg\h;..\Code_Files\_app\can\h;..\Code_Files\_app\com\h;..\Code_Files\_app\database;..\Code_Files\_app\encrypt\h;..\Code_Files\_app\exrtc;..\Code_Files\_app\exuart\h;..\Code_Files\_app\general\h;..\Code_Files\_app\includes;..\Code_Files\_app\interface\h;..\Code_Files\_app\lock\h;..\Code_Files\_app\main;..\Code_Files\_app\power\h;..\Code_Files\_app\public;..\Code_Files\_app\signal\h;..\Code_Files\_bal\comm\h;..\Code_Files\_bal\ppdrv\h;..\Code_Files\_bal\utils\h;..\Code_Files\port;..\Code_Files\_bal\kernel\h;..\Code_Files\_app\hit\h;..\Code_Files\_app\encrypt\h;..\Code_Files\_drv\Template;..\Code_Files\_app\sd2058\h;..\Code_Files\_dal\backtrace;..\Code_Files\_dal\backtrace\Languages</IncludePath>
+              <IncludePath>..\Code_Files\_app\ADC;..\Code_Files\_app\AES128;..\Code_Files\_app\CAN;..\Code_Files\_app\database;..\Code_Files\_app\dataexport;..\Code_Files\_app\driverlogin;..\Code_Files\_app\deliver;..\Code_Files\_app\fat;..\Code_Files\_app\ICcard;..\Code_Files\_app\infrared;..\Code_Files\_app\interface;..\Code_Files\_app\keyboard;..\Code_Files\_app\kline;..\Code_Files\_app\lcd;..\Code_Files\_app\main;..\Code_Files\_app\mileage;..\Code_Files\_app\md5;..\Code_Files\_app\m0_pm;..\Code_Files\_app\printer;..\Code_Files\_app\PhyExUsart;..\Code_Files\_app\phone;..\Code_Files\_app\public;..\Code_Files\_app\pm;..\Code_Files\_app\RFID;..\Code_Files\_app\ring;..\Code_Files\_app\signal;..\Code_Files\_app\update;..\Code_Files\_app\hit;..\Code_Files\_dal\common\h;..\Code_Files\_dal\driver\h;..\Code_Files\_dal\manager\h;..\Code_Files\_dal\usb\core\h;..\Code_Files\_dal\usb\driver\h;..\Code_Files\_dal\usb\MSC\h;..\Code_Files\_dal\usb\user\h;..\Code_Files\_drv\GD32F30x_standard_peripheral\Include;..\Code_Files\_drv\CMSIS;..\Code_Files\_drv\CMSIS\GD\GD32F30x\Include;..\Code_Files\_dal\usb\OTG\h;..\Code_Files\_dal\MPUlib\h;..\Code_Files\_app\exrtc;..\Code_Files\_app\appmain\h;..\Code_Files\_app\balcfg\ioreg\h;..\Code_Files\_app\balcfg\osreg\h;..\Code_Files\_app\balcfg\portreg\h;..\Code_Files\_app\balcfg\ppreg\h;..\Code_Files\_app\can\h;..\Code_Files\_app\com\h;..\Code_Files\_app\database;..\Code_Files\_app\encrypt\h;..\Code_Files\_app\exrtc;..\Code_Files\_app\exuart\h;..\Code_Files\_app\general\h;..\Code_Files\_app\includes;..\Code_Files\_app\interface\h;..\Code_Files\_app\lock\h;..\Code_Files\_app\main;..\Code_Files\_app\power\h;..\Code_Files\_app\public;..\Code_Files\_app\signal\h;..\Code_Files\_bal\comm\h;..\Code_Files\_bal\ppdrv\h;..\Code_Files\_bal\utils\h;..\Code_Files\port;..\Code_Files\_bal\kernel\h;..\Code_Files\_app\hit\h;..\Code_Files\_app\encrypt\h;..\Code_Files\_drv\Template;..\Code_Files\_app\sd2058\h;..\Code_Files\_dal\backtrace;..\Code_Files\_dal\backtrace\Languages;..\Code_Files\_app\uds\h</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -401,6 +401,31 @@
               <FileName>yx_can_man.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Code_Files\_app\can\c\yx_can_man.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>uds</GroupName>
+          <Files>
+            <File>
+              <FileName>yx_dtc_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Code_Files\_app\uds\c\yx_dtc_drv.c</FilePath>
+            </File>
+            <File>
+              <FileName>yx_uds_did.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Code_Files\_app\uds\c\yx_uds_did.c</FilePath>
+            </File>
+            <File>
+              <FileName>yx_uds_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Code_Files\_app\uds\c\yx_uds_drv.c</FilePath>
+            </File>
+            <File>
+              <FileName>yx_uds_transfer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Code_Files\_app\uds\c\yx_uds_transfer.c</FilePath>
             </File>
           </Files>
         </Group>

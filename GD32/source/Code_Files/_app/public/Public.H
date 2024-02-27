@@ -12,10 +12,41 @@
 #define PUBLIC_H                        1
 
 #include  "dal_can.h"
+#if EN_UDS > 0
+#include "yx_dtc_drv.h"
+#endif
 //#include  "app_can.h"
 #define _PUBLIC_FLASHSECTOR             (E_USRPARA_PAGE + 1 - BLOCK_IMAGESECTOR)     /* FLASH扇区号 */
 #define MAX_PARA_SIZE  	                500     /* 注意,公共参数结构最大不得超过这个值 */
+#if EN_UDS > 0
+#define MAX_DID_NUM              22
+/* 故障码信息 */
+typedef struct {
+    INT8U status;                       /* 故障状态 */
+    INT8U self_clr_cnt;                 /* 自清除计数 */
+} DTC_T; 
 
+typedef struct {
+    DTC_T  dtc[MAX_DISP_CODE];                     /* 与MAX_DISP_CODE大小要一致 */         
+} DTC_OBJ_T; 
+/* uds错误计数 */
+typedef struct {
+    INT16U  fault_cnt;
+} UDS_ERR_CNT_T;
+/* UDS DID数据 */
+typedef struct {
+    INT8U DID_F182[24];    // 17数据信息标识    
+    INT8U DID_F187[24];    // 整车厂零件号（图号）
+    INT8U DID_F190[17];    // 车辆标识号 VIN
+    INT8U DID_F193[8];     // 硬件版本号 
+    INT8U DID_F195[8];     // 软件版本号
+    INT8U DID_F19D[4];     // 安装日期
+    INT8U DID_F1A1[16];    // 厂家代码
+    INT8U DID_1004[15];    // IMSI
+
+    INT8U DID_STATUS[MAX_DID_NUM];
+} UDS_DID_DATA_E2ROM_T;
+#endif
 /*
 ********************************************************************************
 *                  DEFINE PUBLIC PARAMETERS TYPE
@@ -28,7 +59,11 @@
 #define AXISCALPARA_                    4 
 #define SCLOCKPARABAK_                  5
 #define KMS_LOCK_PARA_                  6
-
+#if EN_UDS > 0
+#define UDS_DTC_PARA_                   7
+#define UDS_DID_PARA_                   8
+#define UDS_ERRCNT_PARA_                9
+#endif
 #ifdef PUBLIC_C
 /*
 ********************************************************************************
@@ -61,7 +96,68 @@ static ADASPARA_T       const i_ADASPARA      = {0};
 static AXISPARA_T  		const i_axiscalconfig = {false, 2, -41, 997, 4000};
 static SCLOCKPARABAK_T  const i_sclockparabak = {0, 0, 0, 0x01, 0x01, 0x02};
 static KMS_LOCK_OBJ_T   const i_kms_lock      = {0x00, {0xff, 0xff}};
+#if EN_UDS > 0
+static DTC_OBJ_T const i_dtc_obj = {
+    {
+        {0x00, 0x00},    // bus off 
+        {0x00, 0x00},    // 欠压
+        {0x00, 0x00},    // 过压
 
+        {0x00, 0x00},    // 所有伙伴ECU超时（J6低配节点超时）    
+        {0x00, 0x00},    // EMS节点超时  
+        {0x00, 0x00},    // IC仪表节点超时  
+
+        {0x00, 0x00},    // GPS模块故障
+        {0x00, 0x00},    // 4G模块故障
+        {0x00, 0x00},    // SIM卡故障
+        {0x00, 0x00},    // T-box 未定位
+        {0x00, 0x00},    // T-box 专网拨号不成功
+        {0x00, 0x00},    // 国六模块获取发动机VIN失败
+        {0x00, 0x00},    // 国六模块获取发动机VIN不一致
+        {0x00, 0x00},    // 国六企业平台连接失败
+        {0x00, 0x00},    // 国六模块电源线束断开
+    },
+};
+static const UDS_DID_DATA_E2ROM_T     i_uds_did_e2rom_data = {
+    /* DID_F182 */
+    {'7', '9', '2', '5', '6', '1', '2', '-', 'Y', '1', '8', '5', '6', '-', 'C', '0', '0',  
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    },
+    /* DID_F187 */
+    {'7', '9', '2', '5', '1', '0', '0', '-', 'Y', '1', '8', '5', '6', '-', 'C', '0', '0', 
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    }, 
+    /* DID_F190 */
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+     0x00 
+    }, 
+    /* DID_F193 */
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    }, 
+    /* DID_F195 */
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    }, 
+    /* DID_F19D */
+    {0x00, 0x00, 0x00, 0x00
+    }, 
+    /* DID_F1A1 */
+    {'L', 'L', 'L', '2', '1', 
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+     
+    }, 
+    /* DID_1004 */
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    }, 
+
+    /* DID_STATUS */
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    }, 
+};
+static UDS_ERR_CNT_T const i_uds_fault_cnt = {0};
+#endif
 //static VEHICHEFACTOR_T  const i_VEHICHEFACTOR = {0};
 /*
 ********************************************************************************
@@ -81,6 +177,11 @@ static PUBTBL_STRUCT const PubTbl[] = {
             {&i_axiscalconfig,          sizeof(AXISPARA_T)}, 
             {&i_sclockparabak,          sizeof(SCLOCKPARABAK_T)},
             {&i_kms_lock,               sizeof(KMS_LOCK_OBJ_T)},
+            #if EN_UDS > 0
+            {&i_dtc_obj,                sizeof(DTC_OBJ_T)},
+            {&i_uds_did_e2rom_data,     sizeof(UDS_DID_DATA_E2ROM_T)},
+            {&i_uds_fault_cnt,          sizeof(UDS_ERR_CNT_T)},
+            #endif
           };
 #endif
 

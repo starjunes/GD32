@@ -28,7 +28,10 @@
 #include "bal_input_reg.h"
 #include "bal_input_drv.h"
 #include "yx_power_man.h"
-
+#include "yx_com_man.h"
+#if EN_UDS > 0
+#include "yx_uds_drv.h"
+#endif
 #if 0
 #ifdef DEBUG_LOCK
 #undef DEBUG_LOCK
@@ -56,7 +59,11 @@ static INT32U const    s_filtid[] = {
 									  0x18fd0100, 
 									  0x18ff0800, 
 									  0x18fff400,
-									  KMS_Q6_KEY_ID
+									  KMS_Q6_KEY_ID,
+									  #if EN_UDS > 0
+									  FUNC_REQID,
+									  UDS_PHSCL_REQID,
+									  #endif
 									  };
 static SC_LOCK_STEP_E  s_sclockstep = CONFIG_OVER;
 static INT8U           s_key[8];
@@ -1744,31 +1751,29 @@ void Lock_KmsG5Cmd(INT8U* data, INT16U len)
 **************************************************************************************************/
 void Lock_Init(void)
 {
-	INT8U onlinedata[13] = {0x18,0xFF,0xF2,0x4A,0x08,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};//联网报文
-	INT32U id;
+    INT8U onlinedata[13] = {0x18,0xFF,0xF2,0x4A,0x08,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};//联网报文
+    INT32U id;
     bal_pp_ReadParaByID(LOCKRECORD_,(INT8U *)&s_lockrecord, sizeof(LOCK_RECORD));
     bal_pp_ReadParaByID(SCLOCKPARA_,(INT8U *)&s_sclockpara, sizeof(SCLOCKPARA_T));
     #if EN_KMS_LOCK > 0
     bal_pp_ReadParaByID(KMS_LOCK_PARA_,(INT8U *)&s_kms_obj, sizeof(KMS_LOCK_OBJ_T));
     #endif
     CanLocateFiltidSet();
-
+    
     s_lock_tmr = OS_InstallTmr(TSK_ID_OPT, 0, LockTmrProc);
-	SecurityKeySet(s_sclockpara.securityKey, s_sclockpara.securityKeylen);
+    SecurityKeySet(s_sclockpara.securityKey, s_sclockpara.securityKeylen);
     ACCON_HandShake();
-	
-	id = bal_chartolong(onlinedata);
-	CAN_TxData(onlinedata, false, LOCK_CAN_CH);
-	SetCANMsg_Period(id, &onlinedata[4], 100, LOCK_CAN_CH);
-
-	//memset(&g_d008data, 0, sizeof(D008_DATA_T));
-	s_d008data = (D008_DATA_T*)YX_MemMalloc(sizeof(D008_DATA_T));
-	if (s_d008data != NULL) {
-		memset(s_d008data, 0, sizeof(D008_DATA_T));
-		s_d008data->lockcmdtime = 1100;
-	}
-	
-
+    
+    id = bal_chartolong(onlinedata);
+    CAN_TxData(onlinedata, false, LOCK_CAN_CH);
+    SetCANMsg_Period(id, &onlinedata[4], 100, LOCK_CAN_CH);
+    
+    //memset(&g_d008data, 0, sizeof(D008_DATA_T));
+    s_d008data = (D008_DATA_T*)YX_MemMalloc(sizeof(D008_DATA_T));
+    if (s_d008data != NULL) {
+        memset(s_d008data, 0, sizeof(D008_DATA_T));
+        s_d008data->lockcmdtime = 1100;
+    }
 }
 /**************************************************************************************************
 **  函数名称:  CanBaudSet
@@ -1779,10 +1784,9 @@ void Lock_Init(void)
 **************************************************************************************************/
 void CanBaudSet(INT16U baud,INT8U channel)
 {
-	s_sclockpara.canbaud[channel] = baud;
-	bal_pp_StoreParaByID(SCLOCKPARA_, (INT8U *)&s_sclockpara, sizeof(SCLOCKPARA_T));
+    if(s_sclockpara.canbaud[channel] != baud) {
+	      s_sclockpara.canbaud[channel] = baud;
+	      bal_pp_StoreParaByID(SCLOCKPARA_, (INT8U *)&s_sclockpara, sizeof(SCLOCKPARA_T));
+    }
 }
-
-
-
 

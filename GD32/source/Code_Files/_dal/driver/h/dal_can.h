@@ -408,8 +408,25 @@ void SendCANMsg_FromBuf(void);
 **  返回参数:
 **************************************************************************************************/
 BOOLEAN CheckCanIsErrer(INT8U channel);
-
-
+#if EN_UDS > 0
+/*******************************************************************
+** 函数名称:   HAL_CAN_SendIdAccessSet
+** 函数描述:   允许发送id设置
+** 参数:       [in] com :  通道编号,见CAN_COM_E
+               [in] set :  TRUE:打开发送id是否允许发送判断
+               [in] id  :  发送id
+               [in] idx :  允许发送id列表下表号:(0 ~ (MAX_ACCESS_SEND_ID_NUM-1))
+** 返回:       剩余空间字节数
+********************************************************************/
+void HAL_CAN_SendIdAccessSet(INT8U com, BOOLEAN set, INT32U id, INT8U idx);
+/*******************************************************************
+ ** 函数名:        can_Reset_PeriodSendPeriod
+ ** 函数描述:   周期性重新计数
+ ** 参数:        无
+ ** 返回:        无
+ ********************************************************************/
+void dal_CAN_Reset_PeriodSendPeriod(void); 
+#endif
 #endif
 /**************************** (C) COPYRIGHT 2012  XIAMEN YAXON.LTD **************END OF FILE******/
 

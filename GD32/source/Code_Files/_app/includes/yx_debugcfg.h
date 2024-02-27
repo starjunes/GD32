@@ -59,11 +59,11 @@ extern INT8U DEBUG_UART_NO;
 #define     DEBUG_SLEEP_STATUS          0       //ACC休眠测试
 #define     DEBUG_IOTEST_STATUS         0       //(yx_signal_man.c)开关量的打印信息开关
 #define     DEBUG_DATA_STORE            0       //
-#define     DEBUG_CAN                   0
+#define     DEBUG_CAN                   1
 #define     DEBUG_CANSFLFSEND           0
 #define     DEBUG_LOCK                  0       //锁车程序调试
 #define     DEBUG_RTC_SLEEP             1       //设备休眠RTC唤醒调试
-#define     DEBUG_UDS                   0
+#define     DEBUG_UDS                   1
 #define     DEBUG_J1939                 1
 #define     DEBUG_ENC                   0       //加密芯片
 #define     DEBUG_ENC_TEST              0       //加密芯片过检定制

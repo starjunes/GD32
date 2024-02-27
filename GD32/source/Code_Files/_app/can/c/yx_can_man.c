@@ -17,11 +17,13 @@
 #include "appmain.h"
 #include "Dal_Structs.h"
 #include "public.h"
-
-
+#include "dal_structs.h"
 #include "app_update.h"
 #include "dal_flash.h"
-
+#include "bal_pp_drv.h"
+#if EN_UDS > 0
+#include "yx_uds_drv.h"
+#endif
 #define UDS_ID_REC              0x18DA1DF9
 #define UDS_ID_SEND             0x18DAF91D
 
@@ -625,7 +627,7 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
     id = bal_chartolong(CAN_msg->id);
 
     if ((id == UDS_ID_REC) || (id == UDS_ID_REC1) || (id == UDS_ID_REC2) || (id == UDS_ID_REC3)
-     || (id == UDS_ID_REC4) || (id == UDS_ID_REC5) || (id == UDS_ID_REC6)) {//--RF--  处理多包发送时候需要的流控回复
+     || (id == UDS_ID_REC4) || (id == UDS_ID_REC5) || (id == UDS_ID_REC6) || (id == FUNC_REQID) || (id == UDS_PHSCL_REQID)) {//--RF--  处理多包发送时候需要的流控回复
         if (CAN_msg->databuf[0] == 0x30) {
             for (i = 0; i < MAXPACKETPARANUM; i++) {
                 #if DEBUG_UDS > 0
@@ -667,7 +669,7 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
         }
     }
     if ((id == UDS_ID_REC) || (id == UDS_ID_REC1)|| (id == UDS_ID_REC2)|| (id == UDS_ID_REC3)
-        || (id == UDS_ID_REC4) || (id == UDS_ID_REC5) || (id == UDS_ID_REC6)) {//--RF--  多包接收处理
+        || (id == UDS_ID_REC4) || (id == UDS_ID_REC5) || (id == UDS_ID_REC6) || (id == UDS_PHSCL_REQID)) {//--RF--  多包接收处理
         #if DEBUG_UDS > 1
         debug_printf("CAN帧 ");
         printf_hex(CAN_msg->databuf, CAN_msg->len);
@@ -801,14 +803,27 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
                         s_packetpara[i].packet_buf[10] = s_packetpara[i].packet_totallen;
                         YX_COM_DirSend(DATA_REPORT_CAN, s_packetpara[i].packet_buf + 3, s_packetpara[i].packet_totallen + 8);
                       #else
-                        s_packetpara[i].packet_buf[0] = CAN_msg->channel + 1;
-                        bal_longtochar(&s_packetpara[i].packet_buf[1], s_packetpara[i].packet_id);
-                        s_packetpara[i].packet_buf[5] = 0x01;                           /* 一包 */
-                    s_packetpara[i].packet_buf[6] = CAN_msg->format + 1;
-                        s_packetpara[i].packet_buf[7] = 0x00;                           /* reserve */
-                        s_packetpara[i].packet_buf[8] = s_packet_cnt++;                 /* seq */
-                        bal_shorttochar(&s_packetpara[i].packet_buf[9], s_packetpara[i].packet_totallen);/* LEN: 2 BYTE*/
-                        YX_COM_DirSend(DATA_REPORT_CAN, s_packetpara[i].packet_buf, s_packetpara[i].packet_totallen + 11);
+											#if EN_UDS > 0
+										  if(!YX_UDS_MultFrameRecv(s_packetpara[i].packet_id,&s_packetpara[i].packet_buf[12],s_packetpara[i].packet_totallen -1)) {		
+                          s_packetpara[i].packet_buf[0] = CAN_msg->channel + 1;
+                          bal_longtochar(&s_packetpara[i].packet_buf[1], s_packetpara[i].packet_id);
+                          s_packetpara[i].packet_buf[5] = 0x01;                           /* 一包 */
+                          s_packetpara[i].packet_buf[6] = CAN_msg->format + 1;
+                          s_packetpara[i].packet_buf[7] = 0x00;                           /* reserve */
+                          s_packetpara[i].packet_buf[8] = s_packet_cnt++;                 /* seq */
+                          bal_shorttochar(&s_packetpara[i].packet_buf[9], s_packetpara[i].packet_totallen);/* LEN: 2 BYTE*/
+                          YX_COM_DirSend(DATA_REPORT_CAN, s_packetpara[i].packet_buf, s_packetpara[i].packet_totallen + 11);
+										  } 
+											#else
+                         s_packetpara[i].packet_buf[0] = CAN_msg->channel + 1;
+                         bal_longtochar(&s_packetpara[i].packet_buf[1], s_packetpara[i].packet_id);
+                         s_packetpara[i].packet_buf[5] = 0x01;                           /* 一包 */
+                         s_packetpara[i].packet_buf[6] = CAN_msg->format + 1;
+                         s_packetpara[i].packet_buf[7] = 0x00;                           /* reserve */
+                         s_packetpara[i].packet_buf[8] = s_packet_cnt++;                 /* seq */
+                         bal_shorttochar(&s_packetpara[i].packet_buf[9], s_packetpara[i].packet_totallen);/* LEN: 2 BYTE*/
+                         YX_COM_DirSend(DATA_REPORT_CAN, s_packetpara[i].packet_buf, s_packetpara[i].packet_totallen + 11);
+											#endif
                       #endif
                     s_packetpara[i].packet_tmrcnt  = 0;
                     //CANDataReprot(s_packetpara[i].packet_buf, s_packetpara[i].packet_totallen + 11);
@@ -936,6 +951,11 @@ void CANDataHdl(CAN_DATA_HANDLE_T *CAN_msg)
     printf_hex(CAN_msg->databuf, CAN_msg->len);
     #endif
     HandShakeMsgAnalyze(CAN_msg,sizeof(CAN_msg));
+    #if EN_UDS > 0
+		if(UDS_SingleFrameHdl((INT8U*)CAN_msg, sizeof(CAN_DATA_HANDLE_T))) {
+		   return;
+		}
+    #endif
 
     for (i = 0; i < MAX_CANIDS; i++) {
         if ((id == s_msgbt[CAN_msg->channel].idcbt[i].id
@@ -2122,7 +2142,56 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
 	YX_COM_DirSend( DATA_TRANSF_CAN_ACK, ack, 4);
 }
 
-
+/*****************************************************************************
+**  函数名:  YX_MMI_UDS_CanSendMul
+**  函数描述: uds发送多帧数据
+**  参数:    [in] data :
+**           [in] len  :
+**  返回:    FALSE:执行失败 TRUE:执行成功
+*****************************************************************************/
+BOOLEAN YX_MMI_UDS_CanSendMul(INT8U com,INT8U* data, INT16U len) 
+{
+    INT8U j;
+		STREAM_T strm;
+		
+    #if DEBUG_CAN > 0
+    debug_printf("长帧\r\n");
+    #endif
+		
+		
+		bal_InitStrm(&strm, data, len);
+		
+    j = FindFreeItem_SendList();
+    if (j == MAXPACKETPARANUM) {    		
+    		return false;
+    }
+    s_sendpacket[j].packet_com = TRUE;
+    s_sendpacket[j].channel = com;
+    s_sendpacket[j].sendid = UDS_PHSCL_RESPID;
+    s_sendpacket[j].packet_totallen = len;
+    s_sendpacket[j].sendlen = 0;
+    s_sendpacket[j].sendpacket = 0;
+    s_sendpacket[j].packet_buf = PORT_Malloc(s_sendpacket[j].packet_totallen);
+    if (s_sendpacket[j].packet_buf == NULL) {
+    		s_sendpacket[j].packet_com = FALSE;
+				return false;
+    } else {		                
+        bal_ReadDATA_Strm(&strm, s_sendpacket[j].packet_buf, len);	
+    		#if DEBUG_ERR > 0
+    		debug_printf("len = %d",len);
+    		printf_hex(s_sendpacket[j].packet_buf,len);
+    		#endif
+    }
+   
+  	 #if DEBUG_CAN > 0
+  	 debug_printf("UDS长帧长度,%d\r\n",s_sendpacket[j].packet_totallen);
+  	 #endif		 
+  	 s_sendpacket[j].prot_type = UDS_TYPE;
+  	 if (s_sendpacket[j].packet_com) {
+  			 SendFF(&s_sendpacket[j]);
+  	 }
+		 return TRUE;
+}
 /**************************************************************************************************
 **  函数名称:  GetCANDataReqHdl
 **  功能描述:  车台获取CAN数据请求处理函数
@@ -2329,7 +2398,9 @@ void YX_CAN_Init(void)
     s_packet_tmr = OS_InstallTmr(TSK_ID_OPT, 0, PacketTimeOut);
     OS_StartTmr(s_packet_tmr, MILTICK, 1);
     
-    
+    #if EN_UDS > 0
+		YX_UDS_Init();
+		#endif
     #if DEBUG_CAN > 1
     // test
     CAN_DATA_SEND_T candata;

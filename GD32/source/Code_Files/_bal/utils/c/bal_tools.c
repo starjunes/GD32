@@ -610,7 +610,30 @@ INT16U bal_AsciiToSemiOctet(INT8U *dptr, INT8U *sptr, INT16U len)
     }
     return rlen;
 }
-
+/*******************************************************************
+** 函数名:      YX_BigEndModeToHWord
+** 函数描述:    将大端存储的2字节数据转换为半字
+** 参数:        [in]  sptr:             源缓冲区
+** 返回:        双字值
+********************************************************************/
+INT16U YX_BigEndModeToHWord(INT8U *sptr)
+{
+    return ((sptr[0] << 8) + sptr[1]);
+}
+/*******************************************************************
+** 函数名:      YX_DWToLitEndMode
+** 函数描述:    将双字转换为小端存储模式
+** 参数:        [out]  dptr:            目的缓冲区
+                [in]  dwvalue:          双字值
+** 返回:        NULL
+********************************************************************/
+void YX_DWToLitEndMode(INT8U *dptr, INT32U dwvalue)
+{
+    dptr[0] = dwvalue;
+    dptr[1] = (dwvalue >> 8);
+    dptr[2] = (dwvalue >> 16);
+    dptr[3] = (dwvalue >> 24);
+}
 /*********************************************************************************
 ** 函数名:     bal_ConvertGmtToLocaltime
 ** 函数描述:   将格林尼治时间转换成本地时间
