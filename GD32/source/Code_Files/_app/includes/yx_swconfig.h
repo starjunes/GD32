@@ -61,7 +61,7 @@
 #define EN_KMS_LOCK             1          /* 1:使能康明斯锁车; 0:关闭康明斯锁车 */
 #define EN_UDS                  1          /* 1:开启UDS功能     0:关闭UDS功能 */
 #define EN_UDS_TRANS            0          /* 1:开启UDS下载功能 0:关闭UDS下载功能 */ 
-
+#define SOFT_BUSOFF_RECOBRY     1          /* 1:软件恢复BUSOFF  0:自动恢复busoff */
 /*
 *****************************************************************************************
 * 定义全局宏

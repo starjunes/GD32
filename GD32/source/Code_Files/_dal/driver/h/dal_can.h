@@ -427,6 +427,15 @@ void HAL_CAN_SendIdAccessSet(INT8U com, BOOLEAN set, INT32U id, INT8U idx);
  ********************************************************************/
 void dal_CAN_Reset_PeriodSendPeriod(void); 
 #endif
+#if SOFT_BUSOFF_RECOBRY > 0
+/*******************************************************************************
+** 函数名:    CanBusoffHal
+** 函数描述:   CAN BusOff处理
+** 参数:       无
+** 返回:       无
+******************************************************************************/
+void CanBusOffHal(void);
+#endif
 #endif
 /**************************** (C) COPYRIGHT 2012  XIAMEN YAXON.LTD **************END OF FILE******/
 

@@ -67,6 +67,7 @@ __attribute__ ((section ("IRQ_HANDLE"))) static void ss_TIM6_IRQHandler(void) __
             can_cnt = 0;
             SendCANMsg_Period();
         }
+				CanBusOffHal();
     }
 	timer_interrupt_flag_clear(TIMER6, TIMER_INT_FLAG_UP);
     if (s_TMfunctionentry[TM_CANCF].lbhandle != PNULL) {

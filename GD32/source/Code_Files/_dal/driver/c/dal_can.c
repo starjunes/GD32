@@ -31,6 +31,15 @@
 #define     CAN_SEND_BUSY           1
 #if EN_CAN > 0
 #define     MAX_ACCESS_SEND_ID_NUM  3
+#if SOFT_BUSOFF_RECOBRY > 0
+#define BUSOFF_RECOVER_FAST_WAIT    50       /* 快恢复100ms    */
+#define BUSOFF_RECOVER_SLOW_WAIT    1000      /* 慢恢复1000ms   */
+#define BUSOFF_RECOVER_FAST_COUNT   5         /* 快恢复次数 */ 
+#define BUSOFF_CNT_CLEAR_WAIT       1000      /* 恢复后1秒内不再产生BUSOFF，清除计数，再次发生BUSOFF执行快速初始化 */
+static BOOLEAN s_can_busoff[MAX_CAN_CHN];     /* busoff开关 */
+static INT16U  s_can_delay[MAX_CAN_CHN];      /* busoff延时 */
+static INT16U  s_can_offcnt[MAX_CAN_CHN];     /* busoff次数 */
+#endif
 typedef struct {
     BOOLEAN access;                       /* 是否需要判断id */
     INT32U id[MAX_ACCESS_SEND_ID_NUM];    /* 允许发送的id表 */
@@ -940,8 +949,13 @@ static void CAN_WorkModeInit(INT8U sjw, INT8U bs1, INT8U bs2, INT16U prescal,CAN
 {
     can_parameter_struct CAN_InitStructure;
 
-	can_struct_para_init(CAN_INIT_STRUCT,&CAN_InitStructure);
-    CAN_InitStructure.time_triggered		= DISABLE;
+	  can_struct_para_init(CAN_INIT_STRUCT,&CAN_InitStructure);
+    #if SOFT_BUSOFF_RECOBRY > 0
+	  CAN_InitStructure.auto_bus_off_recovery = DISABLE;
+		#else
+		CAN_InitStructure.auto_bus_off_recovery = ENABLE;
+		#endif
+		CAN_InitStructure.time_triggered		= DISABLE;
     CAN_InitStructure.auto_bus_off_recovery	= ENABLE;
     CAN_InitStructure.auto_wake_up			= DISABLE;
     CAN_InitStructure.no_auto_retrans		= DISABLE;
@@ -1307,6 +1321,138 @@ BOOLEAN CheckCanIsErrer(INT8U channel)
         return FALSE;
     }
 }
+#if SOFT_BUSOFF_RECOBRY > 0
+/**************************************************************************************************
+**  函数名称:  CheckCanIsBusOff
+**  功能描述:  查看CAN总线是否进入busoff
+**  输入参数:
+**  返回参数:
+**************************************************************************************************/
+BOOLEAN CheckCanIsBusOff(INT8U channel)
+{
+    INT32U CANx;
+    FlagStatus esr;
+
+    DAL_ASSERT((channel == 0x00) || (channel == 0x01));
+    if (channel == 0x00) {
+        CANx = CAN0;
+    } else {
+        CANx = CAN1;
+    }
+
+    esr = can_flag_get(CANx,CAN_FLAG_BOERR);
+    if (esr) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+/**************************************************************************************************
+**  函数名称:  CanBussOffManual
+**  功能描述:  手动退出busoff
+**  输入参数:
+**  返回参数:
+**************************************************************************************************/
+BOOLEAN CanBussOffManual(INT8U channel)
+{
+    INT32U CANx;
+
+	  DAL_ASSERT((channel == 0x00) || (channel == 0x01));
+	  if (channel == 0x00) {
+		    CANx = CAN0;
+	  } else {
+		  	CANx = CAN1;
+	  }
+
+	  if (can_working_mode_set(CANx,CAN_MODE_INITIALIZE) != SUCCESS) {
+		    return FALSE;
+	  } 
+		if (can_working_mode_set(CANx,CAN_MODE_NORMAL) != SUCCESS) {
+		    return FALSE;
+		}
+
+		return TRUE;
+}
+/*******************************************************************************
+** 函数名:    CanBusoffHal
+** 函数描述:   CAN BusOff处理
+** 参数:       无
+** 返回:       无
+******************************************************************************/
+void CanBusOffHal(void)
+{
+
+    INT8U chn;
+	  INT16U recover_wait = BUSOFF_RECOVER_FAST_WAIT;
+    #if DEBUG_BUS_OFF > 0
+	  static INT16U j = 0;
+    #endif
+
+	  for (chn= 0; chn < (MAX_CAN_CHN -1); chn++) {
+		    if (s_ccbt[chn].onoff == FALSE) {
+				    continue;
+			  } 
+			
+		   #if DEBUG_BUS_OFF > 1 
+			 if(j++ >= 999) {
+					debug_printf("CheckCanIsBusOff%d = %d \r\n", chn, CheckCanIsBusOff(chn));
+					j = 0;
+			 }
+		   #endif
+			 if ((s_can_busoff[chn] == FALSE) && CheckCanIsBusOff(chn)) {
+			     #if DEBUG_BUS_OFF > 0
+					 debug_printf("\r\n CheckCanIsBusOff[%d] = %d 处于BUSOFF状态，准备恢复\r\n", chn, CheckCanIsBusOff(chn));
+				   #endif
+					 s_can_busoff[chn] = TRUE;
+					 s_can_delay[chn] = 0;
+					 s_can_offcnt[chn]++;					
+			 }
+			
+			 if (s_can_busoff[chn]) {
+			     if (s_can_offcnt[chn] <= 5) {
+					     recover_wait = BUSOFF_RECOVER_FAST_WAIT;
+						   #if DEBUG_BUS_OFF > 1
+							 debug_printf("CAN%d BUSOFF快恢复\r\n", chn);
+							 debug_printf("s_can_para[chn].onoff %d \r\n",s_can_para[chn].onoff);
+						   #endif
+					 } else {
+							 s_can_offcnt[chn] = 6;
+							 recover_wait = BUSOFF_RECOVER_SLOW_WAIT;
+						   #if DEBUG_BUS_OFF > 1
+							 debug_printf("CAN%d BUSOFF慢恢复\r\n", chn);
+						   #endif
+					 }
+					 s_can_delay[chn]++;
+					
+					 if (s_can_delay[chn] >= recover_wait - 1) {
+						   #if DEBUG_BUS_OFF > 0
+							 debug_printf("s_can_delay[%d] = %d recover_wait = %d\r\n", chn,s_can_delay[chn],recover_wait);
+						   #endif
+							 //s_can_para[chn].onoff = FALSE;
+							 //hal_clear_cancbrxbuf(chn);
+							 CanBussOffManual(chn);
+							 //s_can_para[chn].onoff = TRUE;
+
+						   #if DEBUG_BUS_OFF > 1
+							 debug_printf("CAN%d BUSOFF恢复\r\n", chn);
+						   #endif
+							 s_can_delay[chn] = 0;
+							 s_can_busoff[chn] = FALSE;
+					  }
+        } else {
+				    s_can_delay[chn]++;
+				
+					  if (s_can_delay[chn] >= BUSOFF_CNT_CLEAR_WAIT) {
+						    #if DEBUG_BUS_OFF > 1
+							  debug_printf("CAN%d 恢复后超过5s没有busoff\r\n", chn);
+						    #endif
+							  s_can_delay[chn] = 0;
+							  s_can_offcnt[chn] = 0;
+					  }
+			  } 
+    } 	
+}
+#endif
 
 /*********************** (C) COPYRIGHT 2012 XIAMEN YAXON.LTD *******************END OF FILE******/
 
