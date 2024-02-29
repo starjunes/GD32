@@ -116,14 +116,15 @@ void Debug_PrintCRLF(void)
 **************************************************************************************************/
 void Debug_PrintHex(BOOLEAN end, INT8U *ptr, INT16U size)
 {
-    INT8U  ch;
+    INT8U  ch[3];
     INT16U i;
 
     for (i = 0; i < size; i++) {
-        ch = *ptr++;
-        Debug_PrintByte(HexToChar(ch >> 4));
-        Debug_PrintByte(HexToChar(ch));
-        Debug_PrintByte(' ');
+        //ch = ;
+		sprintf(ch, "%02x ", *ptr++);
+        Debug_PrintByte(ch[0]);
+        Debug_PrintByte(ch[1]);
+        Debug_PrintByte(ch[2]);
     }
 
     if (end == TRUE) Debug_PrintCRLF();                              /* 在结尾处补加一个回车换行符 */

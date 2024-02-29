@@ -19,9 +19,9 @@
 /*************************************************************************************************/
 /*                           宏替代系统打印函数                                                  */
 /*************************************************************************************************/
-#define Debug_SysPrint       printf                                  /* 重定义系统打印函数 */
+#define Debug_SysPrint       debug_printf                                  /* 重定义系统打印函数 */
 //#define debug_printf         Debug_SysPrint
-#define debug_printf_dir     Debug_SysPrint
+#define debug_printf_dir     debug_printf
 #define printf_hex(buf,len)  Debug_PrintHex(0,buf,len)
 #define printf_hex_dir       printf_hex
 
