@@ -179,7 +179,18 @@ void PORT_CanSeqCFSendCallbakFunc(CAN_SEQCFSEND_HDL handle)
 {
     dal_CanSeqCFSendCallbakFunc(handle);
 }
-
+//#if SOFT_BUSOFF_RECOBRY > 0
+/**************************************************************************************************
+**  函数名称:  GetBusOffStatus
+**  功能描述:  获取busoff状态
+**  输入参数:
+**  返回参数:  TRUE BUSOFF FALSE 
+**************************************************************************************************/
+BOOLEAN PORT_GetBusOffStatus(INT8U chn)
+{
+    return GetBusOffStatus(chn);
+}
+//#endif
 #if EN_CAN_ERR_INT > 0
 /********************************************************************************
 ** 函数名:     PORT_GetBusOffFlag

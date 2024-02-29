@@ -1323,6 +1323,18 @@ BOOLEAN CheckCanIsErrer(INT8U channel)
 }
 #if SOFT_BUSOFF_RECOBRY > 0
 /**************************************************************************************************
+**  函数名称:  GetBusOffStatus
+**  功能描述:  获取busoff状态
+**  输入参数:
+**  返回参数:  TRUE BUSOFF FALSE 
+**************************************************************************************************/
+BOOLEAN GetBusOffStatus(INT8U chn)
+{
+    if(chn >= MAX_CAN_CHN) return false;
+    return s_can_busoff[chn];
+}
+
+/**************************************************************************************************
 **  函数名称:  CheckCanIsBusOff
 **  功能描述:  查看CAN总线是否进入busoff
 **  输入参数:

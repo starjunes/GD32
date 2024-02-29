@@ -428,6 +428,13 @@ void HAL_CAN_SendIdAccessSet(INT8U com, BOOLEAN set, INT32U id, INT8U idx);
 void dal_CAN_Reset_PeriodSendPeriod(void); 
 #endif
 #if SOFT_BUSOFF_RECOBRY > 0
+/**************************************************************************************************
+**  函数名称:  GetBusOffStatus
+**  功能描述:  获取busoff状态
+**  输入参数:
+**  返回参数:  TRUE BUSOFF FALSE 
+**************************************************************************************************/
+BOOLEAN GetBusOffStatus(INT8U chn);
 /*******************************************************************************
 ** 函数名:    CanBusoffHal
 ** 函数描述:   CAN BusOff处理

@@ -27,6 +27,8 @@
 #include "public.h"
 #include "yx_encrypt_man.h"
 #include "app_update.h"
+#include "yx_uds_did.h"
+#include "yx_dtc_drv.h"
 
 static STREAM_T       strm;
 static GPS_STATE_E    GPRSstatus = GPS_NO_STATU;
@@ -551,8 +553,8 @@ static void exio_output(INT8U type, INT8U value)
 void Client_FuntionDown_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U datalen)
 {
     INT8U i;
-    INT16U code;
-    INT8U cmdtye;
+    INT16U code, did;
+    INT8U cmdtye,num,len,type;
     INT8U ionum, iotype, iovalue;
     STREAM_T rstrm;
     INT8U ack[32];
@@ -607,23 +609,53 @@ void Client_FuntionDown_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U da
             ack[3] = 0x00;
             YX_COM_DirSend( CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4);
             break;
+				case 0x25:
+            ack[3] = 0x00;
+            num = bal_ReadBYTE_Strm(&rstrm);
+            bal_ReadHWORD_Strm(&rstrm);  /* 总数据长度 */
+            for (i = 0; i < num; i++)
+            {
+                did = bal_ReadHWORD_Strm(&rstrm);
+                len = bal_ReadBYTE_Strm(&rstrm);
+                if (!YX_UDS_DID_Down(did, (INT8U*)bal_GetStrmPtr(&rstrm), len)) {
+                    ack[3] = 0x01;
+                }
+                bal_MovStrmPtr(&rstrm, len);
+            }
+            YX_COM_DirSend(CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4); 
+            break;
+        case 0x27:
+            ack[3] = 0x00;
+            num = bal_ReadBYTE_Strm(&rstrm);
+            bal_ReadBYTE_Strm(&rstrm);  /* 总数据长度 */
+            for (i = 0; i < num; i++)
+            {
+                did = bal_ReadBYTE_Strm(&rstrm);     /* DTC */
+                type = bal_ReadBYTE_Strm(&rstrm);    /* TRUE/FALSE */
+                did -= 0xA0;
+                if (!YX_DTC_SetMpuStatus(did, type)) {
+                    ack[3] = 0x01;
+                }
+            }
+            YX_COM_DirSend(CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4); 
+            break;
         case 0x26: /* 加密算法 */
             YX_Encrypt_Func(&data[3], datalen - 3);
-			ack[3] = 0x00;
+			      ack[3] = 0x00;
             break;
         case 0x2e:  /* 柳汽康明斯国五锁车指令 */
             #if EN_KMS_LOCK > 0
             Lock_KmsG5Cmd(&data[3], datalen - 3);
             #endif
             break;
-		case 0x31:  /* 锁车命令通知 */
-			#if LOCK_COLLECTION > 0
-			YX_LOCKCMD_SetPara(&data[3]);
-			#endif
+        case 0x31:  /* 锁车命令通知 */
+            #if LOCK_COLLECTION > 0
+            YX_LOCKCMD_SetPara(&data[3]);
+            #endif
             ack[3] = 0x00;
-			YX_COM_DirSend( CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4);
+            YX_COM_DirSend( CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4);
             break;
-		case 0x32:  /* 锁车采集报文同步应答 */
+        case 0x32:  /* 锁车采集报文同步应答 */
             #if LOCK_COLLECTION > 0
             Lock_KmsG5Cmd(&data[3], datalen - 3);
             #endif

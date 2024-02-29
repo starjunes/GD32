@@ -74,12 +74,12 @@
 
 //节点丢失相关
 #define ID_NODE_LOST_START  U000200                                        // 节点丢失编号最小值(显示码编号)
-#define ID_NODE_LOST_END    U015500                                        // 节点丢失编号最大值(显示码编号)
+#define ID_NODE_LOST_END    B158000                                        // 节点丢失编号最大值(显示码编号)
 #define MAX_NODE_LOST_NUM   (ID_NODE_LOST_END - ID_NODE_LOST_START + 1)    // 节点丢失总数   
 
 //杂项故障相关
 #define ID_MISC_START       B156D12                                        // MISC编号最小值(显示码编号)
-#define ID_MISC_END         B157900                                        // MISC编号最大值(显示码编号)
+#define ID_MISC_END         B156E13                                        // MISC编号最大值(显示码编号)
 #define MAX_MISC_NUM        (ID_MISC_END - ID_MISC_START + 1)              // MISC总数    
 
 #define MAIN_POW_LOW_19_5V   1545    // 19.5V(实测)
@@ -145,7 +145,16 @@ static NODE_LOST_T s_node_lost[MAX_NODE_LOST_NUM];
 static const NODE_LOST_OBJ_T s_nodelost_obj[MAX_NODE_LOST_NUM] = {
     {0x00,    100,    &s_node_lost[0]},    // 所有伙伴ECU超时（J6低配节点超时）  
     {0x00,    20,     &s_node_lost[1]},    // EMS节点超时
-    {0x17,    50,     &s_node_lost[2]},    // IC仪表节点超时
+    {0x17,    50,     &s_node_lost[2]},    // IC仪表节点超时    
+    {0x17,    50,     &s_node_lost[3]},    // BCM节点超时//
+    {0x17,    50,     &s_node_lost[4]},    // TCU节点超时//
+    {0x17,    50,     &s_node_lost[5]},    // Retarder节点超时//
+    {0x17,    50,     &s_node_lost[6]},    // ABS/EBS节点超时//
+    {0x17,    50,     &s_node_lost[7]},    // TPMS节点超时//
+    {0x17,    50,     &s_node_lost[8]},    // ECAS节点超时//
+    {0x17,    50,     &s_node_lost[9]},    // GCT节点超时//
+    {0x17,    50,     &s_node_lost[10]},    // IBS节点超时//
+    {0x17,    50,     &s_node_lost[11]},    // VIST节点USB通讯失效 //
 };
 
 /* 杂项故障 */
@@ -169,25 +178,36 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
     /* 基础故障类型 */
     {U000100, 0xC00100, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON | EN_MASK_VOL_NORMAL),                      0, 40, BusIsOff ,         1,        1},     // CAN1 BusOff
     {B157216, 0x957216, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, MainPowerIsLow,    6000,    50},     // 终端电源电压欠压(<19.5v故障，恢复到20.5v解除故障)
-    {B157F00, 0x957F00, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, BatPowerIsLow,     500,     500},     // 备用电池电压低(<3v故障，恢复到3.3解除故障)
-
+    {B157F00, 0x957F00, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, BatPowerIsLow,     500,     500},    // 备用电池电压低(<3v故障，恢复到3.3解除故障)
     /* 节点丢失故障类型 */
     {U000200, 0xC00200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // 所有伙伴ECU超时（J6低配节点超时）  
     {U010000, 0xC10000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // EMS节点超时  
     {U015500, 0xC15500, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // IC仪表节点超时  
-
+			
+		{U014000, 0xC14000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // BCM节点超时//
+		{U010100, 0xC10100, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // TCU节点超时//
+		{U012A00, 0xC12A00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // Retarder节点超时//
+		{U012200, 0xC12200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // ABS/EBS节点超时//
+		{U012700, 0xC12700, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // TPMS节点超时//
+		{U013200, 0xC13200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // ECAS节点超时//
+		{U103C00, 0xD03C00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // GCT节点超时//
+		{U103B00, 0xD03B00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // IBS节点超时//
+		{B158000, 0x958000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // VIST节点USB通讯失效 //
     /* MPU端故障 */
     {B156D12, 0x956D12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},    // GPS模块故障
     {B156F12, 0x956F12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},    // 4G模块故障
     {B157112, 0x957112, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},    // SIM卡故障
     {B157B00, 0x957B00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // T-box 未定位
-    {B157E00, 0x957E00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // T-box 专网拨号不成功
+    //{B157E00, 0x957E00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // T-box 专网拨号不成功
     {B157800, 0x957800, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六模块获取发动机VIN失败
     {B157A00, 0x957A00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六模块获取发动机VIN不一致
-    //{B158200, 0x958200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六企业平台连接失败
+		{B157C00, 0x957C00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 1, 			 10}, 	 // 国六模块获取发动机VIN不一致
+		{B158200, 0x958200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},   // 国六企业平台连接失败
     {B158300, 0x958300, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六企业平台连接失败
+    {B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},   // 4G天线开路
     {B157900, 0x957900, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1000,     10},    // 国六模块电源线束断开
-
+    {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   100,		  100},		 // 终端检测gps开路
+		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   100,		  100},		 // 终端检测gps短路
 };
 
 /*
@@ -202,8 +222,10 @@ static void DTC_Dm1Init(void)
     for (idx = 0; idx < MAX_DISP_CODE; idx++) {
         s_dm1_dtc_tab[idx].bitFiled._CM = 0;
         s_dm1_dtc_tab[idx].bitFiled._OC = 127;    // 127表示未知次数
-        if (idx == B157216) {
+        if ((idx == B157216) || (idx == B156E13)) {
             s_dm1_dtc_tab[idx].bitFiled._FMI = 5;
+        } else if(idx == B156E11) {
+            s_dm1_dtc_tab[idx].bitFiled._FMI = 6;
         } else {
             s_dm1_dtc_tab[idx].bitFiled._FMI = 12;
         }
@@ -223,8 +245,23 @@ static void DTC_Dm1Init(void)
     s_dm1_dtc_tab[B158300].bitFiled._SPN_LOW = 0x10FE;
     s_dm1_dtc_tab[B157216].bitFiled._SPN_LOW = 0xEAFD;
     s_dm1_dtc_tab[B157F00].bitFiled._SPN_LOW = 0x0CFE;
-    s_dm1_dtc_tab[B157E00].bitFiled._SPN_LOW = 0x0BFE;
-    s_dm1_dtc_tab[B157B00].bitFiled._SPN_LOW = 0x08FE;      
+    //s_dm1_dtc_tab[B157E00].bitFiled._SPN_LOW = 0x0BFE;
+    s_dm1_dtc_tab[B157B00].bitFiled._SPN_LOW = 0x08FE; 
+    
+		s_dm1_dtc_tab[U014000].bitFiled._SPN_LOW = 0xEFFD;    // BCM节点超时//
+    s_dm1_dtc_tab[U010100].bitFiled._SPN_LOW = 0xF1FD;    // TCU节点超时//
+    s_dm1_dtc_tab[U012A00].bitFiled._SPN_LOW = 0xFBFD;    // Retarder节点超时//
+    s_dm1_dtc_tab[U012200].bitFiled._SPN_LOW = 0x00FE;    // ABS/EBS节点超时//
+    s_dm1_dtc_tab[U012700].bitFiled._SPN_LOW = 0xF5FD;    // TPMS节点超时//
+    s_dm1_dtc_tab[U013200].bitFiled._SPN_LOW = 0xFAFD;    // ECAS节点超时//
+    s_dm1_dtc_tab[U103C00].bitFiled._SPN_LOW = 0x01FE;    // GCT节点超时//
+    s_dm1_dtc_tab[U103B00].bitFiled._SPN_LOW = 0x04FE;    // IBS节点超时//
+    s_dm1_dtc_tab[B158000].bitFiled._SPN_LOW = 0x0DFE;    // VIST节点USB通讯失效 //
+    s_dm1_dtc_tab[B157C00].bitFiled._SPN_LOW = 0x09FE;    // wifi 热点(公网)拨号不成功 //
+    s_dm1_dtc_tab[B158200].bitFiled._SPN_LOW = 0x0FFE;    // 国六地方平台连接失败  //
+    s_dm1_dtc_tab[B157513].bitFiled._SPN_LOW = 0xECFD;    // 4G天线开路//
+    s_dm1_dtc_tab[B156E11].bitFiled._SPN_LOW = 0xE7FD;    // GPS短路//
+    s_dm1_dtc_tab[B156E13].bitFiled._SPN_LOW = 0xE7FD;    // GPS开路//
 }
 
 /*******************************************************************************
@@ -540,7 +577,17 @@ static void MainPowerCheck(void)
         }
     }
 }
-
+/*****************************************************************************
+**  函数名:   CANBusOffCheck
+**  函数描述: BusOff检测
+**  参数:     无
+**  返回:     无
+*****************************************************************************/
+static void CANBusOffCheck(void) 
+{
+    s_dtc_en.can0_bus_off_en = !PORT_GetBusOffStatus(DTC_CAN_CH0);
+		s_dtc_en.can1_bus_off_en = !PORT_GetBusOffStatus(DTC_CAN_CH1);
+}
 /*****************************************************************************
 **  函数名:  BatPowerCheck
 **  函数描述: 主电检测
@@ -619,6 +666,18 @@ static void MiscStatusCheck(void)
         YX_DTC_SetMpuStatus(B157900-ID_MISC_START, TRUE);
     } else {
         YX_DTC_SetMpuStatus(B157900-ID_MISC_START, FALSE);
+    } 
+		
+		if (bal_input_ReadSensorFilterStatus(TYPE_GPSSHORT)) {
+        YX_DTC_SetMpuStatus(B156E11 - ID_MISC_START, TRUE);
+    } else {
+        YX_DTC_SetMpuStatus(B156E11 - ID_MISC_START, FALSE);
+    } 
+
+		if (bal_input_ReadSensorFilterStatus(TYPE_GPSOPEN)) {
+        YX_DTC_SetMpuStatus(B156E13 - ID_MISC_START, TRUE);
+    } else {
+        YX_DTC_SetMpuStatus(B156E13 - ID_MISC_START, FALSE);
     } 
 }
 
@@ -933,6 +992,7 @@ static void DTC_HandleTmr(void* pdata)
 { 
 	pdata = pdata;
     /* 故障条件检测 */
+		CANBusOffCheck();
     MainPowerCheck();
     BatPowerCheck();
     Kl15_Check();
