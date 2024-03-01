@@ -26,6 +26,8 @@
 #include "port_gpio.h"
 #include "yx_uds_did.h"
 #include "yx_com_send.h"
+#include "hal_exrtc_sd2058_drv.h"
+
 #if EN_UDS > 0
 /*
 ********************************************************************************
@@ -77,6 +79,8 @@ typedef struct {
 ********************************************************************************
 */
 typedef struct {
+		INT8U DID_1007[7]; 	   /* 当前时间 */
+    #if 0
     INT8U DID_F184[7];    /* 刷写日期 */
     INT8U DID_F1A0[64];   /* 软件版本号 */
 
@@ -91,7 +95,8 @@ typedef struct {
     INT8U DID_1036[1];    // TBOX备用电池电压
     INT8U DID_103B[4];    // AI总里程/积分总里程
     INT8U DID_103C[4];    // AI总油耗/积分总油耗
-    INT8U DID_103D[1];    // TSP连接状态    
+    INT8U DID_103D[1];    // TSP连接状态  
+		#endif
 } UDS_DID_LOCAL_T;
 
 static UDS_DID_LOCAL_T    s_uds_did_local;
@@ -107,7 +112,7 @@ static CAN_SIGNAL_T s_can_signal;
 * 定义本地接口
 ********************************************************************************
 */
-
+#if 0
 static BOOLEAN DID_ReadF1A0(INT8U* pData, INT8U didLen)
 {
     INT8U i, *ver;
@@ -265,8 +270,39 @@ static BOOLEAN DID_Read103D(INT8U* pData, INT8U didLen)
 
     return TRUE;
 }
+#endif
+static BOOLEAN DID_Read1007(INT8U* pData, INT8U didLen)
+{
+    INT8U data[7];
+		 
+		if ((pData == NULL) || (didLen == 0)) {
+       return FALSE;
+    }
+               
+    if(HAL_sd2058_ReadCalendar(data)) {      
+        pData[0] = 20; 	        //YEAR
+        pData[1] = data[6]; 		//YEAR
+        pData[2] = data[5]; 	  //MONTH
+        pData[3] = data[4]; 		//DATE
+        pData[4] = data[2]; 		//HOUR
+        pData[5] = data[1]; 		//MINITE
+        pData[6] = data[0]; 		//TICK
+    } else { 
+        pData[0] = 20; 	        //YEAR
+        pData[1] = 24; 		//YEAR
+        pData[2] = 03; 	  //MONTH
+        pData[3] = 01; 		//DATE
+        pData[4] = 13; 		//HOUR
+        pData[5] = 43; 		//MINITE
+        pData[6] = 58; 		//TICK
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
+	  #if 0
     {0xF184, DID_RW,  sizeof(s_uds_did_local.DID_F184), s_uds_did_local.DID_F184, DID_DATA_TYPE_HEX , NULL,         NULL}, 
     {0xF1A0, DID_RO,  sizeof(s_uds_did_local.DID_F1A0), s_uds_did_local.DID_F1A0, DID_DATA_TYPE_HEX , DID_ReadF1A0, NULL},
 
@@ -282,16 +318,26 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
     {0x103B, DID_RO,  sizeof(s_uds_did_local.DID_103B), s_uds_did_local.DID_103B, DID_DATA_TYPE_HEX , DID_Read103B, NULL},
     {0x103C, DID_RO,  sizeof(s_uds_did_local.DID_103C), s_uds_did_local.DID_103C, DID_DATA_TYPE_HEX , DID_Read103C, NULL},
     {0x103D, DID_RO,  sizeof(s_uds_did_local.DID_103D), s_uds_did_local.DID_103D, DID_DATA_TYPE_HEX , DID_Read103D, NULL},
-
+    #endif
+		{0x1007, DID_RO,  sizeof(s_uds_did_local.DID_1007),      s_uds_did_local.DID_1007,      DID_DATA_TYPE_BCD,   DID_Read1007, NULL}, 
     // 存在pp参数中
-    {0xF182, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F182), s_uds_did_e2rom_data.DID_F182, DID_DATA_TYPE_ASCII, NULL, NULL},   
+    {0x0100, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_0100), s_uds_did_e2rom_data.DID_0100, DID_DATA_TYPE_HEX,   NULL, NULL},  
+		{0x1002, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_1002), s_uds_did_e2rom_data.DID_1002, DID_DATA_TYPE_ASCII, NULL, NULL},
+		{0x1003, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_1003), s_uds_did_e2rom_data.DID_1003, DID_DATA_TYPE_ASCII, NULL, NULL},
+	  {0x1004, DID_RO,	sizeof(s_uds_did_e2rom_data.DID_1004), s_uds_did_e2rom_data.DID_1004, DID_DATA_TYPE_ASCII, NULL, NULL},
+		{0x1028, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_1028), s_uds_did_e2rom_data.DID_1028, DID_DATA_TYPE_ASCII, NULL, NULL},
+		{0x102A, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_102A), s_uds_did_e2rom_data.DID_102A, DID_DATA_TYPE_HEX,	 NULL, NULL},
+		{0x102B, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_102B), s_uds_did_e2rom_data.DID_102B, DID_DATA_TYPE_HEX,	 NULL, NULL},
+		{0x102C, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_102C), s_uds_did_e2rom_data.DID_102C, DID_DATA_TYPE_HEX,	 NULL, NULL},
+
+		{0x1035, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_1035), s_uds_did_e2rom_data.DID_1035, DID_DATA_TYPE_HEX,   NULL, NULL},	
+		{0xF182, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F182), s_uds_did_e2rom_data.DID_F182, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF187, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F187), s_uds_did_e2rom_data.DID_F187, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF190, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F190), s_uds_did_e2rom_data.DID_F190, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF193, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F193), s_uds_did_e2rom_data.DID_F193, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF195, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F195), s_uds_did_e2rom_data.DID_F195, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF19D, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F19D), s_uds_did_e2rom_data.DID_F19D, DID_DATA_TYPE_BCD,   NULL, NULL},   
-    {0xF1A1, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F1A1), s_uds_did_e2rom_data.DID_F1A1, DID_DATA_TYPE_ASCII, NULL, NULL},   
-    {0x1004, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_1004), s_uds_did_e2rom_data.DID_1004, DID_DATA_TYPE_ASCII, NULL, NULL},  
+    {0xF1A1, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F1A1), s_uds_did_e2rom_data.DID_F1A1, DID_DATA_TYPE_ASCII, NULL, NULL},     
 };
 INT8U s_did_status[MAX_DID_NUM];
 static INT8U s_did_num = MAX_DID_NUM;
@@ -849,10 +895,11 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
         #if DEBUG_DID > 0
         debug_printf("<**** (2)保存主机下发的did到pp参数延时启动 ****>\r\n");
         #endif
-        if (s_uds_did_e2rom_data.DID_STATUS[i] == 0) {
-            YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
+        if (s_uds_did_e2rom_data.DID_STATUS[i] == 0) {         
             /* did == 0xF1A1 ||did == 0xF182 || did == 0xF187 为MCU默认配置，无需主机同步 */
-            if (did == 0xF190 || did == 0xF193|| did == 0xF195 || did == 0xF19D || did == 0x1004) {
+            if (did == 0xF190 || did == 0xF193|| did == 0xF195 || did == 0xF19D || did == 0x1004 ||
+							  did == 0x1002 || did == 0x1003|| did == 0x1028 ) {
+							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
                 DID_DataUpdate();
             }
         }
@@ -931,11 +978,11 @@ void YX_UDS_DID_UpdataCanData(INT32U canId, INT8U* data, INT8U len)
 *****************************************************************************/
 void YX_UDS_DID_DataReset(void)
 {
-    YX_MEMSET(s_uds_did_local.DID_102D, 0xFF, sizeof(s_uds_did_local.DID_102D));
-    YX_MEMSET(s_uds_did_local.DID_102E, 0xFF, sizeof(s_uds_did_local.DID_102E));
-    YX_MEMSET(s_uds_did_local.DID_1030, 0xFF, sizeof(s_uds_did_local.DID_1030));
-    YX_MEMSET(s_uds_did_local.DID_1031, 0xFF, sizeof(s_uds_did_local.DID_1031));
-    YX_MEMSET(s_uds_did_local.DID_1036, 0xFF, sizeof(s_uds_did_local.DID_1036));
+    //YX_MEMSET(s_uds_did_local.DID_102D, 0xFF, sizeof(s_uds_did_local.DID_102D));
+    //YX_MEMSET(s_uds_did_local.DID_102E, 0xFF, sizeof(s_uds_did_local.DID_102E));
+    //YX_MEMSET(s_uds_did_local.DID_1030, 0xFF, sizeof(s_uds_did_local.DID_1030));
+    //YX_MEMSET(s_uds_did_local.DID_1031, 0xFF, sizeof(s_uds_did_local.DID_1031));
+    //YX_MEMSET(s_uds_did_local.DID_1036, 0xFF, sizeof(s_uds_did_local.DID_1036));
     
     YX_MEMSET(&s_can_signal, 0xFF, sizeof(s_can_signal));
 }
@@ -948,15 +995,15 @@ void YX_UDS_DID_DataReset(void)
 ********************************************************************/
 void YX_UDS_DID_Init(void)
 {
-    char* img_inf;
+    //char* img_inf;
 
     YX_MEMSET((INT8U*)&s_can_signal, 0x00, sizeof(s_can_signal));
     YX_MEMSET((INT8U *)&s_uds_did_local, 0x00, sizeof(UDS_DID_LOCAL_T));
     
     YX_UDS_DID_DataReset();
     
-    img_inf = YX_GetVersionDate();
-    memcpy(s_uds_did_local.DID_F184, img_inf, sizeof(s_uds_did_local.DID_F184));
+    //img_inf = YX_GetVersionDate();
+    //memcpy(s_uds_did_local.DID_F184, img_inf, sizeof(s_uds_did_local.DID_F184));
     
     s_delay_save_to_flash = 0;
     if (!bal_pp_ReadParaByID(UDS_DID_PARA_, (INT8U *)&s_uds_did_e2rom_data, sizeof(UDS_DID_DATA_E2ROM_T))) {

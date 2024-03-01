@@ -20,7 +20,7 @@
 #include "bal_pp_drv.h"
 #include "bal_pp_misc.h"
 #include "port_gpio.h"
-
+#include "hal_exrtc_sd2058_drv.h"
 #if 0
 #undef DEBUG_GSEN_STATUS
 #define DEBUG_GSEN_STATUS 1

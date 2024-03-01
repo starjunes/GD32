@@ -34,8 +34,9 @@ typedef enum {
     FUNC_QUERY                   = 0x06,             /* 设备功能查询请求 (DOWN) */
     RESET_REQ_ACK                = 0x07,             /* 复位设备请求应答(UP) */
     RESET_REQ                    = 0x07,             /* 复位设备请求(DOWN) */
-	CLOCK_SYNCHRONIZATION		 = 0x08,			 /* 时钟同步请求*/
-	CLOCK_SYNCHRONIZATION_ACK	 = 0x08,			 /* 时钟同步请求应答*/
+	  RTC_SYNC_REQ								 = 0x08,						 /* rtc时钟校准请求 (UP)*/	
+		RTC_SYNC_REQ_ACK						 = 0x08,						 /* rtc时钟校准应答 (DOWN)*/
+
 	
     GET_HOSTSTATUS_REQ           = 0X40,             /*获取主机状态请求*/
     GET_HOSTSTATUS_REQ_ACK       = 0X40,             /*获取主机状态请求应答*/

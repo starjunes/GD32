@@ -20,6 +20,7 @@
 #include "bal_gpio_cfg.h"
 #include "yx_configure.h"
 #include "yx_lock.h"
+#include "hal_exrtc_sd2058_drv.h"
 
 #define IG_ON_MASK    0x01
 #define BCALL_MASK    0x02
@@ -34,7 +35,6 @@ static INT8U  s_accofftime=0;
 #endif
 static INT8U acc0;//, ecall0, bcall0;
 static INT8U acc1;//ecall1, bcall1;
-
 
 #if EN_TESTCAN > 0
 /*******************************************************************************
@@ -376,10 +376,31 @@ INT8U GetAccState(void)
 static void GetSignalstatusTmr(void* pdata)
 {
     /*-----------------主机状态请求-------------------*/
-	if (YX_COM_Islink()){
-    	YX_COM_DirSend( GET_HOSTSTATUS_REQ, NULL, 0);
-    }
+    INT8U  ack[32], len, num = 0,data[7];
+		
+   	YX_MEMSET(ack, 0x00, sizeof(ack));
 
+	  if (YX_COM_Islink()) {	                
+        if(HAL_sd2058_ReadCalendar(data)) {
+            len = 0;
+            num = 0;
+            ack[len++] = 0; 					// 类型总和(最后填充)
+            /* 欠压状态 */
+            ack[len++] = 0x01;			  //类型
+            ack[len++] = 0x06;				//长度
+            ack[len++] = data[6]; 		//YEAR
+            ack[len++] = data[5]; 	  //MONTH
+            ack[len++] = data[4]; 		//DATE
+            ack[len++] = data[2]; 		//HOUR
+            ack[len++] = data[1]; 		//MINITE
+            ack[len++] = data[0]; 		//TICK
+            num++;
+            ack[0] = num; 
+						YX_COM_DirSend( GET_HOSTSTATUS_REQ, ack, len);
+        } else {
+            YX_COM_DirSend( GET_HOSTSTATUS_REQ, NULL, 0);
+        }
+    }
 }
 /*******************************************************************************
  ** 函数名:    YX_Signal_Init
@@ -475,6 +496,30 @@ void SigChgInfom_AckHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
 void RealTimeStatusReport_AckHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen)
 {
 
+}
+/**************************************************************************************************
+**  函数名称:  RTC_Synchro_Hdl
+**  功能描述:  RTC时间设置
+**  输入参数:
+**  返回参数:
+**************************************************************************************************/
+void RTC_Synchro_Hdl(INT8U mancode, INT8U command, INT8U *userdata, INT16U userdatalen)
+{
+	  INT8U buf[7];
+	  buf[0] = userdata[5];           /* 秒 */
+    buf[1] = userdata[4];           /* 分 */
+    buf[2] = userdata[3];           /* 时 */
+    buf[3] = 1;                    /* 星期 */
+    buf[4] = userdata[2];           /* 日 */
+    buf[5] = userdata[1];           /* 月 */
+    buf[6] = userdata[0];           /* 年 */
+ 		#if DEBUG_EX_RTC > 0
+		debug_printf("RTC_Synchro_Hdl\r\n");
+		printf_hex(buf,7);
+	  #endif
+    if (HAL_sd2058_SetCalendar(buf)) {
+        YX_COM_DirSend( RTC_SYNC_REQ_ACK, NULL,0);
+    }
 }
 
 

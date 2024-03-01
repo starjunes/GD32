@@ -26,6 +26,7 @@ PROTOHDL_REG_DEF(SIGFILTER_PARA_CONF, SigFilterParaConfig_ReqHdl)        /* 信号
 PROTOHDL_REG_DEF(SIG_CHG_INFO_ONFF_REQ, SigChgInfomONOFF_ReqHdl)         /* IO输出控制请求函数处理函数 */
 PROTOHDL_REG_DEF(SIG_CHG_INFO_ACK, SigChgInfom_AckHdl)                   /* IO输出控制请求函数处理函数 */
 PROTOHDL_REG_DEF(RETIM_STATUS_REPORT_AKC, RealTimeStatusReport_AckHdl)   /* 车台对实时状态上报的应答指令 */
+PROTOHDL_REG_DEF(RTC_SYNC_REQ_ACK, RTC_Synchro_Hdl) 											/* 车台对实时状态上报的应答指令 */
 
 /*数据透传*/
 PROTOHDL_REG_DEF(PHYCOM_PARA_CONFIG_REQ, EXUsartParaSetReqHdl)           /* 物理扩展串口参数设置指令0xc0的处理函数 */

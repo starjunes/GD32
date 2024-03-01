@@ -21,7 +21,7 @@ void DeviceConfigurationQueryHdl(INT8U mancode, INT8U command, INT8U *data, INT1
 /******************************************************************************/
 void ResetReq_Hdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen);
 
-
+void RTC_Synchro_Hdl(INT8U mancode, INT8U command, INT8U *userdata, INT16U userdatalen);
 void EquipmentStatusReq(INT8U mancode, INT8U command, INT8U *data, INT16U datalen);
 void RealTimeStatusReport_AckHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen);
 
