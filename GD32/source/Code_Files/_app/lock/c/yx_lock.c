@@ -91,7 +91,7 @@ static INT16U		   s_d008locktime = 600;			// 收到指令后采集报文时间
 
 
 //潍柴
-#define ACK_HANFSHARK	0x18FE09EE  //握手回复报文
+#define ACK_HANFSHARK	0x18FE02FB  //握手回复报文
 static INT8U s_wc_state = 0, s_wc_ack = 0;
 
 
