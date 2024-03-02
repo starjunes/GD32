@@ -52,9 +52,12 @@ void    StartTimer(INT32U tmrid, TIMER_PA_E attrib, INT32U interval, BOOLEAN rel
 void    StopTimer(INT32U tmrid);
 void    RemoveTimer(INT32U tmrid);
 BOOLEAN TimerIsRun(INT32U tmrid);
+INT8U   TimerRemain(void);
 void    InitTimerMan(void);
 void    SysTimerEntryProc(void);
 INT32U OS_GetSysTick(INT32U * count);
+
+
 
 #endif
 
