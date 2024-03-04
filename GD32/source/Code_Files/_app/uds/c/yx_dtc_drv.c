@@ -16,7 +16,7 @@
 #include "port_adc.h"
 #include "bal_pp_drv.h"
 #include "port_dm.h"
-#include "yx_uds_drv.h"
+#include "yx_uds_did.h"
 #include "bal_gpio_cfg.h"
 #include "port_can.h"
 #if EN_UDS > 0
@@ -38,7 +38,7 @@
 #define DEBUG_MAIN_PWR      0
 
 #undef  DEBUG_DTC
-#define DEBUG_DTC           0
+#define DEBUG_DTC           1
 
 #undef  DEBUG_NODE_LOST
 #define DEBUG_NODE_LOST     0
@@ -74,7 +74,7 @@
 
 //节点丢失相关
 #define ID_NODE_LOST_START  U000200                                        // 节点丢失编号最小值(显示码编号)
-#define ID_NODE_LOST_END    B158000                                        // 节点丢失编号最大值(显示码编号)
+#define ID_NODE_LOST_END    U014600                                        // 节点丢失编号最大值(显示码编号)
 #define MAX_NODE_LOST_NUM   (ID_NODE_LOST_END - ID_NODE_LOST_START + 1)    // 节点丢失总数   
 
 //杂项故障相关
@@ -143,20 +143,22 @@ static BOOLEAN s_bat_pow_low_sta = FALSE;
 /* 节点丢失结构 */
 static NODE_LOST_T s_node_lost[MAX_NODE_LOST_NUM];
 static const NODE_LOST_OBJ_T s_nodelost_obj[MAX_NODE_LOST_NUM] = {
-    {0x00,    100,    &s_node_lost[0]},    // 所有伙伴ECU超时（J6低配节点超时）  
-    {0x00,    20,     &s_node_lost[1]},    // EMS节点超时
-    {0x17,    50,     &s_node_lost[2]},    // IC仪表节点超时    
-    {0x17,    50,     &s_node_lost[3]},    // BCM节点超时//
-    {0x17,    50,     &s_node_lost[4]},    // TCU节点超时//
-    {0x17,    50,     &s_node_lost[5]},    // Retarder节点超时//
-    {0x17,    50,     &s_node_lost[6]},    // ABS/EBS节点超时//
-    {0x17,    50,     &s_node_lost[7]},    // TPMS节点超时//
-    {0x17,    50,     &s_node_lost[8]},    // ECAS节点超时//
-    {0x17,    50,     &s_node_lost[9]},    // GCT节点超时//
-    {0x17,    50,     &s_node_lost[10]},    // IBS节点超时//
-    {0x17,    50,     &s_node_lost[11]},    // VIST节点USB通讯失效 //
+    {0x00,       1000,  &s_node_lost[0]},    // 所有伙伴ECU超时（J6低配节点超时）  
+    {0x18FF7400, 1000,  &s_node_lost[1]},    // EMS节点超时
+    {0x0CFE6C17, 50,    &s_node_lost[2]},    // IC仪表节点超时    
+    {0x0CFDCC21, 1000,  &s_node_lost[3]},    // BCM节点超时//
+    {0x18FF6003, 50,    &s_node_lost[4]},    // TCU节点超时//
+    {0x18F00010, 100,   &s_node_lost[5]},    // Retarder节点超时//
+    {0x18FECA0B, 1000,  &s_node_lost[6]},    // ABS/EBS节点超时//
+    {0x18FEF433, 1000,  &s_node_lost[7]},    // TPMS节点超时//
+    {0x18FE582F, 100,   &s_node_lost[8]},    // ECAS节点超时//
+    {0x18FEFCC6, 1000,  &s_node_lost[9]},    // GCT节点超时//
+    {0x18FC08F4, 100,   &s_node_lost[10]},    // IBS节点超时//
+    {0x18FF0241, 100,   &s_node_lost[11]},    // VIST节点USB通讯失效 //
+    {0x18FF4FF4, 100,   &s_node_lost[12]},    // gatway节点超时 //
 };
-
+static INT8U s_support_dtc[MAX_DISP_CODE]; /* 支持DTC */
+static INT8U s_onoff_dtc[MAX_DISP_CODE];   /* 开启检测对应DTC */
 /* 杂项故障 */
 static INT8U s_misc_flag[MAX_MISC_NUM];
 
@@ -177,6 +179,7 @@ static BOOLEAN MiscIsDetect(INT8U dtc_id);
 static const DTC_REG_T s_obj_dtc_tbl[] = {
     /* 基础故障类型 */
     {U000100, 0xC00100, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON | EN_MASK_VOL_NORMAL),                      0, 40, BusIsOff ,         1,        1},     // CAN1 BusOff
+    {U003700, 0xC03700, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON | EN_MASK_VOL_NORMAL),                      0, 40, BusIsOff ,         1,        1},     // CAN1 BusOff
     {B157216, 0x957216, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, MainPowerIsLow,    6000,    50},     // 终端电源电压欠压(<19.5v故障，恢复到20.5v解除故障)
     {B157F00, 0x957F00, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, BatPowerIsLow,     500,     500},    // 备用电池电压低(<3v故障，恢复到3.3解除故障)
     /* 节点丢失故障类型 */
@@ -193,7 +196,8 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
 		{U103C00, 0xD03C00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // GCT节点超时//
 		{U103B00, 0xD03B00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // IBS节点超时//
 		{B158000, 0x958000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // VIST节点USB通讯失效 //
-    /* MPU端故障 */
+		{U014600, 0xC14600, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost, 			 1, 				1}, 		// GATWAY节点超时 //
+		/* MPU端故障 */
     {B156D12, 0x956D12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},    // GPS模块故障
     {B156F12, 0x956F12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},    // 4G模块故障
     {B157112, 0x957112, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},    // SIM卡故障
@@ -949,6 +953,7 @@ static void DtcMapHdl(void)
 	
     dtc_cnt = Get_DtcCntPtr();
     for (i = MIN_DTC_ID; i < DTC_GetMaxDtcNum(); i++) {
+			  if((s_support_dtc[i] != 0x01) || (s_onoff_dtc[i] != 0x01))   continue;
         dtc_info = DTC_GetRegTblInfo(i);
         if (dtc_info == NULL) return;
         if (dtc_cnt  == NULL) return;
@@ -1045,9 +1050,15 @@ static BOOLEAN BatPowerIsLow(INT8U dtc_id)
 *****************************************************************************/
 static BOOLEAN BusIsOff(INT8U dtc_id)
 {
-    dtc_id = dtc_id;
-    if (!s_dtc_en.can0_bus_off_en) {
-        return TRUE;
+    //dtc_id = dtc_id;
+    if(dtc_id == U000100) {
+        if (!s_dtc_en.can0_bus_off_en) {
+            return TRUE;
+        }
+    } else if(dtc_id == U003700) {
+        if (!s_dtc_en.can0_bus_off_en) {
+            return TRUE;
+        }
     }
     return FALSE;
 }
@@ -1302,7 +1313,8 @@ void YX_DTC_SID19_ReadDTCInformation(INT8U *data, INT16U len)
             }
             if ((isSupPosRsp == FALSE) || (!(reporttype & SUPPRESS_RESP))) {
                 bal_WriteBYTE_Strm(wstrm, MASK_DEFAUTLT);
-                for (i = MIN_DTC_ID; i < MAX_DISP_CODE; i++) {  
+                for (i = MIN_DTC_ID; i < MAX_DISP_CODE; i++) { 
+									  if(s_support_dtc[i] != 0x01) continue;
                     dtc_info = DTC_GetRegTblInfo(i);
                     
                     LongDtc2hex(dtc_codetemp, dtc_info->dtc_code);
@@ -1331,8 +1343,23 @@ void YX_DTC_SID19_ReadDTCInformation(INT8U *data, INT16U len)
  ******************************************************************************/
 void YX_DTC_NodeIdCheck(INT8U ch, INT32U node_id)
 {
-    INT8U i, mask;    
+    INT8U i;  
 
+		for(i = 0; i < MAX_NODE_LOST_NUM; i++) {
+		    if(node_id ==  s_nodelost_obj[i].id) {
+		    }
+		}
+
+		if(i == MAX_NODE_LOST_NUM) {
+		    return;
+		}
+		s_nodelost_obj[i].nodecheck->is_detect = TRUE;
+    s_nodelost_obj[i].nodecheck->node_lost_time_out = 0;
+        
+    // 所有伙伴ECU超时
+    s_nodelost_obj[0].nodecheck->is_detect = TRUE;
+    s_nodelost_obj[0].nodecheck->node_lost_time_out = 0; 
+    #if 0
     ch = ch;
     i = 0;
     mask = node_id & 0x000000FF;
@@ -1379,7 +1406,7 @@ void YX_DTC_NodeIdCheck(INT8U ch, INT32U node_id)
                 break;
         }
     }
-
+    #endif
     #if DEBUG_DTC > 0
     debug_printf("<**** dtc lost id recv:0x%x ****>\r\n", i, node_id);
     #endif
@@ -1471,7 +1498,92 @@ BOOLEAN YX_DTC_GetStatus(INT8U* dtcBuf, INT8U* dtcBufLen)
     
     return FALSE;
 }
+/*****************************************************************************
+**  函数名:  YX_CAR_SIGNAL_AdapterDTC
+**  函数描述  : 获取故障码状态 
+**  参数:    [out] dtcBuf  : 
+             [out] dtcBufLen : 
+**  返回:    TRUE:有故障 FALSE:无故障
+*****************************************************************************/
+void YX_CarSignal_AdapterDTC(INT8U type, INT8U *data)
+{
+    #if DEBUG_DTC > 0
+	  INT8U i;
+		#endif
+		
+	  YX_MEMSET(&s_support_dtc, 0x01, sizeof(s_support_dtc));
+		YX_MEMSET(&s_onoff_dtc,   0x01, sizeof(s_onoff_dtc));
+    
+    switch(type) {
+        case CAR_SIGNAL_J6:           /* J6低配 */
+				    s_support_dtc[U003700] = 0x00;
+						s_support_dtc[U014600] = 0x00;
+        break;       
+        case CAR_SIGNAL_J6_MID:	     /* J6中配 */
+					  s_support_dtc[U000100] = 0x00;
+						s_support_dtc[U010000] = 0x00;
+						s_support_dtc[U015500] = 0x00;
+						s_support_dtc[U010100] = 0x00;
+						s_support_dtc[U012A00] = 0x00;
+						s_support_dtc[U012200] = 0x00;
+						s_support_dtc[U013200] = 0x00;
+        break;
+        case CAR_SIGNAL_QINGQI:			 /* 青汽架构 */
+						s_support_dtc[U003700] = 0x00;
+						s_support_dtc[U014000] = 0x00;
+						s_support_dtc[U010100] = 0x00;
+						s_support_dtc[U012A00] = 0x00;
+						s_support_dtc[U012200] = 0x00;
+						s_support_dtc[U012700] = 0x00;
+						s_support_dtc[U013200] = 0x00;
+						s_support_dtc[U103C00] = 0x00;
+						s_support_dtc[U103B00] = 0x00;
+						s_support_dtc[B158000] = 0x00;
+						s_support_dtc[U014600] = 0x00;
+        break;		  
+		}
 
+	  if(data[1] == 0x00) {
+		    s_onoff_dtc[U010100] = 0x00;
+	  }
+
+	  if(data[3] == 0x00) {
+		    s_onoff_dtc[U012700] = 0x00;
+	  }
+
+		if(data[4] == 0x00) {
+		    s_onoff_dtc[U013200] = 0x00;
+	  }
+
+		if(data[7] == 0x00) {
+		    s_onoff_dtc[U012A00] = 0x00;
+	  }
+
+		if(data[8] == 0x00) {
+		    s_onoff_dtc[U014000] = 0x00;
+	  }
+		if(data[9] == 0x00) {
+		    s_onoff_dtc[U012200] = 0x00;
+	  }
+		if(data[10] == 0x00) {
+		    s_onoff_dtc[U103C00] = 0x00;
+	  }
+		if(data[11] == 0x00) {
+		    s_onoff_dtc[U103B00] = 0x00;
+	  }
+
+		if(data[13] == 0x00) {
+		    s_onoff_dtc[U010000] = 0x00;
+	  }
+		if(data[14] == 0x00) {
+		    s_onoff_dtc[U014600] = 0x00;
+	  }
+		#if DEBUG_DTC > 0
+		for(i = 0; i < MAX_DISP_CODE; i++) {
+        debug_printf("s_support_dtc[%d] = %d s_onoff_dtc[%d] = %d r\n",i,s_support_dtc[i],i,s_onoff_dtc[i]);
+		}
+    #endif
+}
 /*******************************************************************************
 ** 函数名:     YX_DTC_Init
 ** 函数描述:   初始化DTC功能
@@ -1492,6 +1604,7 @@ void YX_DTC_Init(void)
         debug_printf("<**** 读取DTC的pp参数错误 ****>r\n");
         #endif
     }     
+		YX_MEMSET(&s_onoff_dtc,	 0x01, sizeof(s_onoff_dtc));
 
     // 初始化节点丢失检测结构
     for (i = 0; i < MAX_NODE_LOST_NUM; i++) {

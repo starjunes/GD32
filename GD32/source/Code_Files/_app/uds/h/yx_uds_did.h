@@ -41,8 +41,13 @@ typedef enum {
     DID_DATA_TYPE_BCD,
     DID_DATA_TYPE_ERR,
 } DID_DATA_TYPE_E;
-
-
+/* 显示码 */
+typedef enum {
+    CAR_SIGNAL_J6,           /* J6低配 */
+		CAR_SIGNAL_J6_MID,	     /* J6中配 */
+		CAR_SIGNAL_QINGQI,			 /* 青汽架构 */
+    MAX_CAR_SIGNAL_TYPE
+} CAR_SIGNAL_TYPE_E;
 /*
 ********************************************************************************
 * 定义模块变量
@@ -114,6 +119,13 @@ void YX_UDS_DID_UpdataCanData(INT32U canId, INT8U* data, INT8U len);
 **  返回:    无
 *****************************************************************************/
 void YX_UDS_DID_DataReset(void);
+/*****************************************************************************
+**  函数名:  YX_Set_CarSignal(
+**  函数描述:根据did数据配置车型
+**  参数:    无
+**  返回:    无
+*****************************************************************************/
+void YX_Set_CarSignal(INT8U *data);
 
 /*******************************************************************
 ** 函数名: YX_UDS_DID_Init
