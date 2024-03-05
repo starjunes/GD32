@@ -92,7 +92,7 @@ static SCLOCKPARA_T     const i_sclockpara    = {0xff,
                                                  0x04,{0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb},
                                                  0x01,
                                                  0x06,TRUE,
-                                                 250, 250, 250};
+                                                 5, 5, 5};
 static LOCK_RECORD      const i_LOCKRECORD    = {0,0,{{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},
                                                 {{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0}}};
 static GSENSOR_CALIBRATION_T  const i_GSENSOR_CALIBRATION   = {0, 0, 0, 0};

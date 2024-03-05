@@ -33,23 +33,23 @@
 /*************************************************************************************************/
 #define CANSWJ                CAN_BT_SJW_1TQ
 
-#define CAN_BS1_1000K         CAN_BT_BS1_3TQ        
-#define CAN_BS2_1000K         CAN_BT_BS2_2TQ
-#define CAN_PRES_1000K        (PCLK1_FREQ / (1000000 * 6))       /* Prescaler */
+#define CAN_BS1_1000K         CAN_BT_BS1_8TQ        
+#define CAN_BS2_1000K         CAN_BT_BS2_3TQ
+#define CAN_PRES_1000K        (PCLK1_FREQ / (1000000 * 12))  //83.3%  /* Prescaler */
       
-#define CAN_BS1_500K          CAN_BT_BS1_3TQ
+#define CAN_BS1_500K          CAN_BT_BS1_12TQ
 #define CAN_BS2_500K          CAN_BT_BS2_2TQ
-#define CAN_PRES_500K         (PCLK1_FREQ / (500000 * 6))       /* Prescaler */
+#define CAN_PRES_500K         (PCLK1_FREQ / (500000 * 15))   //86.6%  /* Prescaler */
 
-#define CAN_BS1_250K          CAN_BT_BS1_3TQ   
+#define CAN_BS1_250K          CAN_BT_BS1_12TQ   
 #define CAN_BS2_250K          CAN_BT_BS2_2TQ
-#define CAN_PRES_250K         (PCLK1_FREQ / (250000 * 6))       /* Prescaler */
+#define CAN_PRES_250K         (PCLK1_FREQ / (250000 * 15))   //86.6%  /* Prescaler */
 
-#define CAN_PRES_125K         (PCLK1_FREQ / (125000 * 9))       /* Prescaler */
-#define CAN_PRES_100K         (PCLK1_FREQ / (100000 * 9))       /* Prescaler */
-#define CAN_PRES_50K          (PCLK1_FREQ / (50000 * 9))        /* Prescaler */
-#define CAN_PRES_20K          (PCLK1_FREQ / (20000 * 9))        /* Prescaler */
-#define CAN_PRES_10K          (PCLK1_FREQ / (10000 * 9))        /* Prescaler */
+#define CAN_PRES_125K         (PCLK1_FREQ / (125000 * 15))       /* Prescaler */
+#define CAN_PRES_100K         (PCLK1_FREQ / (100000 * 15))       /* Prescaler */
+#define CAN_PRES_50K          (PCLK1_FREQ / (50000 * 15))        /* Prescaler */
+#define CAN_PRES_20K          (PCLK1_FREQ / (20000 * 15))        /* Prescaler */
+#define CAN_PRES_10K          (PCLK1_FREQ / (10000 * 15))        /* Prescaler */
 
 
 /*************************************************************************************************/
