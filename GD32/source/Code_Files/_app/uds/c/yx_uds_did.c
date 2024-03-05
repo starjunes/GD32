@@ -19,7 +19,7 @@
 #include "bal_input_drv.h"
 #include "bal_pp_drv.h"
 #include "port_dm.h"
-#include "yx_uds_drv.h"
+#include "yx_dtc_drv.h"
 #include "bal_gpio_cfg.h"
 #include "yx_com_man.h"
 #include "port_adc.h"
@@ -105,8 +105,8 @@ static UDS_DID_DATA_E2ROM_T s_uds_did_e2rom_data;
 static INT8U s_did_tmr;
 static INT8U s_delay_save_to_flash;
 
-static CAN_SIGNAL_T s_can_signal;
-
+static CAN_SIGNAL_T      s_can_signal;
+static CAR_SIGNAL_TYPE_E s_car_signal;
 /*
 ********************************************************************************
 * 定义本地接口
@@ -814,6 +814,9 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
         YX_UDS_NegativeResponse(SID_2E, NRC_78);
         
          memcpy(s_uds_did_obj[i].data, p_did, didLen);
+				 if(did == 0x0100) {
+				     YX_Set_CarSignal(s_uds_did_obj[i].data);	
+				 }
         if (did != 0xF184) {
             DID_DataUpdateDelay();
             #if DEBUG_DID > 0
@@ -986,7 +989,40 @@ void YX_UDS_DID_DataReset(void)
     
     YX_MEMSET(&s_can_signal, 0xFF, sizeof(s_can_signal));
 }
+/*****************************************************************************
+**  函数名:  YX_Set_CarSignal(
+**  函数描述:根据did数据配置车型
+**  参数:    无
+**  返回:    无
+*****************************************************************************/
+void YX_Set_CarSignal(INT8U *data)
+{
+    INT8U type;
 
+		type = data[15];
+    if((type == 0x02) || (type == 0x07)) {
+		    s_car_signal = CAR_SIGNAL_J6;
+    } else if((type == 0x03) || (type == 0x08)) {
+        s_car_signal = CAR_SIGNAL_J6_MID;
+    } else if((type == 0x0C) || (type == 0x0D)) {
+        s_car_signal = CAR_SIGNAL_QINGQI;
+    } else {
+         s_car_signal = CAR_SIGNAL_J6;
+    }
+		YX_CarSignal_AdapterDTC(s_car_signal,data);
+}
+#if 0
+/*****************************************************************************
+**  函数名:  YX_Get_CarSignal(
+**  函数描述:获取车型
+**  参数:    无
+**  返回:    无
+*****************************************************************************/
+CAR_SIGNAL_TYPE_E YX_Set_CarSignal(void)
+{
+    return  s_car_signal; 
+}
+#endif
 /*******************************************************************
 ** 函数名: YX_UDS_DID_Init
 ** 函数描述:DID数据初始化
@@ -1011,7 +1047,7 @@ void YX_UDS_DID_Init(void)
         debug_printf("<<YX_UDS_DID_Init 读取主机UDS参数失败>>\r\n");
         #endif
     } 
-
+    YX_Set_CarSignal(s_uds_did_e2rom_data.DID_0100);
     s_did_tmr = OS_InstallTmr(TSK_ID_OPT, 0, DID_HandleTmr);
     OS_StartTmr(s_did_tmr, _SECOND, 1);
 

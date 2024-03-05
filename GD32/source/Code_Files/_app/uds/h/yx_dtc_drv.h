@@ -25,6 +25,7 @@ typedef enum {
 /* 显示码 */
 typedef enum {
     U000100,    // CAN1 BusOff//
+    U003700,    // CAN2 BusOff//
     B157216,    // 终端电源电压欠压//
     B157F00,    // 备用电池电压低//
     
@@ -40,7 +41,7 @@ typedef enum {
     U103C00,    // GCT节点超时//
     U103B00,    // IBS节点超时//
     B158000,    // VIST节点USB通讯失效 //
-    
+    U014600,    // GATWAY节点超时
     B156D12,    // GPS模块故障//
     B156F12,    // 4G模块故障//
     B157112,    // SIM卡故障//
@@ -149,7 +150,14 @@ BOOLEAN YX_DTC_SetMpuStatus(INT8U dtcCode, BOOLEAN status);
 **  返回:    TRUE:有故障 FALSE:无故障
 *****************************************************************************/
 BOOLEAN YX_DTC_GetStatus(INT8U* dtcBuf, INT8U* dtcBufLen);
-
+/*****************************************************************************
+**  函数名:  YX_CAR_SIGNAL_AdapterDTC
+**  函数描述  : 获取故障码状态 
+**  参数:    [out] dtcBuf  : 
+             [out] dtcBufLen : 
+**  返回:    TRUE:有故障 FALSE:无故障
+*****************************************************************************/
+void YX_CarSignal_AdapterDTC(INT8U type,INT8U *data);
 /*******************************************************************************
  ** 函数名:    YX_DTC_Init
  ** 函数描述:   信号量初始化
