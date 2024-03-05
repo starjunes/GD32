@@ -27,7 +27,7 @@
 #include "yx_uds_did.h"
 #include "yx_com_send.h"
 #include "hal_exrtc_sd2058_drv.h"
-
+#include "public.h"
 #if EN_UDS > 0
 /*
 ********************************************************************************
@@ -339,7 +339,7 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
     {0xF19D, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F19D), s_uds_did_e2rom_data.DID_F19D, DID_DATA_TYPE_BCD,   NULL, NULL},   
     {0xF1A1, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F1A1), s_uds_did_e2rom_data.DID_F1A1, DID_DATA_TYPE_ASCII, NULL, NULL},     
 };
-INT8U s_did_status[MAX_DID_NUM];
+INT8U s_did_status[MAX_DID_NUM]= {0x00};
 static INT8U s_did_num = MAX_DID_NUM;
 
 /*******************************************************************************
@@ -401,8 +401,8 @@ static void DID_HandleTmr(void* pdata)
                 s_delay_send_did = 0xff;
                 isNeedSaveToFlash = FALSE;
                 for (i = 0; i < MAX_DID_NUM; i++) {
-                    if (s_uds_did_e2rom_data.DID_STATUS[i] == 1) {
-                        s_uds_did_e2rom_data.DID_STATUS[i] = 0;
+                    if (s_did_status[i] == 1) {
+                        s_did_status[i] = 0;
                         isNeedSaveToFlash = TRUE;
                         /* 上报到屏 */
                         wstrm = bal_STREAM_GetBufferStream();
@@ -838,7 +838,7 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
         YX_COM_DirSend(CLIENT_FUNCTION_UP_REQ, bal_GetStrmStartPtr(wstrm), bal_GetStrmLen(wstrm));
 
     } else {
-        s_uds_did_e2rom_data.DID_STATUS[i] = 1;
+        s_did_status[i] = 1;
         DID_DataUpdateDelay();
     }
     
@@ -898,7 +898,7 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
         #if DEBUG_DID > 0
         debug_printf("<**** (2)保存主机下发的did到pp参数延时启动 ****>\r\n");
         #endif
-        if (s_uds_did_e2rom_data.DID_STATUS[i] == 0) {         
+        if (s_did_status[i] == 0) {         
             /* did == 0xF1A1 ||did == 0xF182 || did == 0xF187 为MCU默认配置，无需主机同步 */
             if (did == 0xF190 || did == 0xF193|| did == 0xF195 || did == 0xF19D || did == 0x1004 ||
 							  did == 0x1002 || did == 0x1003|| did == 0x1028 ) {

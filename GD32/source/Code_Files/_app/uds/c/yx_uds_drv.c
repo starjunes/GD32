@@ -132,6 +132,46 @@ static void Get_Rand(INT8U len, INT8U *random)
     s_rand_cnt++;
 }
 /*******************************************************************
+** 函数名:      seedToKey_Diag
+** 函数描述:    诊断仪安全校验算法
+** 参数:        [in]  seed:           SEED
+**                [out]  key:            KEY
+** 返回:        无
+********************************************************************/
+static void SeedToKey_Diag(char *seed, INT32U length, char *key)
+{
+    INT32U i;
+    INT32U mask = 0x4278396E;
+    union { 
+        char byte[4];
+        INT32U wort;
+    } seedlokal;
+    
+    length = length;
+
+    #if 0
+    if (seed[1] == 0 && seed[2] == 0) {
+        //
+    } else 
+    #endif
+
+    {
+        seedlokal.wort = (seed[0] << 24) + (seed[1] << 16) + (seed[2] << 8) + seed[3];
+        for (i = 0; i < 35; i++){
+            if (seedlokal.wort & 0x80000000){
+                seedlokal.wort = seedlokal.wort << 1;
+                seedlokal.wort = seedlokal.wort ^ mask;
+            } else {
+                seedlokal.wort = seedlokal.wort << 1;
+            }
+        }
+        for (i = 0; i < 4; i++){
+            key[3-i] = seedlokal.byte[i];
+        } 
+    }
+}
+
+/*******************************************************************
 ** 函数名: Get_SecurityKey
 ** 函数描述: 获得安全访问密钥
 ** 参数: [in] accesstype : 访问等级，见@ REQSEED_TYPE_E
@@ -139,38 +179,22 @@ static void Get_Rand(INT8U len, INT8U *random)
 **       [out] key       : 输出key值
 ** 返回: 无
 ********************************************************************/
-static void Get_SecurityKey(INT8U accesstype, INT8U* seedval, INT8U* keyval)
+static void Get_SecurityKey(INT8U accesstype, INT8U* seed, INT8U* key)
 {
-    INT8U i;
-    INT32U seed, key, algorithmask;
-
-    seed = 0;
-    key  = 0;
-    if (accesstype == REQSEED_1) {
-        algorithmask = 0x1DB7E8D9;
-    } else if (accesstype == REQSEED_5) {
-        algorithmask = 0x2DD3BE5D;
-    } else {
-        algorithmask = 0x37313533;
-    }
+    INT8U temp[4];
     
-    seed = (INT32U)(seedval[0] << 24) + (INT32U)(seedval[1] << 16) + (INT32U)(seedval[2] << 8) + (INT32U)(seedval[3]);
-
-    if (!((seed == 0) || (seed == 0xFFFFFFFF))) {
-        for(i = 0; i < 35; i++) {
-            if(seed & 0x80000000) {
-                seed = seed << 1;
-                seed = seed ^ algorithmask;
-            } else {
-                seed = seed << 1;
-            }
-        }
-        key = seed;
+	accesstype = accesstype;
+    if (key == NULL || key == NULL) {
+        return;
     }
-    keyval[3] = key;
-    keyval[2] = key >> 8;
-    keyval[1] = key >> 16;
-    keyval[0] = key >> 24;   
+    YX_MEMSET(temp, 0, 4);
+    SeedToKey_Diag((char *)seed,4,(char *)temp); 
+    // SPC560是大端模式，生成的数据需要转成小端
+    key[0] = temp[3];
+    key[1] = temp[2];
+    key[2] = temp[1];
+    key[3] = temp[0];
+    
 }
 /*******************************************************************
 ** 函数名: Req_CmnctCtl
@@ -370,6 +394,7 @@ static void UDS_SID10_DiagnosticSessionControl(INT8U sessiontype)
             break;
         case SESSION_PROGRAM:
         case (SESSION_PROGRAM + SUPPRESS_RESP):
+					  #if 0
             /* 编程会话在功能请求不支持 */
             if ((s_reqid == FUNC_REQID) || (s_uds_module.session_type == SESSION_DEFAULT)) {
                 YX_UDS_NegativeResponse(SID_10, NRC_7E);
@@ -406,6 +431,9 @@ static void UDS_SID10_DiagnosticSessionControl(INT8U sessiontype)
                 // s_uds_module.reset_cnt = 0;
                 // s_uds_module.reset_type = RESET_HARD;
             }
+						#else
+						YX_UDS_NegativeResponse(SID_10, NRC_12);
+						#endif
             break;
         case SESSION_EXTENDED:
         case (SESSION_EXTENDED + SUPPRESS_RESP):

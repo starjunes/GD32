@@ -10,14 +10,14 @@
 
 #ifndef PUBLIC_H
 #define PUBLIC_H                        1
-
+#include "yx_swconfig.h"
 #include  "dal_can.h"
 #if EN_UDS > 0
 #include "yx_dtc_drv.h"
 #endif
 //#include  "app_can.h"
 #define _PUBLIC_FLASHSECTOR             (E_USRPARA_PAGE + 1 - BLOCK_IMAGESECTOR)     /* FLASH扇区号 */
-#define MAX_PARA_SIZE  	                500     /* 注意,公共参数结构最大不得超过这个值 */
+#define MAX_PARA_SIZE  	                512     /* 注意,公共参数结构最大不得超过这个值 */
 #if EN_UDS > 0
 #define MAX_DID_NUM              17
 /* 故障码信息 */
@@ -51,7 +51,7 @@ typedef struct {
     INT8U DID_F195[8];     // 软件版本号
     INT8U DID_F19D[4];     // 安装日期
     INT8U DID_F1A1[16];    // 厂家代码
-    INT8U DID_STATUS[MAX_DID_NUM];
+    //INT8U DID_STATUS[MAX_DID_NUM];
 } UDS_DID_DATA_E2ROM_T;
 #endif
 /*
@@ -78,13 +78,13 @@ typedef struct {
 ********************************************************************************
 */
 
-static ROUTER_STRUCT    const i_TELROUTER     = {0xFF};
-static SETCONFIG_STRUCT const i_SETCONFIG     = {6, true, 3};
-static BT_PIN_STRUCT    const i_BT_PIN        = {0, "\"123456\"", TRUE};
-static CAN_ATTR_T       const i_CAN1          = {TRUE, CAN_250, DEF_FTYPE, DEF_FMAT, CAN_NORMAL_MODE, CAN_UN_SET, CAN_UN_SET, CAN_UN_SET, CAN_FILTER_ON};
-static CAN_ATTR_T       const i_CAN2          = {TRUE, CAN_500, DEF_FTYPE, DEF_FMAT, CAN_NORMAL_MODE, CAN_UN_SET, CAN_UN_SET, CAN_UN_SET, CAN_FILTER_ON};
-static ICPARA_T         const i_IC            = {0};
-static ICCANPARA_T      const i_iccan         = {1,1,1,1,1}; /* 配置卡默认参数发送CAN车速 */
+//static ROUTER_STRUCT    const i_TELROUTER     = {0xFF};
+//static SETCONFIG_STRUCT const i_SETCONFIG     = {6, true, 3};
+//static BT_PIN_STRUCT    const i_BT_PIN        = {0, "\"123456\"", TRUE};
+//static CAN_ATTR_T       const i_CAN1          = {TRUE, CAN_250, DEF_FTYPE, DEF_FMAT, CAN_NORMAL_MODE, CAN_UN_SET, CAN_UN_SET, CAN_UN_SET, CAN_FILTER_ON};
+//static CAN_ATTR_T       const i_CAN2          = {TRUE, CAN_500, DEF_FTYPE, DEF_FMAT, CAN_NORMAL_MODE, CAN_UN_SET, CAN_UN_SET, CAN_UN_SET, CAN_FILTER_ON};
+//static ICPARA_T         const i_IC            = {0};
+//static ICCANPARA_T      const i_iccan         = {1,1,1,1,1}; /* 配置卡默认参数发送CAN车速 */
 static SCLOCKPARA_T     const i_sclockpara    = {0xff,
                                                  0x02,{0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb},
                                                  0x04,{0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb},
@@ -202,9 +202,9 @@ static const UDS_DID_DATA_E2ROM_T     i_uds_did_e2rom_data = {
     {'L', 'L', 'L', '2', '1', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00    
     }, 
     /* DID_STATUS */
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
+   /* {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
      0x00
-    }, 
+    }, */
 };
 static UDS_ERR_CNT_T const i_uds_fault_cnt = {0};
 #endif

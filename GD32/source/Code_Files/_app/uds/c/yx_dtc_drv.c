@@ -801,7 +801,7 @@ static BOOLEAN Set_DTCStatus(DTC_DISP_CODE_E dtc, INT8U mask, DTCSTATUS_OP_E op,
                 DTC_PpUpdateStart();
             }
 
-            #if DEBUG_DTC > 0
+            #if DEBUG_DTC > 1
             debug_printf("clr dtc(0x%x) mask(%d) op(%d) info(%d) status(%x)\r\n", dtc, mask, op, info, s_dtc_obj.dtc[dtc].status);
             #endif
             if (info) {
