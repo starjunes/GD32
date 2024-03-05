@@ -75,8 +75,8 @@ int main(void)
     /* 调试串口初始化不可置于后面，不然要是打开调试开关，其他部分有打印，就会出错 */
     //Debug_Initiate();
     PORT_InitUart(USART_DEBUG, 115200, 1000 , 1000);
-    Debug_SysPrint("System Start...\r\n");              /* 打印系统启动信息 */
-    Debug_PrintHex(TRUE, (INT8U*)s_temphexbuf, sizeof(s_temphexbuf));/* 测试打印hex */
+    //Debug_SysPrint("System Start...\r\n");              /* 打印系统启动信息 */
+    //Debug_PrintHex(TRUE, (INT8U*)s_temphexbuf, sizeof(s_temphexbuf));/* 测试打印hex */
     
     Debug_SysPrint("<--app start SystemClock:%d PCLK1:%d-->\r\n", rcu_clock_freq_get(CK_SYS), rcu_clock_freq_get(CK_APB1));
     #endif
