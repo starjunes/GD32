@@ -74,7 +74,6 @@ static BOOLEAN         s_handskenable;
 static INT16U          s_idfiltcnt;
 static BOOLEAN         s_parasendstat;
 static INT8U           s_parasendcnt;
-//static BOOLEAN         s_ecuonoffstat;
 static INT8U           s_md5source[8];
 static INT8U           s_md5result[16];
 static INT8U           s_lock_tmr;
@@ -82,7 +81,7 @@ static INT16U          s_reqcnt;
 static INT16U          s_poweron_times_cnt = 0;                             /* 上电2分钟内读取油耗报文 */
 static BOOLEAN         s_oilsumreq = FALSE;                                  /* FALSE:表示不发送油耗请求，TRUE：表示发送油耗请求 */
 static INT8U           s_ycseed[4];
-static BOOLEAN         f_handsk = FALSE;
+static BOOLEAN         f_handsk = FALSE;						// 是否握手成功
 static BOOLEAN         f_handskcnt = 0;
 static INT32U 		   s_securitykey[4] = {0x32B162CD,0x729F6E13,0x5FAE2E12,0x12747A3E};
 
@@ -90,9 +89,25 @@ static D008_DATA_T	   *s_d008data;				// 记录监控数据
 static INT16U		   s_d008locktime = 600;			// 收到指令后采集报文时间
 
 
+static BOOLEAN		  	s_ishandover	= FALSE;	   			/* 握手结束标志 */
+static HANDSHAKE_ACK_E	s_handshake_ack = HANDSHAKE_UNKNOWN;    // 上报平台握手结果
+
 //潍柴
 #define ACK_HANFSHARK	0x18FE02FB  //握手回复报文
 static INT8U s_wc_state = 0, s_wc_ack = 0;
+static BOOLEAN s_wc_0100recv = FALSE;		// 是否收到握手校验报文
+static INT8U s_wc_0100cnt = 0;				// 握手报文超时时间
+static BOOLEAN s_wc_0800recv = FALSE;		// 是否收到消贷报文
+static INT8U s_wc_0800cnt = 0;				// 消贷报文超时时间
+
+/* ECU反馈 byte3 */
+#define WC_ACTIVE_BIT (1)    //激活位
+#define WC_LOCK_BIT   (1<<1) //锁车位
+#define WC_KEY_BIT    (1<<2) //KEY位
+#define WC_GID_BIT    (1<<3) //GPS ID
+
+// 玉柴
+static INT8U s_yc_state = 0;		// 握手状态
 
 
 // 康明斯
@@ -383,6 +398,28 @@ BOOLEAN GetFiltenableStat(void)
 }
 
 /**************************************************************************************************
+**  函数名称:  DC_CanDelayTmr
+**  功能描述:  大柴锁车延时处理
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+void DC_CanDelayTmr(void)
+{
+
+}
+
+/**************************************************************************************************
+**  函数名称:  XC_CanDelayTmr
+**  功能描述:  锡柴锁车延时处理
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+void XC_CanDelayTmr(void)
+{
+
+}
+
+/**************************************************************************************************
 **  函数名称:  WC_HandShake
 **  功能描述:  潍柴握手
 **  输入参数:  None
@@ -391,10 +428,8 @@ BOOLEAN GetFiltenableStat(void)
 void WC_HandShake(void)
 {
     INT8U senddata[13] = {0x00,0x00,0x00,0x00,0x08,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-    INT32U id;
 	
-
-    if (s_sclockpara.ecutype != ECU_WEICHAI) return;
+	if (s_sclockpara.ecutype != ECU_WEICHAI) return;
     
 	senddata[0]	= (ACK_HANFSHARK>>24) & 0xFF;
 	senddata[1]	= (ACK_HANFSHARK>>16) & 0xFF;
@@ -408,18 +443,69 @@ void WC_HandShake(void)
     senddata[10] = s_md5result[5];
     senddata[11] = s_md5result[6];
     senddata[12] = s_md5result[7];
-	id = bal_chartolong(senddata);
 
     CAN_TxData(senddata, false, LOCK_CAN_CH);
-	#if LOCK_COLLECTION > 0
-	INT8U canbuf[12];
-	memcpy(canbuf, senddata, 4);	// id
-	memcpy(&canbuf[4], &senddata[5], 8);
-	YX_AddDataCollection(canbuf);
-	#endif
-    SetCANMsg_Period(id, &senddata[4], 100, LOCK_CAN_CH);
-    s_sclockstep = CONFIG_CONFIRM_REC;
 }
+
+/**************************************************************************************************
+**  函数名称:  WC_CanDelayTmr
+**  功能描述:  潍柴锁车延时处理
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+void WC_CanDelayTmr(void)
+{
+	static INT8U delay_cnt = 0;
+	switch (s_sclockstep) {
+		case HAND_SEND1:
+			delay_cnt = 0;
+			s_sclockstep = HAND_SEND2;
+			WC_HandShake();
+		break;
+		case HAND_SEND2:
+			if (++delay_cnt >= 5) {
+				delay_cnt = 0;
+				WC_HandShake();
+				s_sclockstep = HAND_SEND3;
+			}
+		break;
+		case HAND_SEND3:
+			if (++delay_cnt >= 5) {
+				delay_cnt = 0;
+				WC_HandShake();
+				s_wc_0100recv = FALSE;
+				s_wc_0100cnt = 0;
+				s_sclockstep = CONFIG_CONFIRM_REC;
+			}
+		break;
+		case CONFIG_CONFIRM_REC:
+			if ((s_wc_0100cnt >= 300) && (s_ishandover == FALSE)) {
+				s_sclockstep = CONFIG_OVER;
+				f_handsk = FALSE;		// 握手失败
+				s_handshake_ack = HANDSHAKE_CHECKERR;
+				s_ishandover == TRUE;
+			}
+		default:
+		break;
+	}
+
+	if ((s_wc_0800recv == FALSE) && (s_ishandover == FALSE)) {
+		if (++s_wc_0800cnt >= 100) {
+			s_wc_0800cnt = 102;
+			f_handsk == FALSE;
+			s_handshake_ack = HANDSHAKE_BUSEXCEPTION;
+			s_ishandover == TRUE;
+		}
+	}
+	if ((s_wc_0100recv == FALSE) && (s_ishandover == FALSE)) {
+		if (++s_wc_0100cnt >= 1000) {
+			s_wc_0800cnt = 1002;
+			s_handshake_ack = HANDSHAKE_ERR;
+			s_ishandover == TRUE;
+		}
+	}
+}
+
 
 /**************************************************************************************************
 **  函数名称:  YC_HandShake
@@ -457,23 +543,58 @@ void YC_HandShake(void)
             senddata[3] = 0xfb;
             memcpy(&senddata[5],s_key,8);
             CAN_TxData(senddata, false, LOCK_CAN_CH);
-			#if LOCK_COLLECTION > 0
-			memcpy(canbuf, senddata, 4);	// id
-			memcpy(&canbuf[4], &senddata[5], 8);
-			YX_AddDataCollection(canbuf);	// 添加采集数据
-			#endif
             #if DEBUG_LOCK > 0
                 debug_printf("校验码s_key发送  ");
                 printf_hex(&senddata[5], 8);
             #endif
-            id = bal_chartolong(senddata);
-            SetCANMsg_Period(id, &senddata[4], YC_HANDSK_PERIOD/10, LOCK_CAN_CH); /* 发送周期1000ms -> 800ms */
+            //id = bal_chartolong(senddata);
+            //SetCANMsg_Period(id, &senddata[4], YC_HANDSK_PERIOD/10, LOCK_CAN_CH); /* 发送周期1000ms -> 800ms */
             s_sclockstep = CONFIG_CONFIRM_REC;
             break;
         default:
             break;
     }
 }
+
+/**************************************************************************************************
+**  函数名称:  YC_CanDelayTmr
+**  功能描述:  玉柴锁车延时处理
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+void YC_CanDelayTmr(void)
+{
+	static INT8U ycdelay_cnt = 0;
+	switch (s_sclockstep) {
+		case RAND_CODE_REC:
+			if (++ycdelay_cnt >= 800) {
+				ycdelay_cnt = 0;
+				s_sclockstep = CONFIG_OVER;
+				s_ishandover = TRUE;
+				f_handsk	= FALSE;
+				s_handshake_ack = HANDSHAKE_BUSEXCEPTION
+			}
+			break;
+		case CONFIG_CONFIRM_REC:
+			if (++ycdelay_cnt >= 300) {
+				if (s_yc_state == 0x00) {
+					s_handshake_ack = HANDSHAKE_CHECKERR;	// 校验失败
+				} else if (s_yc_state == 0x11) {
+					s_handshake_ack = HANDSHAKE_OVER;	// 校验失败
+				}
+				ycdelay_cnt = 0;
+				s_sclockstep = CONFIG_OVER;
+				s_ishandover = TRUE;
+				f_handsk	= FALSE;
+			}
+			break;
+		default:
+			ycdelay_cnt = 0;
+			break;
+	}
+}
+
+
 /**************************************************************************************************
 **  函数名称:  YC_Set18ea0021Period
 **  功能描述:  玉柴设置周期发送请求
@@ -514,27 +635,11 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 	if (id == CAN_SPEED_ID){
 		SetSpeedFlag(TRUE);
 	}
-    if (s_sclockpara.ecutype == ECU_YUCHAI_Q6) {
-        #if 0
-    	if (id == 0x18fff400) {
-            if (CAN_msg->databuf[7] == 0x01) {
-                if (!s_ecuonoffstat) {
-                    if (!s_sclockpara.unbindstat) {
-                        s_sclockstep = CONFIG_REQ;
-                        YC_HandShake();
-                        s_ecuonoffstat = true;
-                    }
-                }
-                s_ecuonoffstat = true;
-            } else if (CAN_msg->databuf[7] == 0x00) {
-                s_ecuonoffstat = false;
-            }
-        }
-        #endif
+    if (s_sclockpara.ecutype == ECU_YUCHAI) {
 		
         if (id == 0x18fd0100) {
+			s_yc_state = (CAN_msg->databuf[5] & 0x30) >> 4;
 			#if DEBUG_LOCK > 0
-		        //Debug_SysPrint("收到CANid:%x\r\n", id);
 		        debug_printf("收到CANid:%x ecutype:%d s_sclockstep:%d buf\r\n", id, s_sclockpara.ecutype, s_sclockstep);
 			 	Debug_PrintHex(true, CAN_msg->databuf, CAN_msg->len);
 		    #endif
@@ -543,16 +648,10 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 			memcpy(&can_buf[4], CAN_msg->databuf, CAN_msg->len);
 			YX_AddDataCollection(can_buf);
 			#endif
-			#if DEBUG_LOCK > 0
-		        debug_printf("HandShakeMsgAnalyze YX_AddDataCollection can_buf:\r\n");
-				Debug_PrintHex(TRUE , can_buf, 12);
-		    #endif
 			if (s_sclockstep == RAND_CODE_REC) {
                 #if DEBUG_LOCK > 0
                     debug_printf("随机码seed接收\r\n");
                 #endif
-
-                
                 if (((CAN_msg->databuf[5] & 0x70) == 0x70) && (seed != 0) && ((CAN_msg->databuf[7] & 0x0f) == 0x0d)) {
                     #if DEBUG_LOCK > 0
                         debug_printf("随机码帧校验成功，计算key\r\n");
@@ -566,12 +665,14 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     s_sclockstep = CONFIG_OVER;
                     s_idfiltenable = TRUE;
                     f_handsk = true;
-                    StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
+					s_handshake_ack = HANDSHAKE_OK;
+					s_ishandover = TRUE;
+                    //StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
                     s_handskenable = FALSE;
                     /* 握手成功，发送全0清除标志到0x18fe02fb */
                     CAN_TxData(senddata, false, LOCK_CAN_CH);
                     #if DEBUG_LOCK > 0
-                    debug_printf("已激活，结束流程\r\n");
+                    debug_printf("已握手，结束流程\r\n");
 					#endif
                 }
            } else if (s_sclockstep == CONFIG_CONFIRM_REC) {
@@ -579,7 +680,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     s_sclockstep = CONFIG_OVER;
                     s_idfiltenable = TRUE;
                     f_handsk = true;
-                    StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
+                    //StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
                     s_handskenable = FALSE;
                     /* 握手成功，发送全0清除标志到0x18fe02fb */
                     CAN_TxData(senddata, false, LOCK_CAN_CH);
@@ -662,15 +763,11 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 	/**************************潍柴**********************/
     if (s_sclockpara.ecutype == ECU_WEICHAI) {
         if (id == 0x18fd0100) {
-			#if LOCK_COLLECTION > 0
-			memcpy(can_buf, CAN_msg->id, 4);
-			memcpy(&can_buf[4], CAN_msg->databuf, CAN_msg->len);
-			YX_AddDataCollection(can_buf);
-			#endif
-			#if DEBUG_LOCK > 0
-		        debug_printf("HandShakeMsgAnalyze YX_AddDataCollection LINE:%d can_buf:\r\n", __LINE__);
-				Debug_PrintHex(TRUE , can_buf, 12);
-		    #endif
+			s_wc_0100recv = TRUE;
+			s_wc_0100cnt  = 0;
+			if ((s_ishandover == TRUE) || (s_wc_0800recv == FALSE)) {
+				return;		// 握手流程已结束或未收到消贷报文，不响应握手
+			}
             if(!s_sclockpara.unbindstat){
                 s_md5source[0] = s_sclockpara.firmcode[0];
                 s_md5source[1] = s_sclockpara.firmcode[1];
@@ -681,31 +778,19 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                 s_md5source[6] = CAN_msg->databuf[3];
                 s_md5source[7] = CAN_msg->databuf[4];
                 MDString(s_md5source,s_md5result,sizeof(s_md5source));
-                s_sclockstep = CHECK_CODE_SEND;
-                WC_HandShake();
+                s_sclockstep = HAND_SEND1;
            }
         }
         if (id == 0x18FF0800) {
-			#if LOCK_COLLECTION > 0
-			
-			if ((s_wc_state != CAN_msg->databuf[2]) || (s_wc_ack != CAN_msg->databuf[5])) {
-				memcpy(can_buf, CAN_msg->id, 4);
-				memcpy(&can_buf[4], CAN_msg->databuf, CAN_msg->len);
-				YX_AddDataCollection(can_buf);
-				#if DEBUG_LOCK > 0
-			        debug_printf("HandShakeMsgAnalyze YX_AddDataCollection LINE:%d can_buf:\r\n", __LINE__);
-					Debug_PrintHex(TRUE , can_buf, 12);
-			    #endif
-			}
-			s_wc_state 	= CAN_msg->databuf[2];
-			s_wc_ack	= CAN_msg->databuf[5];
-			#endif
-			
+			s_wc_0800recv = TRUE; 
+			s_wc_0800cnt  = 0;
             if (s_sclockpara.ecutype == ECU_WEICHAI) {
-                if (s_sclockstep == CONFIG_CONFIRM_REC) {
+                if ((s_ishandover == FALSE) || ((CAN_msg->databuf[2] & WC_KEY_BIT) == WC_KEY_BIT)) {
                     s_idfiltenable = TRUE;
                     s_sclockstep = CONFIG_OVER;
-                    BOOLEAN ret = StopCANMsg_Period(ACK_HANFSHARK, LOCK_CAN_CH);
+					s_ishandover = TRUE;
+					s_handshake_ack = HANDSHAKE_OK;
+					f_handsk = TRUE;
                 }
                 memcpy(s_lockstatid,CAN_msg->id,4);
                 memcpy(s_lockstatid + 4,CAN_msg->databuf,8);
@@ -719,10 +804,6 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 		memcpy(&can_buf[4], CAN_msg->databuf, CAN_msg->len);
 		YX_AddDataCollection(can_buf);
 		#endif
-		#if DEBUG_LOCK > 0
-	        debug_printf("HandShakeMsgAnalyze YX_AddDataCollection LINE:%d can_buf:\r\n", __LINE__);
-			Debug_PrintHex(TRUE , can_buf, 12);
-	    #endif
 		#if DEBUG_LOCK > 0
 			debug_printf("%s id:%08x buf:",__FUNCTION__,id);
 			Debug_PrintHex(true, CAN_msg->databuf,CAN_msg->len);
@@ -1229,8 +1310,48 @@ void CanLocateFiltidSet(void)
 }
 
 /**************************************************************************************************
-**  函数名称:  CANAppTmrProc
-**  功能描述:  CAN应用层模块定时函数 10ms
+**  函数名称:  GetEcuType
+**  功能描述:  获取ECU锁车类型
+**  输入参数:
+**  返回参数:  None
+**************************************************************************************************/
+ECU_TYPE_E GetEcuType(void)
+{
+    return s_sclockpara.ecutype;
+}
+
+
+/**************************************************************************************************
+**  函数名称:  CanSendTmr
+**  功能描述:  锁车延时处理
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+void CanDelayTmr(void)
+{
+	INT8U ecutype = GetEcuType();
+	switch (ecutype) {
+		case ECU_WEICHAI:
+			WC_CanDelayTmr();
+			break;
+		case ECU_YUCHAI:
+			YC_CanDelayTmr();
+			break;
+		case ECU_DACHAI:
+			DC_CanDelayTmr();
+			break;
+		case ECU_XICHAI:
+			XC_CanDelayTmr();
+			break;
+		default:
+			break;
+	}
+}
+
+
+/**************************************************************************************************
+**  函数名称:  LockTmrProc
+**  功能描述:  锁车定时器 10ms
 **  输入参数:  无
 **  输出参数:  无
 **  返回参数:  无
@@ -1238,6 +1359,7 @@ void CanLocateFiltidSet(void)
 static void LockTmrProc(void*index)
 {
     INT8U acc_state;
+	static int cnt = 0;
     #if EN_KMS_LOCK > 0
     static INT16U acc_off_delay = 0;
     #endif
@@ -1250,7 +1372,13 @@ static void LockTmrProc(void*index)
 	}else{
 		acc_state = FALSE;
 	}
+	if (cnt++ > 100) {
+		cnt = 0;
+		debug_printf("timer remain:%d\r\n", TimerRemain());
+	}
 
+	CanDelayTmr();
+	
     #if EN_KMS_LOCK > 0
     if (!acc_state) {
         acc_off_delay = 3000;    /* 延时30秒 */
@@ -1264,15 +1392,12 @@ static void LockTmrProc(void*index)
     }
     #endif
 	// 康明斯 2s 延时发送握手报文
-	if(s_sclockpara.ecutype == ECU_KMS_Q6){
+	if(GetEcuType() == ECU_KMS_Q6){
 		if ((s_kms_delay_cnt++ % 10) == 0){
-			//debug_printf("s_kms_delay_cnt:%d\r\n",s_kms_delay_cnt);
 			if(s_kms_delay_cnt < 200){
 				if (s_sclockpara.limitfunction < MAX_LC_CMD) {
-					//if (s_kms_hand_send_enable == TRUE){
-						s_kmslockstep = KMS_REQ_SEED;
-		            	KMS_HandShake(NULL, 0);
-					//}
+					s_kmslockstep = KMS_REQ_SEED;
+	            	KMS_HandShake(NULL, 0);
 		        }
 			}else {
 				s_kms_delay_cnt = 201;
@@ -1327,13 +1452,6 @@ static void LockTmrProc(void*index)
                     StopCANMsg_Period(0x18ea0021, LOCK_CAN_CH);
                 }
             }
-        }
-    }
-
-    if (++s_parasendcnt >= 100) {                   /* 开机每秒发送同步帧，直到车台回应 */
-        s_parasendcnt = 0;
-        if (s_parasendstat) {
-            //SendLockPara();
         }
     }
 	#if LOCK_COLLECTION > 0
@@ -1622,7 +1740,7 @@ void ACCON_HandShake(void)
     s_idfiltenable = FALSE;
     s_idfiltcnt    = 0;
     s_parasendcnt  = 0;
-
+	s_yc_state	   = 0;
     memset(&s_ycseed, 0, sizeof(s_ycseed));
 
     OS_StartTmr(s_lock_tmr, MILTICK, 1);
@@ -1644,6 +1762,12 @@ void ACCON_HandShake(void)
     }
 
 	s_kms_delay_cnt = 0;
+
+	
+	f_handsk = FALSE;
+	s_ishandover = FALSE;
+	s_handshake_ack = HANDSHAKE_UNKNOWN;
+	
 	#if LOCK_COLLECTION > 0
 	YX_StartDataCollection(0x00);
 	#endif
@@ -1678,10 +1802,15 @@ void ACCOFF_HandShake(void)
          debug_printf("stop\r\n");
       #endif
       s_idfiltenable = FALSE;
-      f_handsk = FALSE;
       StopCANMsg_Period(0x18ea0021, LOCK_CAN_CH);
       StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
    }
+
+	s_wc_0100cnt = 0;
+	s_wc_0100recv = 0;
+	s_wc_0800cnt = 0;
+	s_wc_0800recv = 0;
+	s_sclockstep = CONFIG_OVER;
 }
 
 #if EN_KMS_LOCK > 0
@@ -1786,7 +1915,8 @@ void CanBaudSet(INT16U baud,INT8U channel)
 {
     if(s_sclockpara.canbaud[channel] != baud) {
 	      s_sclockpara.canbaud[channel] = baud;
-	      bal_pp_StoreParaByID(SCLOCKPARA_, (INT8U *)&s_sclockpara, sizeof(SCLOCKPARA_T));
+	      bal_pp_StoreParaByID(SCLOCKPARA_, (INT8U *)&s_sclockpara, sizeof(SCLOCKPARA_T));
+
     }
 }
 

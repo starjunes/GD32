@@ -23,10 +23,9 @@
 typedef enum {
     ECU_WEICHAI,                    /* 潍柴 */
 	ECU_KMS_Q6,						/*康明斯国六*/
-	ECU_YUCHAI_Q6,					/*玉柴国六*/
-	ECU_YUCHAI = ECU_YUCHAI_Q6,     /* 玉柴 */
-    ECU_C913,                       /* C9/C13 */
-    ECU_SHANGCHAI,                  /* 上柴EDC17 */
+	ECU_YUCHAI,						/*玉柴国六*/
+    ECU_DACHAI,                     /* 大柴 */
+    ECU_XICHAI,                  	/* 锡柴 */
     MAX_ECU_TYPE
 } ECU_TYPE_E;
 
@@ -36,11 +35,14 @@ typedef enum {
 /*                           握手流程阶段                                                 */
 /*************************************************************************************************/
 typedef enum {
-    CONFIG_REQ         = 0x00,        // 发送控制命令
-    RAND_CODE_REC      = 0x01,        // 获取随机码
-    CHECK_CODE_SEND    = 0x02,        // 发送校验码
-    CONFIG_CONFIRM_REC = 0x03,        // 获取控制验证信息
-    CONFIG_OVER        = 0x04,        // 控制结束
+    CONFIG_REQ   = 0x00,        // 发送控制命令
+    RAND_CODE_REC      ,        // 获取随机码
+    CHECK_CODE_SEND    ,        // 发送校验码
+    HAND_SEND1,					// 发送握手加密报文第一包
+    HAND_SEND2,					// 发送握手加密报文第二包
+    HAND_SEND3,					// 发送握手加密报文第三包
+    CONFIG_CONFIRM_REC ,        // 获取控制验证信息
+    CONFIG_OVER        ,        // 控制结束
 } SC_LOCK_STEP_E;
 
 /*************************************************************************************************/
@@ -53,6 +55,20 @@ typedef enum {
     KMS_ECU_REC          = 0x03,        // 获取控制验证信息
     KMS_OVER             = 0x04,        // 控制结束
 } KMS_LOCK_STEP_E;
+
+
+/* 终端上报平台握手结果 */
+typedef enum {
+    HANDSHAKE_ERR,                  /*  0-ECU握手失败 */
+    HANDSHAKE_OK,                   /*  1-ECU握手成功 */
+    HANDSHAKE_UNKNOWN,              /*  2-ECU状态未知 */
+    HANDSHAKE_OVER,                 /*  3-ECU超时 */
+    HANDSHAKE_NOSEED,               /*  4-ECU未响应随机数请求 */
+    HANDSHAKE_NOACK,                /*  5-ECU未反馈握手结果 */
+    HANDSHAKE_BUSEXCEPTION,			/*  6-总线异常 */
+    HANDSHAKE_CHECKERR,				/*  7-握手校验失败 */
+    MAX_STAT
+} HANDSHAKE_ACK_E;
 
 
 
