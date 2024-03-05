@@ -754,7 +754,7 @@ static BOOLEAN Set_DTCStatus(DTC_DISP_CODE_E dtc, INT8U mask, DTCSTATUS_OP_E op,
 
     p_dtc_cnt = Get_DtcCntPtr();
     if (op == OP_SET) {
-        #if DEBUG_DTC > 0
+        #if DEBUG_DTC > 1
         debug_printf("<set dtc:%d>status(%x) mask(%x)\r\n", dtc, s_dtc_obj.dtc[dtc].status, mask);
         #endif
         if ((s_dtc_obj.dtc[dtc].status & mask) != mask) { /* 当前状态为未设置状态 */
@@ -772,7 +772,7 @@ static BOOLEAN Set_DTCStatus(DTC_DISP_CODE_E dtc, INT8U mask, DTCSTATUS_OP_E op,
                 DTC_PpUpdateStart();
             }
 
-            #if DEBUG_DTC > 0
+            #if DEBUG_DTC > 1
             debug_printf("set dtc(0x%x) mask(%d) op(%d) info(%d) status(%x)\r\n", dtc, mask, op, info, s_dtc_obj.dtc[dtc].status);
             #endif
 

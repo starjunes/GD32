@@ -17,7 +17,7 @@
 #endif
 //#include  "app_can.h"
 #define _PUBLIC_FLASHSECTOR             (E_USRPARA_PAGE + 1 - BLOCK_IMAGESECTOR)     /* FLASH扇区号 */
-#define MAX_PARA_SIZE  	                512     /* 注意,公共参数结构最大不得超过这个值 */
+#define MAX_PARA_SIZE  	                1024     /* 注意,公共参数结构最大不得超过这个值 */
 #if EN_UDS > 0
 #define MAX_DID_NUM              17
 /* 故障码信息 */
@@ -216,7 +216,7 @@ static UDS_ERR_CNT_T const i_uds_fault_cnt = {0};
 */
 typedef struct {
     void const  *i_ptr;                      /* 指向初始化区 */
-    INT8U       len;                         /* 长度 */
+    INT16U       len;                         /* 长度 */
 } PUBTBL_STRUCT;
 
 static PUBTBL_STRUCT const PubTbl[] = {
