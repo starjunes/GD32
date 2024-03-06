@@ -96,9 +96,9 @@ static HANDSHAKE_ACK_E	s_handshake_ack = HANDSHAKE_UNKNOWN;    // 上报平台握手结
 #define ACK_HANFSHARK	0x18FE02FB  //握手回复报文
 static INT8U s_wc_state = 0, s_wc_ack = 0;
 static BOOLEAN s_wc_0100recv = FALSE;		// 是否收到握手校验报文
-static INT8U s_wc_0100cnt = 0;				// 握手报文超时时间
+static INT16U s_wc_0100cnt = 0;				// 握手报文超时时间
 static BOOLEAN s_wc_0800recv = FALSE;		// 是否收到消贷报文
-static INT8U s_wc_0800cnt = 0;				// 消贷报文超时时间
+static INT16U s_wc_0800cnt = 0;				// 消贷报文超时时间
 
 /* ECU反馈 byte3 */
 #define WC_ACTIVE_BIT (1)    //激活位
@@ -483,7 +483,7 @@ void WC_CanDelayTmr(void)
 				s_sclockstep = CONFIG_OVER;
 				f_handsk = FALSE;		// 握手失败
 				s_handshake_ack = HANDSHAKE_CHECKERR;
-				s_ishandover == TRUE;
+				s_ishandover = TRUE;
 			}
 		default:
 		break;
@@ -492,16 +492,16 @@ void WC_CanDelayTmr(void)
 	if ((s_wc_0800recv == FALSE) && (s_ishandover == FALSE)) {
 		if (++s_wc_0800cnt >= 100) {
 			s_wc_0800cnt = 102;
-			f_handsk == FALSE;
+			f_handsk = FALSE;
 			s_handshake_ack = HANDSHAKE_BUSEXCEPTION;
-			s_ishandover == TRUE;
+			s_ishandover = TRUE;
 		}
 	}
 	if ((s_wc_0100recv == FALSE) && (s_ishandover == FALSE)) {
 		if (++s_wc_0100cnt >= 1000) {
 			s_wc_0800cnt = 1002;
 			s_handshake_ack = HANDSHAKE_ERR;
-			s_ishandover == TRUE;
+			s_ishandover = TRUE;
 		}
 	}
 }
@@ -572,7 +572,7 @@ void YC_CanDelayTmr(void)
 				s_sclockstep = CONFIG_OVER;
 				s_ishandover = TRUE;
 				f_handsk	= FALSE;
-				s_handshake_ack = HANDSHAKE_BUSEXCEPTION
+				s_handshake_ack = HANDSHAKE_BUSEXCEPTION;
 			}
 			break;
 		case CONFIG_CONFIRM_REC:
@@ -687,7 +687,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     #if DEBUG_LOCK > 0
                         debug_printf("握手成功\r\n");
                     #endif
-                }else{
+                }/*else{
                     if((f_handskcnt++) == 3){
                         f_handskcnt = 0;
                         s_sclockstep = CONFIG_OVER;
@@ -696,7 +696,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                         f_handsk = false;
                         s_handskenable = FALSE;
                     }
-                }
+                }*/
          	}
 
 
