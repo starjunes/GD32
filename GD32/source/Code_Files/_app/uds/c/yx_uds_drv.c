@@ -25,6 +25,7 @@
 #include "yx_uds_did.h"
 #include "port_plat.h"
 #include "bal_tools.h"
+#include "tbox_seed2key.h"
 #if EN_UDS > 0
 #if EN_UDS_TRANS > 0
 #include "yx_uds_transfer.h"
@@ -583,7 +584,7 @@ static void UDS_SID27_Level(INT8U accesstype, INT8U* data, INT8U len)
    
     INT8U status;
     INT8U accesskey[4];
-
+    INT32U seed,key;
     switch (accesstype) {
         case REQSEED_1:
         case REQSEED_5: 
@@ -680,8 +681,10 @@ static void UDS_SID27_Level(INT8U accesstype, INT8U* data, INT8U len)
                 UDS_SID27_Response(accesstype, s_uds_module.access_seed, 4);
                 
                 /* 根据seed算出key值 */
-                Get_SecurityKey(accesstype, s_uds_module.access_seed, s_uds_module.access_key);
-                
+                //Get_SecurityKey(accesstype, s_uds_module.access_seed, s_uds_module.access_key);
+                Chartolong(&key, s_uds_module.access_seed);              
+                key = tbox_seed2key(key);
+								Longtochar(s_uds_module.access_key,key);
                 #if DEBUG_UDS > 1 
                 s_uds_module.access_key[0] = 0x44;
                 s_uds_module.access_key[1] = 0x33;

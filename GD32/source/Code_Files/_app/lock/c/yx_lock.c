@@ -564,7 +564,7 @@ void YC_HandShake(void)
 **************************************************************************************************/
 void YC_CanDelayTmr(void)
 {
-	static INT8U ycdelay_cnt = 0;
+	static INT16U ycdelay_cnt = 0;
 	switch (s_sclockstep) {
 		case RAND_CODE_REC:
 			if (++ycdelay_cnt >= 800) {
@@ -572,7 +572,7 @@ void YC_CanDelayTmr(void)
 				s_sclockstep = CONFIG_OVER;
 				s_ishandover = TRUE;
 				f_handsk	= FALSE;
-				s_handshake_ack = HANDSHAKE_BUSEXCEPTION
+				s_handshake_ack = HANDSHAKE_BUSEXCEPTION;
 			}
 			break;
 		case CONFIG_CONFIRM_REC:
