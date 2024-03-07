@@ -41,7 +41,7 @@ static INT16U  s_can_delay[MAX_CAN_CHN];      /* busoff延时 */
 static INT16U  s_can_offcnt[MAX_CAN_CHN];     /* busoff次数 */
 #endif
 typedef struct {
-    BOOLEAN access;                       /* 是否需要判断id */
+    CAN_SEND_PACKET_E access;                       /* 是否需要判断id */
     INT32U id[MAX_ACCESS_SEND_ID_NUM];    /* 允许发送的id表 */
 } SEND_ID_ACCESS_LIST_T;
 
@@ -726,7 +726,7 @@ BOOLEAN DAL_CAN_TxData_Dir(INT8U *data, INT8U channel)
                [in] idx :  允许发送id列表下表号:(0 ~ (MAX_ACCESS_SEND_ID_NUM-1))
 ** 返回:       剩余空间字节数
 ********************************************************************/
-void HAL_CAN_SendIdAccessSet(INT8U com, BOOLEAN set, INT32U id, INT8U idx)
+void HAL_CAN_SendIdAccessSet(INT8U com, CAN_SEND_PACKET_E set, INT32U id, INT8U idx)
 {
     if (com >= MAX_CANCHAN) return;
 
@@ -751,6 +751,9 @@ static BOOLEAN SendIdAccessCheck(INT8U com, INT32U id)
         return TRUE;
     } 
 
+    if(s_send_id_access[com].access == CAN_SEND_DISABLE) {
+		    return FALSE;
+    }
     for (idx = 0; idx < MAX_ACCESS_SEND_ID_NUM; idx++) {
         if (s_send_id_access[com].id[idx] == id) {
             return TRUE;

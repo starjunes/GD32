@@ -117,6 +117,11 @@ typedef enum {
     CAN_LOOPBACK_MODE  = Can_LOOPBACK_MODE,                          /* 环回模式(只能收到自己发送的数据) */  
     CAN_SILENT_MODE    = Can_SILENT_MODE,                            /* 静默模式(只收不发) */  
 } CAN_TEST_MODE_E;
+typedef enum {
+		CAN_SEND_ALL_PACKET 	 = 0x00,							// 发送所有报文
+		CAN_SEND_ID_PACKET		 = 0x01,							// 发送指定id
+		CAN_SEND_DISABLE			 = 0x02,							// 禁止所有发送
+} CAN_SEND_PACKET_E;
 /*************************************************************************************************/
 /*                             CAN属性结构体                                                     */
 /*************************************************************************************************/
@@ -418,7 +423,7 @@ BOOLEAN CheckCanIsErrer(INT8U channel);
                [in] idx :  允许发送id列表下表号:(0 ~ (MAX_ACCESS_SEND_ID_NUM-1))
 ** 返回:       剩余空间字节数
 ********************************************************************/
-void HAL_CAN_SendIdAccessSet(INT8U com, BOOLEAN set, INT32U id, INT8U idx);
+void HAL_CAN_SendIdAccessSet(INT8U com, CAN_SEND_PACKET_E set, INT32U id, INT8U idx);
 /*******************************************************************
  ** 函数名:        can_Reset_PeriodSendPeriod
  ** 函数描述:   周期性重新计数

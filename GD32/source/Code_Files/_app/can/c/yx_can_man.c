@@ -21,6 +21,8 @@
 #include "app_update.h"
 #include "dal_flash.h"
 #include "bal_pp_drv.h"
+#include  "bal_input_drv.h"
+#include "yx_signal_man.h"
 #if EN_UDS > 0
 #include "yx_uds_drv.h"
 #endif
@@ -1406,6 +1408,39 @@ static void YX_PeriodDataTran(void )
 		}
 	}
 }
+#if ACC_OFF_STOP_SEND  > 0
+/*******************************************************************************
+**  函数名称:  SendCanMsg_OnOff
+**  功能描述:  开启和关闭CAN发送
+**  输入参数:  无
+**  输出参数:  无
+**  返回参数:  无
+*******************************************************************************/
+static void SendCanMsg_OnOff(void)
+{
+    static INT8U   s_op_delay  = 0;
+		static BOOLEAN s_op_static = FALSE;
+		INT8U  acc_sta;
+		
+		acc_sta = bal_input_ReadSensorFilterStatus(TYPE_ACC);
+		if(acc_sta && (s_op_static == FALSE)) {                        /* ACC off并且没有停发报文 */	
+       
+        if(s_op_delay++ >= 50) {
+            s_op_delay = 0;					
+            s_op_static = TRUE;
+            HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_DISABLE, UDS_PHSCL_RESPID, 0);
+            HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_DISABLE, UDS_PHSCL_RESPID, 0);        
+        }
+    } else {	
+        if((!acc_sta) && s_op_static) {                            /* ACC On并且已经停发报文 */
+			      s_op_delay  = 0;
+					  s_op_static = FALSE;
+					  HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
+            HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0); 
+        }
+    }
+}
+#endif
 /*******************************************************************************
 **  函数名称:  PacketTimeOut
 **  功能描述:  分包传输超时
@@ -1453,7 +1488,10 @@ static void PacketTimeOut(void* pdata)
 
     SendCF();
 
-    Can_LossCanMsg();    
+    Can_LossCanMsg(); 
+		#if ACC_OFF_STOP_SEND  > 0
+    SendCanMsg_OnOff();
+		#endif
 }
 
 /**************************************************************************************************

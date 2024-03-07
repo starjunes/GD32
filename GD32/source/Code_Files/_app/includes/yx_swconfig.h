@@ -62,6 +62,7 @@
 #define EN_UDS                  1          /* 1:开启UDS功能     0:关闭UDS功能 */
 #define EN_UDS_TRANS            0          /* 1:开启UDS下载功能 0:关闭UDS下载功能 */ 
 #define SOFT_BUSOFF_RECOBRY     1          /* 1:软件恢复BUSOFF  0:自动恢复busoff */
+#define ACC_OFF_STOP_SEND       1          /* 1:开启acc off 1000ms内关闭报文发送  0:关闭此功能 */
 /*
 *****************************************************************************************
 * 定义全局宏

@@ -212,14 +212,14 @@ void Req_CmnctCtl(INT8U ctltype, INT8U cmncttype)
     switch (cmncttype) {
         case UDS_COMTYPE_APP:
             if (ctltype & 0x01) {
-                HAL_CAN_SendIdAccessSet(CAN_CHN_1, TRUE, UDS_PHSCL_RESPID, 0);
-                HAL_CAN_SendIdAccessSet(CAN_CHN_2, TRUE, UDS_PHSCL_RESPID, 0);
+                HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ID_PACKET, UDS_PHSCL_RESPID, 0);
+                HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_ID_PACKET, UDS_PHSCL_RESPID, 0);
                 #if DEBUG_UDS > 0
                 debug_printf("常规应用报文 禁止发送\r\n");
                 #endif
             } else {
-                HAL_CAN_SendIdAccessSet(CAN_CHN_1, FALSE, UDS_PHSCL_RESPID, 0);
-                HAL_CAN_SendIdAccessSet(CAN_CHN_2, FALSE, UDS_PHSCL_RESPID, 0);
+                HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
+                HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
                 
                 dal_CAN_Reset_PeriodSendPeriod();
                 #if DEBUG_UDS > 0
@@ -266,16 +266,16 @@ void Req_CmnctCtl(INT8U ctltype, INT8U cmncttype)
 		#endif	
         case UDS_COMTYPE_ALL:
             if (ctltype & 0x01) {
-                HAL_CAN_SendIdAccessSet(CAN_CHN_1, TRUE, UDS_PHSCL_RESPID, 0);
-                HAL_CAN_SendIdAccessSet(CAN_CHN_2, TRUE, UDS_PHSCL_RESPID, 0);
+                HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ID_PACKET, UDS_PHSCL_RESPID, 0);
+                HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_ID_PACKET, UDS_PHSCL_RESPID, 0);
 
                 //PORT_Nm_Silent();
                 #if DEBUG_UDS > 0
                 debug_printf("常规应用和网络管理报文 禁止发送\r\n");
                 #endif
             } else {
-                HAL_CAN_SendIdAccessSet(CAN_CHN_1, FALSE, UDS_PHSCL_RESPID, 0);
-                HAL_CAN_SendIdAccessSet(CAN_CHN_2, FALSE, UDS_PHSCL_RESPID, 0);
+                HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
+                HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
                 dal_CAN_Reset_PeriodSendPeriod();
                 //PORT_Nm_Talk();
                 #if DEBUG_UDS > 0
@@ -322,8 +322,8 @@ static void UDS_Reset_ServiceStatus(void)
 
     /* 复位28服务:CAN使能收发 */
     // 允许发送
-    HAL_CAN_SendIdAccessSet(CAN_CHN_1, FALSE, UDS_PHSCL_RESPID, 0);
-    HAL_CAN_SendIdAccessSet(CAN_CHN_2, FALSE, UDS_PHSCL_RESPID, 0);
+    HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
+    HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
     // 允许接收
     s_can_recv_sw = TRUE;
 
