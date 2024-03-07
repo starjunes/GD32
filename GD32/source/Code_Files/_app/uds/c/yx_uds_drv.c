@@ -191,11 +191,11 @@ static void Get_SecurityKey(INT8U accesstype, INT8U* seed, INT8U* key)
     YX_MEMSET(temp, 0, 4);
     SeedToKey_Diag((char *)seed,4,(char *)temp); 
     // SPC560是大端模式，生成的数据需要转成小端
-    key[0] = temp[3];
-    key[1] = temp[2];
-    key[2] = temp[1];
-    key[3] = temp[0];
-    
+    /*key[0] = temp[0];
+    key[1] = temp[1];
+    key[2] = temp[2];
+    key[3] = temp[3];*/
+    MMI_MEMCPY(key, 4, temp, 4);           
 }
 /*******************************************************************
 ** 函数名: Req_CmnctCtl
@@ -681,10 +681,10 @@ static void UDS_SID27_Level(INT8U accesstype, INT8U* data, INT8U len)
                 UDS_SID27_Response(accesstype, s_uds_module.access_seed, 4);
                 
                 /* 根据seed算出key值 */
-                //Get_SecurityKey(accesstype, s_uds_module.access_seed, s_uds_module.access_key);
-                Chartolong(&key, s_uds_module.access_seed);              
+                Get_SecurityKey(accesstype, s_uds_module.access_seed, s_uds_module.access_key);
+                /*Chartolong(&key, s_uds_module.access_seed);              
                 key = tbox_seed2key(key);
-								Longtochar(s_uds_module.access_key,key);
+								Longtochar(s_uds_module.access_key,key);*/
                 #if DEBUG_UDS > 1 
                 s_uds_module.access_key[0] = 0x44;
                 s_uds_module.access_key[1] = 0x33;
