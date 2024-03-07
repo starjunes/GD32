@@ -79,6 +79,13 @@ typedef struct {
 #define MAX_RESEND_NUM    2
 static RESENT_CAN_T s_resend_can[MAX_RESEND_NUM];
 
+typedef struct {
+    CAN_DATA_SEND_T send;   // 发送数据信息
+	BOOLEAN send_en;		// 发送使能
+	INT16U  period;			// 发送周期
+    INT8U   send_cnt;		// 已发送次数
+} PERIOD_SEND_T;
+static PERIOD_SEND_T s_period_can;  // 固定次数周期报文
 /*****************************************************************************
 **  函数名:  StartCanResend
 **  函数描述: 启动重发
@@ -1376,7 +1383,29 @@ void Test_CAN_Send(void)
     candata.can_id = 0xbb;
     PORT_CanSend(&candata);    
 }
+/*****************************************************************************
+**  函数名:  YX_PeriodDataTran
+**  函数描述: 特殊数据发送 发送三帧后停发
+**  参数:    [in] arg : 无
+**  返回:    无
+*****************************************************************************/
+static void YX_PeriodDataTran(void )
+{
+    static INT8U spe_cnt = 0;
 
+	if (s_period_can.send_en){
+		spe_cnt++;
+		if (s_period_can.period == spe_cnt){		// 达到发送周期
+			spe_cnt = 0;
+			if (s_period_can.send_cnt++ < 3){
+				HAL_CAN_SendData(s_period_can.send.channel,&s_period_can.send);
+			}else{
+                s_period_can.send_en = FALSE;
+				s_period_can.send_cnt = 0;
+			}
+		}
+	}
+}
 /*******************************************************************************
 **  函数名称:  PacketTimeOut
 **  功能描述:  分包传输超时
@@ -2090,7 +2119,7 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
                 if (id == 0x18ea0021)
                 debug_printf("玉柴锁车下发\r\n");
             #endif
-    		senddata.period = period/10;
+    		senddata.period = period/PERTICK;
     		senddata.can_DLC = sendlen;
             if(id <= 0x7ff){
                 senddata.can_IDE = 0;  /*标准帧*/
@@ -2134,6 +2163,26 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
 				ack[3] = 0x02;
 			}
 			break;
+        case CAN_SEND_THREE:
+            if (s_period_can.send_en == FALSE) {
+                s_period_can.send_cnt       = 0;
+                s_period_can.send.can_DLC   = sendlen;
+                s_period_can.send.can_id	= id;
+                s_period_can.send.can_IDE	= senddata.can_IDE;
+                s_period_can.send.channel	= senddata.channel;
+                memcpy(s_period_can.send.Data, senddata.Data, sendlen);
+                s_period_can.period 		= senddata.period;
+                s_period_can.send.period 	= 0xffff;
+                if (s_period_can.period){
+                    s_period_can.send_en	= TRUE;
+                }else {
+                    ack[3] = 0x02;
+                    s_period_can.send_en	= FALSE;
+                }
+            } else {
+                ack[3] = 0x02;
+            }
+            break;
 		default:
 			ack[3] = 0x02;
 			break;

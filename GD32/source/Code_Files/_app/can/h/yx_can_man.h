@@ -68,6 +68,7 @@ typedef enum {
     CAN_SEND_NOMAL  = 0x00,
     CAN_SEND_PERIOD = 0x01,
     CAN_SEND_STOP   = 0x02,
+    CAN_SEND_THREE  = 0x03,     // 周期发送三帧
 } CAN_SEND_TYPE_E;
 
 /******************************************************************************/
