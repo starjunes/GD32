@@ -19,7 +19,7 @@
 #define _PUBLIC_FLASHSECTOR             (E_USRPARA_PAGE + 1 - BLOCK_IMAGESECTOR)     /* FLASH扇区号 */
 #define MAX_PARA_SIZE  	                1024     /* 注意,公共参数结构最大不得超过这个值 */
 #if EN_UDS > 0
-#define MAX_DID_NUM              17
+#define MAX_DID_NUM              31
 /* 故障码信息 */
 typedef struct {
     INT8U status;                       /* 故障状态 */
@@ -44,6 +44,8 @@ typedef struct {
 		INT8U DID_102C[1];		 // 新能源远程监控法规配置
     INT8U DID_1028[32];    // T-box APN2的名称
     INT8U DID_1035[2];     // 新能源车型参数配置 
+    INT8U DID_3102[17];    // IMEI
+    INT8U DID_3103[20];    // ICCID
     INT8U DID_F182[24];		 // 数据信息标识 
 	  INT8U DID_F187[24]; 	 //整车厂零件号 
 		INT8U DID_F190[17];    // 车辆标识号 VIN
@@ -176,6 +178,14 @@ static const UDS_DID_DATA_E2ROM_T     i_uds_did_e2rom_data = {
     },
     /* DID_1035 */
     {0x00,0x00
+    },
+    /* DID_1032 */
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
+     0x00
+    },
+     /* DID_1033 */
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
+     0x00, 0x00, 0x00, 0x00
     },
     /* DID_F182 */
     {'7', '9', '2', '5', '6', '1', '2', '-', '8', '8', 'P', '-', 'C', '0', '0', 0x00, 

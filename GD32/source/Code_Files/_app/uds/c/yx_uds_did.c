@@ -83,6 +83,7 @@ typedef struct {
     #if 0
     INT8U DID_F184[7];    /* 刷写日期 */
     INT8U DID_F1A0[64];   /* 软件版本号 */
+    #endif
 
     INT8U DID_1009[2];    // GPS定位状态
     INT8U DID_1010[2];    // 4G工作状态
@@ -96,7 +97,6 @@ typedef struct {
     INT8U DID_103B[4];    // AI总里程/积分总里程
     INT8U DID_103C[4];    // AI总油耗/积分总油耗
     INT8U DID_103D[1];    // TSP连接状态  
-		#endif
 } UDS_DID_LOCAL_T;
 
 static UDS_DID_LOCAL_T    s_uds_did_local;
@@ -133,7 +133,7 @@ static BOOLEAN DID_ReadF1A0(INT8U* pData, INT8U didLen)
 
     return TRUE;
 }
-
+#endif
 static BOOLEAN DID_Read1009(INT8U* pData, INT8U didLen)
 {
     if ((pData == NULL) || (didLen == 0)) {
@@ -270,7 +270,6 @@ static BOOLEAN DID_Read103D(INT8U* pData, INT8U didLen)
 
     return TRUE;
 }
-#endif
 static BOOLEAN DID_Read1007(INT8U* pData, INT8U didLen)
 {
     INT8U data[7];
@@ -305,7 +304,7 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
 	  #if 0
     {0xF184, DID_RW,  sizeof(s_uds_did_local.DID_F184), s_uds_did_local.DID_F184, DID_DATA_TYPE_HEX , NULL,         NULL}, 
     {0xF1A0, DID_RO,  sizeof(s_uds_did_local.DID_F1A0), s_uds_did_local.DID_F1A0, DID_DATA_TYPE_HEX , DID_ReadF1A0, NULL},
-
+    #endif
     {0x1009, DID_RO,  sizeof(s_uds_did_local.DID_1009), s_uds_did_local.DID_1009, DID_DATA_TYPE_HEX , DID_Read1009, NULL},
     {0x1010, DID_RO,  sizeof(s_uds_did_local.DID_1010), s_uds_did_local.DID_1010, DID_DATA_TYPE_HEX , DID_Read1010, NULL},
     {0x1015, DID_RO,  sizeof(s_uds_did_local.DID_1015), s_uds_did_local.DID_1015, DID_DATA_TYPE_HEX , DID_Read1015, NULL},
@@ -318,7 +317,7 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
     {0x103B, DID_RO,  sizeof(s_uds_did_local.DID_103B), s_uds_did_local.DID_103B, DID_DATA_TYPE_HEX , DID_Read103B, NULL},
     {0x103C, DID_RO,  sizeof(s_uds_did_local.DID_103C), s_uds_did_local.DID_103C, DID_DATA_TYPE_HEX , DID_Read103C, NULL},
     {0x103D, DID_RO,  sizeof(s_uds_did_local.DID_103D), s_uds_did_local.DID_103D, DID_DATA_TYPE_HEX , DID_Read103D, NULL},
-    #endif
+    
 		{0x1007, DID_RO,  sizeof(s_uds_did_local.DID_1007),      s_uds_did_local.DID_1007,      DID_DATA_TYPE_BCD,   DID_Read1007, NULL}, 
     // 存在pp参数中
     {0x0100, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_0100), s_uds_did_e2rom_data.DID_0100, DID_DATA_TYPE_HEX,   NULL, NULL},  
@@ -331,6 +330,8 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
 		{0x102C, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_102C), s_uds_did_e2rom_data.DID_102C, DID_DATA_TYPE_HEX,	 NULL, NULL},
 
 		{0x1035, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_1035), s_uds_did_e2rom_data.DID_1035, DID_DATA_TYPE_HEX,   NULL, NULL},	
+		{0x3102, DID_RO,	sizeof(s_uds_did_e2rom_data.DID_3102), s_uds_did_e2rom_data.DID_3102, DID_DATA_TYPE_HEX,	 NULL, NULL}, 
+		{0x3103, DID_RO,	sizeof(s_uds_did_e2rom_data.DID_3103), s_uds_did_e2rom_data.DID_3103, DID_DATA_TYPE_HEX,	 NULL, NULL}, 
 		{0xF182, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F182), s_uds_did_e2rom_data.DID_F182, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF187, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F187), s_uds_did_e2rom_data.DID_F187, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF190, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F190), s_uds_did_e2rom_data.DID_F190, DID_DATA_TYPE_ASCII, NULL, NULL},   
@@ -900,8 +901,9 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
         #endif
         if (s_did_status[i] == 0) {         
             /* did == 0xF1A1 ||did == 0xF182 || did == 0xF187 为MCU默认配置，无需主机同步 */
-            if (did == 0xF190 || did == 0xF193|| did == 0xF195 || did == 0xF19D || did == 0x1004 ||
-							  did == 0x1002 || did == 0x1003|| did == 0x1028 ) {
+            if (did == 0xF190 || did == 0xF193 || did == 0xF195 || did == 0xF19D || did == 0x1004 ||
+							  did == 0x1002 || did == 0x1003 || did == 0x1028 || did == 0x1009 || did == 0x1010 || 
+							  did == 0x1015 || did == 0x1003 || did == 0x3102 || did == 0x3103) {
 							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
                 DID_DataUpdate();
             }
@@ -981,11 +983,11 @@ void YX_UDS_DID_UpdataCanData(INT32U canId, INT8U* data, INT8U len)
 *****************************************************************************/
 void YX_UDS_DID_DataReset(void)
 {
-    //YX_MEMSET(s_uds_did_local.DID_102D, 0xFF, sizeof(s_uds_did_local.DID_102D));
-    //YX_MEMSET(s_uds_did_local.DID_102E, 0xFF, sizeof(s_uds_did_local.DID_102E));
-    //YX_MEMSET(s_uds_did_local.DID_1030, 0xFF, sizeof(s_uds_did_local.DID_1030));
-    //YX_MEMSET(s_uds_did_local.DID_1031, 0xFF, sizeof(s_uds_did_local.DID_1031));
-    //YX_MEMSET(s_uds_did_local.DID_1036, 0xFF, sizeof(s_uds_did_local.DID_1036));
+    YX_MEMSET(s_uds_did_local.DID_102D, 0xFF, sizeof(s_uds_did_local.DID_102D));
+    YX_MEMSET(s_uds_did_local.DID_102E, 0xFF, sizeof(s_uds_did_local.DID_102E));
+    YX_MEMSET(s_uds_did_local.DID_1030, 0xFF, sizeof(s_uds_did_local.DID_1030));
+    YX_MEMSET(s_uds_did_local.DID_1031, 0xFF, sizeof(s_uds_did_local.DID_1031));
+    YX_MEMSET(s_uds_did_local.DID_1036, 0xFF, sizeof(s_uds_did_local.DID_1036));
     
     YX_MEMSET(&s_can_signal, 0xFF, sizeof(s_can_signal));
 }
