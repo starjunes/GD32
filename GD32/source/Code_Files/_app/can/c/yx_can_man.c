@@ -1423,7 +1423,7 @@ static void PacketTimeOut(void* pdata)
         Test_CAN_Send();
     }
     #endif
-    
+    YX_PeriodDataTran();
     CanResendHdl();
     for (i = 0 ; i < MAXPACKETPARANUM; i++) {
         if (s_packetpara[i].packet_com == TRUE) {
