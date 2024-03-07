@@ -28,6 +28,7 @@
 #include "yx_com_send.h"
 #include "hal_exrtc_sd2058_drv.h"
 #include "public.h"
+#include "appmain.h"
 #if EN_UDS > 0
 /*
 ********************************************************************************
@@ -407,7 +408,7 @@ static void DID_HandleTmr(void* pdata)
                         isNeedSaveToFlash = TRUE;
                         /* 上报到屏 */
                         wstrm = bal_STREAM_GetBufferStream();
-                        bal_WriteHWORD_Strm(wstrm, 0x3105);//CLIENT_CODE
+                        bal_WriteHWORD_Strm(wstrm, CLIENT_CODE);//CLIENT_CODE
                         bal_WriteBYTE_Strm(wstrm, 0x20);
                         bal_WriteHWORD_Strm(wstrm, s_uds_did_obj[i].code);
                         bal_WriteBYTE_Strm(wstrm, (INT8U)s_uds_did_obj[i].len);
@@ -831,7 +832,7 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
     if (YX_COM_Islink()) {
         /* 上报到屏 */
         wstrm = bal_STREAM_GetBufferStream();
-        bal_WriteHWORD_Strm(wstrm, 0x3105);//CLIENT_CODE
+        bal_WriteHWORD_Strm(wstrm, CLIENT_CODE);//CLIENT_CODE
         bal_WriteBYTE_Strm(wstrm, 0x20);
         bal_WriteHWORD_Strm(wstrm, did);
         bal_WriteBYTE_Strm(wstrm, (INT8U)didLen);
@@ -903,7 +904,7 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
             /* did == 0xF1A1 ||did == 0xF182 || did == 0xF187 为MCU默认配置，无需主机同步 */
             if (did == 0xF190 || did == 0xF193 || did == 0xF195 || did == 0xF19D || did == 0x1004 ||
 							  did == 0x1002 || did == 0x1003 || did == 0x1028 || did == 0x1009 || did == 0x1010 || 
-							  did == 0x1015 || did == 0x1003 || did == 0x3102 || did == 0x3103) {
+							  did == 0x1015 || did == 0x3102 || did == 0x3103) {
 							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
                 DID_DataUpdate();
             }

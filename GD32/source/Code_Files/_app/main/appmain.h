@@ -17,7 +17,7 @@
 
 #define  SIZE_APPMSG_BUF         50
 
-#define  CLIENT_CODE             0x0918
+#define  CLIENT_CODE             0x1775
 
 
 /* Exported macro ------------------------------------------------------------*/
