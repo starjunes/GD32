@@ -1398,7 +1398,7 @@ static void YX_PeriodDataTran(void )
 		if (s_period_can.period == spe_cnt){		// 达到发送周期
 			spe_cnt = 0;
 			if (s_period_can.send_cnt++ < 3){
-				HAL_CAN_SendData(s_period_can.send.channel,&s_period_can.send);
+				PORT_CanSend(&s_period_can.send);
 			}else{
                 s_period_can.send_en = FALSE;
 				s_period_can.send_cnt = 0;
