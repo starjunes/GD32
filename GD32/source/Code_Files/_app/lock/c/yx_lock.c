@@ -681,7 +681,9 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     s_idfiltenable = TRUE;
                     f_handsk = true;
                     //StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
+                    s_ishandover = TRUE;
                     s_handskenable = FALSE;
+                    s_handshake_ack = HANDSHAKE_OK;
                     /* 握手成功，发送全0清除标志到0x18fe02fb */
                     CAN_TxData(senddata, false, LOCK_CAN_CH);
                     #if DEBUG_LOCK > 0
