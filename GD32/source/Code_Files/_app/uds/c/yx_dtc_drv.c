@@ -143,16 +143,16 @@ static BOOLEAN s_bat_pow_low_sta = FALSE;
 /* 节点丢失结构 */
 static NODE_LOST_T s_node_lost[MAX_NODE_LOST_NUM];
 static const NODE_LOST_OBJ_T s_nodelost_obj[MAX_NODE_LOST_NUM] = {
-    {0x00,       1000,  &s_node_lost[0]},    // 所有伙伴ECU超时（J6低配节点超时）  
+    {0x00,       500,   &s_node_lost[0]},    // 所有伙伴ECU超时（J6低配节点超时）  
     {0x18FEF000, 100,   &s_node_lost[1]},    // EMS节点超时
     {0x0CFE6C17, 50,    &s_node_lost[2]},    // IC仪表节点超时    
     {0x18D00021, 100,   &s_node_lost[3]},    // BCM节点超时//
     {0x18FF6003, 50,    &s_node_lost[4]},    // TCU节点超时//
     {0x18F00010, 100,   &s_node_lost[5]},    // Retarder节点超时//
     {0x18F0010B, 100,   &s_node_lost[6]},    // ABS/EBS节点超时//
-    {0x18FEF433, 1000,  &s_node_lost[7]},    // TPMS节点超时//
+    {0x18FEF433, 500,   &s_node_lost[7]},    // TPMS节点超时//
     {0x18FE582F, 100,   &s_node_lost[8]},    // ECAS节点超时//
-    {0x18FEFCC6, 1000,  &s_node_lost[9]},    // GCT节点超时//
+    {0x18FEFCC6, 500,   &s_node_lost[9]},    // GCT节点超时//
     {0x18FC08F4, 100,   &s_node_lost[10]},    // IBS节点超时//
     {0x18FF0241, 100,   &s_node_lost[11]},    // VIST节点USB通讯失效 //
     {0x18FF4FF4, 100,   &s_node_lost[12]},    // gatway节点超时 //
