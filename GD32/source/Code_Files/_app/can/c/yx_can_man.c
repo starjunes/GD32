@@ -2435,6 +2435,34 @@ INT8U YX_CAN_SoftStatus(void)
 
 }
 /*******************************************************************************
+**  函数名称:  SendTimeCan
+**  功能描述:  CAN时间报文发送
+**  输入参数:  CAN通道
+**  返回参数:  无
+*******************************************************************************/
+void SendTimeCan(INT8U* data)
+{
+    INT8U senddata[13] = {0x18,0xFE,0xE6,0x4A,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+
+    if(data[6] || data[4] || data[0] ) {
+		    data[6] = 2000 + data[6] - 1985;
+		    data[4] = (data[4] / 0.25);
+		    data[0] = (data[0] / 0.25);
+    }
+		
+    senddata[5]  = data[0]; 				 //TICK  
+    senddata[6]  = data[1]; 				 //MINITE  
+    senddata[7]  = data[2]; 				 //HOUR
+    senddata[8]  = data[5]; 				 //MONTH
+    senddata[9]  = data[4]; 				 //DATE
+    senddata[10] = data[6]; 				 //YEAR
+    CAN_TxData(senddata, false, 0);
+		#if DEBUG_EX_RTC > 0
+   	debug_printf("SendTimeCan\r\n");
+   	#endif
+}
+
+/*******************************************************************************
  ** 函数名:    YX_CAN_Init
  ** 函数描述:   CAN通讯驱动模块初始化
  ** 参数:       无
