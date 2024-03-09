@@ -64,6 +64,9 @@ static INT32U const    s_filtid[] = {
 									  FUNC_REQID,
 									  UDS_PHSCL_REQID,
 									  #endif
+										0x18FEAF00,
+										0x1CFEAF00,
+										0x18FEE900
 									  };
 static SC_LOCK_STEP_E  s_sclockstep = CONFIG_OVER;
 static INT8U           s_key[8];
@@ -1365,7 +1368,7 @@ static void LockTmrProc(void*index)
     #if EN_KMS_LOCK > 0
     static INT16U acc_off_delay = 0;
     #endif
-    INT8U senddata[13] = {0x18,0xea,0x00,0x21,0x08,0xcb,0xfe,0x00,0xff,0xff,0xff,0xff,0xff}; /* 0x18ea0021 */
+    INT8U senddata[13] = {0x18,0xEA,0x00,0x17,0x08,0x00,0xFE,0xAF,0xFF,0xFF,0xFF,0xFF,0xFF}; /* 0x18ea0017 */
 	INT32U accpwrad;
     //acc_state = bal_input_ReadSensorFilterStatus(TYPE_ACC);
 	accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
@@ -1416,15 +1419,13 @@ static void LockTmrProc(void*index)
     }
     #else
     if(acc_state == TRUE){    //ACC ON
-        if(s_poweron_times_cnt < 12000){// 12000             /* 上电2分钟内检测有没有收到油耗报文ID:0x18FEE900 */
-            s_poweron_times_cnt++;
+        if(s_poweron_times_cnt++ < 12000 ){// 12000    /* 上电2分钟内检测有没有收到油耗报文ID:0x18FEE900 */
             s_oilsumreq = GetOilMsg_State();
-            s_reqcnt = 3000;                         /* 如果没读到该ID,1分钟后可以马上上报油耗请求 */
+            s_reqcnt = 0;                             /* 如果没读到该ID,可以马上上报油耗请求 */
         }else{
             if(s_oilsumreq == TRUE){
-                if (++s_reqcnt >= 3000/*2500*/) {                /* 2017-06-12 修改油耗请求周期为30秒 */
+                if (++s_reqcnt >= 1000) {                /* 2017-06-12 修改油耗请求周期为30秒 */
                     s_reqcnt = 0;
-                    senddata[5] = 0xe9;                        /* 0xe9 请求油耗 */
                     CAN_TxData(senddata, false, LOCK_CAN_CH);
                 }
             }
