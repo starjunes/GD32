@@ -25,6 +25,7 @@
 #include "yx_signal_man.h"
 #if EN_UDS > 0
 #include "yx_uds_drv.h"
+#include "yx_dtc_drv.h"
 #endif
 #define UDS_ID_REC              0x18DA1DF9
 #define UDS_ID_SEND             0x18DAF91D
@@ -54,6 +55,16 @@
 #define NONE_TYPE   0
 #define UDS_TYPE    1
 #define J1939_TYPE  2
+#define PERIOD_MSG1              0x18FFDA4A   /* FM_2(防拆报文) */
+#define PERIOD_MSG2              0x18FECA4A   /* DM1_FM(故障报文) */
+
+typedef struct {
+    INT8U   chn;
+    INT16U period;
+		INT8U  ide;
+    INT32U canId;
+    INT8U  canData[8];
+} PERIOD_MSG_T;
 static CAN_PARA_T s_can_para[MAX_CAN_CHN];
 static AAPCAN_MSG_T  s_msgbt[MAX_CAN_CHN];                    /* 接收的CAN id表 */
 #define MAXPACKETPARANUM         10                            /* 多包接收最多缓存包数 */
@@ -88,6 +99,12 @@ typedef struct {
     INT8U   send_cnt;		// 已发送次数
 } PERIOD_SEND_T;
 static PERIOD_SEND_T s_period_can;  // 固定次数周期报文
+
+static PERIOD_MSG_T s_period_msg[] = {    
+    {0, 100,   1, PERIOD_MSG1, {0xF5, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},  
+    {0, 0xffff,1, PERIOD_MSG2, {0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF}},
+};
+#define PERIOD_NUM    (sizeof(s_period_msg) / sizeof(s_period_msg[0]))
 /*****************************************************************************
 **  函数名:  StartCanResend
 **  函数描述: 启动重发
@@ -1441,6 +1458,45 @@ static void SendCanMsg_OnOff(void)
     }
 }
 #endif
+/*****************************************************************************
+**  函数名:  CanSendDtcMsg
+**  函数描述: 发生DTC报文
+**  参数:    无
+**  返回:    无
+*****************************************************************************/
+static void CanSendDtcMsg(void)
+{
+    static INT8U senddtc_cnt = 0;
+    INT8U bufLen, sendBuf[128];
+		CAN_DATA_SEND_T candata;
+		
+    if(senddtc_cnt++ >= 99) {
+			  senddtc_cnt = 0;
+        bufLen = 0;
+        candata.can_DLC = 8;
+        candata.can_id  = s_period_msg[PERIOD_NUM - 1].canId;
+        candata.can_IDE = s_period_msg[PERIOD_NUM - 1].ide;
+        candata.channel = s_period_msg[PERIOD_NUM - 1].chn;
+    		candata.period  = s_period_msg[PERIOD_NUM - 1].period;
+    		
+        if (YX_DTC_GetStatus(&sendBuf[2], &bufLen)) {
+            sendBuf[0] = 0x40;                         // bit6~7 = 01,表示故障指示灯
+            sendBuf[1] = 0xFF;                         // 预留，默认0xff
+    
+            if (bufLen == 4) {                         // 表示1个故障(单帧处理)
+                sendBuf[6] = 0xFF;                     // 预留，默认0xff
+                sendBuf[7] = 0xFF;                     // 预留，默认0xff
+                MMI_MEMCPY(candata.Data, 8,sendBuf,8);
+    				    PORT_CanSend(&candata);
+            } else {  
+                YX_MMI_CanSendMul(CAN_CHN_1, s_period_msg[PERIOD_NUM - 1].canId,sendBuf,bufLen);
+            }
+        } else {    // 无故障时，发默认值     
+    				MMI_MEMCPY(candata.Data, 8, s_period_msg[PERIOD_NUM - 1].canData,8);
+    				PORT_CanSend(&candata);
+        }
+   }
+}
 /*******************************************************************************
 **  函数名称:  PacketTimeOut
 **  功能描述:  分包传输超时
@@ -1492,6 +1548,7 @@ static void PacketTimeOut(void* pdata)
 		#if ACC_OFF_STOP_SEND  > 0
     SendCanMsg_OnOff();
 		#endif
+		CanSendDtcMsg();  /* 丢失节点故障发送 */
 }
 
 /**************************************************************************************************
@@ -2230,19 +2287,19 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
 }
 
 /*****************************************************************************
-**  函数名:  YX_MMI_UDS_CanSendMul
+**  函数名:  YX_MMI_CanSendMul
 **  函数描述: uds发送多帧数据
 **  参数:    [in] data :
 **           [in] len  :
 **  返回:    FALSE:执行失败 TRUE:执行成功
 *****************************************************************************/
-BOOLEAN YX_MMI_UDS_CanSendMul(INT8U com,INT8U* data, INT16U len) 
+BOOLEAN YX_MMI_CanSendMul(INT8U com,INT32U id,INT8U* data, INT16U len) 
 {
     INT8U j;
 		STREAM_T strm;
 		
     #if DEBUG_CAN > 0
-    debug_printf("长帧\r\n");
+    debug_printf("YX_MMI_CanSendMul len = %d\r\n",len);
     #endif
 		
 		
@@ -2254,7 +2311,7 @@ BOOLEAN YX_MMI_UDS_CanSendMul(INT8U com,INT8U* data, INT16U len)
     }
     s_sendpacket[j].packet_com = TRUE;
     s_sendpacket[j].channel = com;
-    s_sendpacket[j].sendid = UDS_PHSCL_RESPID;
+    s_sendpacket[j].sendid = id;
     s_sendpacket[j].packet_totallen = len;
     s_sendpacket[j].sendlen = 0;
     s_sendpacket[j].sendpacket = 0;
@@ -2264,19 +2321,27 @@ BOOLEAN YX_MMI_UDS_CanSendMul(INT8U com,INT8U* data, INT16U len)
 				return false;
     } else {		                
         bal_ReadDATA_Strm(&strm, s_sendpacket[j].packet_buf, len);	
-    		#if DEBUG_ERR > 0
+    		#if DEBUG_ERR > 1
     		debug_printf("len = %d",len);
     		printf_hex(s_sendpacket[j].packet_buf,len);
     		#endif
     }
-   
-  	 #if DEBUG_CAN > 0
-  	 debug_printf("UDS长帧长度,%d\r\n",s_sendpacket[j].packet_totallen);
-  	 #endif		 
-  	 s_sendpacket[j].prot_type = UDS_TYPE;
-  	 if (s_sendpacket[j].packet_com) {
-  			 SendFF(&s_sendpacket[j]);
-  	 }
+         
+		 if(id > 0x7ff) {
+		 	   s_sendpacket[j].prot_type = J1939_TYPE;
+         if ((s_sendpacket[j].packet_com) && (FALSE == Find_J1939Sending())) {//没找到正在发送的J1939长帧
+             SendJ1939FirPacket(&s_sendpacket[j]);
+         } else {
+             #if DEBUG_CAN > 0
+  	         debug_printf("CanSendMul_ERROR \r\n");
+  	         #endif	
+         }
+		 } else {	
+		     s_sendpacket[j].prot_type = UDS_TYPE;
+       	 if (s_sendpacket[j].packet_com) {
+      			 SendFF(&s_sendpacket[j]);
+      	 }  
+		 }
 		 return TRUE;
 }
 /**************************************************************************************************
@@ -2472,6 +2537,7 @@ void YX_CAN_Init(void)
 {
     INT8U i;
 	SCLOCKPARA_T t_sclockpapra;
+	CAN_DATA_SEND_T candata;
     PORT_InitCan();
     for (i = 0; i < MAX_RESEND_NUM; i++) {
         YX_MEMSET((INT8U*)&s_resend_can[i], 0x00, sizeof(RESENT_CAN_T));
@@ -2512,7 +2578,15 @@ void YX_CAN_Init(void)
 	#endif
     s_packet_tmr = OS_InstallTmr(TSK_ID_OPT, 0, PacketTimeOut);
     OS_StartTmr(s_packet_tmr, MILTICK, 1);
-    
+    for (i = 0; i < (PERIOD_NUM -1); i++) {       
+        candata.can_DLC = 8;
+        candata.can_id = s_period_msg[i].canId;
+        candata.can_IDE = s_period_msg[i].ide;
+        candata.channel = s_period_msg[i].chn;
+				candata.period = s_period_msg[i].period;
+				MMI_MEMCPY(candata.Data, 8, s_period_msg[i].canData,8);
+				PORT_CanSend(&candata);
+		}
     #if EN_UDS > 0
 		YX_UDS_Init();
 		#endif
