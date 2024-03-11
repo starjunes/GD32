@@ -45,6 +45,11 @@
 
 #define KMS_Q6_KEY_ID          0x18FFCA00   /* 康明斯ECU to 记录仪 */
 
+typedef struct {
+    INT8U  chn;
+    INT32U filtrid;
+    INT32U filtrid_mask;
+} FILTER_ID_CFG_T;
 /* 锁车参数 */
 static SCLOCKPARA_T s_sclockpara;
 /* 锁车日志 */
@@ -54,20 +59,19 @@ static SCLOCKPARABAK_T s_sclockparabak;
 
 static INT8U           s_lockstatid[12];
 static INT8U           s_seed[4];		// 随机数种子
-static INT32U const    s_filtid[] = {
-									  0x0cfffd00, 
-									  0x18fd0100, 
-									  0x18ff0800, 
-									  0x18fff400,
-									  KMS_Q6_KEY_ID,
-									  #if EN_UDS > 0
-									  FUNC_REQID,
-									  UDS_PHSCL_REQID,
-									  #endif
-										0x18FEAF00,
-										0x1CFEAF00,
-										0x18FEE900
-									  };
+static FILTER_ID_CFG_T const    s_filtid[] = {
+						LOCK_CAN_CH, 0x0cfffd00,      0xffffffff,
+						LOCK_CAN_CH, 0x18fd0100,      0xffffffff,
+						LOCK_CAN_CH, 0x18ff0800,      0xffffffff,     
+						LOCK_CAN_CH, 0x18fff400,      0xffffffff,
+						LOCK_CAN_CH, KMS_Q6_KEY_ID,   0xffffffff,
+						#if EN_UDS > 0
+						UDS_CAN_CH,  FUNC_REQID,      0xffffffff,
+						UDS_CAN_CH,	 UDS_PHSCL_REQID, 0xffffffff,
+						#endif
+						LOCK_CAN_CH, 0x18FEAF00,      0xFBFFB9FF,     /* 油气请求判读id 0x18FEAF00,0x1CFEAF00,0x18FEE900 */
+						LOCK_CAN_CH, 0x18FEF000,      0xEBD00000,     /* DTC丢失节点 0x18FEF000,0x0CFE6C17,0x18D00021,0x18FF6003,0x18F00010,0x18F0010B,0x18FEF433,0x18FE582F,0x18FEFCC6,0x18FC08F4,0x18FF0241,0x18FF4FF4 */
+};
 static SC_LOCK_STEP_E  s_sclockstep = CONFIG_OVER;
 static INT8U           s_key[8];
 
@@ -1303,14 +1307,14 @@ void CanLocateFiltidSet(void)
     #endif
     //idnum = 4;
     for (i = 0; i < idnum; i++) {
-        PORT_SetCanFilter(LOCK_CAN_CH, 1,s_filtid[i], 0xffffffff);
-        canid.id = s_filtid[i];
+        PORT_SetCanFilter(s_filtid[i].chn, 1,s_filtid[i].filtrid, s_filtid[i].filtrid_mask);
+        canid.id = s_filtid[i].filtrid;
         canid.stores = 1;
         canid.isused = TRUE;
         for (j = 0; j < MAX_CANIDS; j++) {
-            if (FALSE == GetIDIsUsed(j, LOCK_CAN_CH)) break;        /* 查找到未被配置的，可以配置 */
+            if (FALSE == GetIDIsUsed(j, s_filtid[i].chn)) break;        /* 查找到未被配置的，可以配置 */
         }
-        SetIDPara(&canid, j, LOCK_CAN_CH);
+        SetIDPara(&canid, j, s_filtid[i].chn);
     }
 }
 
