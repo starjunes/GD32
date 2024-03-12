@@ -60,9 +60,10 @@ void Dal_HardSysReset(void);
 ** 函数名:     Dal_McuLowPower
 ** 函数描述:   低功耗处理函数
 ** 参数:       [in] hook : 钩子函数
+               [in] wktime:休眠唤醒时间
 ** 返回:       无
 ********************************************************************/
-void Dal_McuLowPower(INT16U (*hook)(void));
+void Dal_McuLowPower(INT16U (*hook)(void), INT16U wktime);
 
 #endif
 /**************************** (C) COPYRIGHT 2010  XIAMEN YAXON.LTD **************END OF FILE******/
