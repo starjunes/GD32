@@ -200,11 +200,13 @@ static void Delay_ms(INT16U time)
 ** 函数名:     Dal_McuLowPower
 ** 函数描述:   低功耗处理函数
 ** 参数:       [in] hook : 钩子函数
+               [in] wktime:休眠唤醒时间
 ** 返回:       无
 ********************************************************************/
-void Dal_McuLowPower(INT16U (*hook)(void))
+void Dal_McuLowPower(INT16U (*hook)(void), INT16U wktime)
 {
     INT16U hook_ret;
+    INT16U time = 0;
     INT8U wake_time = 9;//闹钟唤醒时间，保证设备不被看门狗复位，最大9s
     if (hook == NULL) return;
     
@@ -228,6 +230,10 @@ void Dal_McuLowPower(INT16U (*hook)(void))
 	Delay_ms(1);//需要加延时，否则唤醒失败
     pmu_to_deepsleepmode(PMU_LDO_LOWPOWER, WFE_CMD);	
     while ((hook_ret = hook()) == 0) {
+        time++;
+        if ((time*9/60 >= wktime) && (wktime > 0)){
+			break;
+		}
         if (rtc_flag_get(RTC_FLAG_ALARM) != RESET) {
             rtc_flag_clear(RTC_FLAG_ALARM);
             exti_flag_clear(EXTI_17);

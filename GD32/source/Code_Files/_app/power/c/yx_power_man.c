@@ -118,6 +118,7 @@ static INT8U  s_gztest = 0;               // bit0 充电，bit1 放电，bit2 内阻
 static BOOLEAN s_gzwork = false;
 static INT8U s_gztesttmr;
 static BOOLEAN s_gztest_flag = false;
+static INT16U s_waketime = 0;             // 休眠唤醒时间
 
 /*******************************************************************************
  ** 函数名:     WakeupgsmTmr()
@@ -359,7 +360,7 @@ void LightSleep(void)
     PORT_GpioLowPower(TRUE);
     PORT_ClearGpioIntSta();
     
-    PORT_Sleep(PORT_GetIoInitSta);            /* 休眠指令 */                        
+    PORT_Sleep(PORT_GetIoInitSta, s_waketime);            /* 休眠指令 */                        
 
     PORT_SetPinIntMode(PIN_MCUWK, FALSE);
     PORT_GpioLowPower(FALSE);
@@ -436,7 +437,7 @@ void DeepSleep(void)
 
     PORT_SetPinIntMode(PIN_MCUWK, TRUE);
     
-    PORT_Sleep(PORT_GetIoInitSta);
+    PORT_Sleep(PORT_GetIoInitSta, s_waketime);
 
     PORT_SetPinIntMode(PIN_MCUWK, FALSE);
     
@@ -481,7 +482,7 @@ static void RtcElecCtlTmr(void *pdata)
     #if DEBUG_RTC_SLEEP > 0
     debug_printf("RTC自动进入休眠:%d\r\n", s_rtchalftm);
     #endif
-    PORT_Sleep(PORT_GetIoInitSta);
+    PORT_Sleep(PORT_GetIoInitSta, 0);
 }
 
 /*******************************************************************************
@@ -1485,15 +1486,14 @@ void GetADCDataHdl(INT8U mancode, INT8U command, INT8U *data, INT16U datalen)
 void PowerControl_Hdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen)
 {
     INT8U  ack = 0x01;
-    INT16U settime;
 
     YX_COM_DirSend(POWER_CONTROL_REQ_ACK, &ack, 1);
 
     s_simcomisleep = true;
 
-    settime = bal_chartoshort(&data[1]);
-	if(settime != 0x0) {
-		PORT_SetAlarm(settime);
+    s_waketime = bal_chartoshort(&data[1]);
+	if(s_waketime != 0x0) {
+		PORT_SetAlarm(s_waketime);
 	}
 
     s_rtchalftm = 1;
@@ -1501,7 +1501,7 @@ void PowerControl_Hdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen)
 
 	#if DEBUG_RTC_SLEEP > 0
 	debug_printf("收到休眠指令(按照GSM设置的时间进行设置)\r\n");
-	debug_printf("设置休眠时间:%d\r\n", settime);
+	debug_printf("设置休眠时间:%d\r\n", s_waketime);
 	#endif
 
     s_modedata = data[0];

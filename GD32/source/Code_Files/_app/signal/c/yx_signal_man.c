@@ -377,11 +377,18 @@ static void GetSignalstatusTmr(void* pdata)
 {
     /*-----------------主机状态请求-------------------*/
     INT8U  ack[32], len, num = 0,data[7];
+		static INT8U count = 0;
+		BOOLEAN ret;
 		
    	YX_MEMSET(ack, 0x00, sizeof(ack));
-
-	  if (YX_COM_Islink()) {	                
-        if(HAL_sd2058_ReadCalendar(data)) {
+		YX_MEMSET(data, 0x00, sizeof(data));
+		
+		ret = HAL_sd2058_ReadCalendar(data);
+		SendTimeCan(data);
+    
+	  if((count++ >= 2) && YX_COM_Islink()) { 
+			  count = 0;
+        if(ret) {
             len = 0;
             num = 0;
             ack[len++] = 0; 					// 类型总和(最后填充)
@@ -395,12 +402,14 @@ static void GetSignalstatusTmr(void* pdata)
             ack[len++] = data[1]; 		//MINITE
             ack[len++] = data[0]; 		//TICK
             num++;
-            ack[0] = num; 
-						YX_COM_DirSend( GET_HOSTSTATUS_REQ, ack, len);
-        } else {
+            ack[0] = num;        	
+        		YX_COM_DirSend( GET_HOSTSTATUS_REQ, ack, len);
+        } else {      	 
             YX_COM_DirSend( GET_HOSTSTATUS_REQ, NULL, 0);
         }
-    }
+	  } else {
+	      count = 0;
+	  }
 }
 /*******************************************************************************
  ** 函数名:    YX_Signal_Init
@@ -421,7 +430,7 @@ void YX_Signal_Init(void)
     s_signalhanle_tmr = OS_InstallTmr(TSK_ID_OPT, 0, SignalHandleTmr);
     OS_StartTmr(s_signalhanle_tmr, SECOND, 1);
     s_getsignalstau_tmr = OS_InstallTmr(TSK_ID_OPT, 0, GetSignalstatusTmr);
-    OS_StartTmr(s_getsignalstau_tmr, SECOND, 2);
+    OS_StartTmr(s_getsignalstau_tmr, SECOND, 1);
 }
 
 
