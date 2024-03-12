@@ -553,7 +553,7 @@ static void exio_output(INT8U type, INT8U value)
 void Client_FuntionDown_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U datalen)
 {
     INT8U i;
-    INT16U code, did;
+    INT16U code, did,seq;
     INT8U cmdtye,num,len,type;
     INT8U ionum, iotype, iovalue;
     STREAM_T rstrm;
@@ -647,6 +647,19 @@ void Client_FuntionDown_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U da
             #if EN_KMS_LOCK > 0
             Lock_KmsG5Cmd(&data[3], datalen - 3);
             #endif
+            break;
+		case 0x2F:
+			seq = bal_ReadHWORD_Strm(&rstrm);
+            ionum = bal_ReadBYTE_Strm(&rstrm);
+            for (i = 0; i < ionum; i++) {
+                iotype = bal_ReadBYTE_Strm(&rstrm);
+                iovalue = bal_ReadBYTE_Strm(&rstrm);
+                exio_output(iotype, iovalue);
+            }
+			ack[3] = data[3];
+			ack[4] = data[4];
+            ack[5] = 0x00;
+            YX_COM_DirSend( CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 6);
             break;
         case 0x31:  /* Ëø³µÃüÁîÍ¨Öª */
             #if LOCK_COLLECTION > 0

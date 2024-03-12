@@ -2079,7 +2079,7 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
     mancode     = mancode;
     command     = command;
 
-#if DEBUG_UDS > 0
+#if DEBUG_CAN > 0
     debug_printf_dir("<*****CANDataTransReqHdl*****>:\r\n");
     printf_hex_dir(data, datalen);
     debug_printf_dir("\r\n");

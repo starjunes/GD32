@@ -1361,7 +1361,6 @@ void CanDelayTmr(void)
 static void LockTmrProc(void*index)
 {
     INT8U acc_state;
-	static int cnt = 0;
     #if EN_KMS_LOCK > 0
     static INT16U acc_off_delay = 0;
     #endif
@@ -1373,10 +1372,6 @@ static void LockTmrProc(void*index)
 		acc_state = TRUE;
 	}else{
 		acc_state = FALSE;
-	}
-	if (cnt++ > 100) {
-		cnt = 0;
-		debug_printf("timer remain:%d\r\n", TimerRemain());
 	}
 
 	CanDelayTmr();
