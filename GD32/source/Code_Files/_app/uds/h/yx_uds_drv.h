@@ -39,7 +39,7 @@
 #define RESP_ADD                    0x40                       /* 肯定响应附加 */
 #define ACCESS_WAIT_TIME            1000                       /* 安全访问等待最大时间(单位:10ms) */
 #define RESET_WAIT_TIME             4                          /* 复位等待最大时间(单位:10ms) 要求50ms内执行*/
-#define UDS_CAN_CH                  CAN_CHN_1                  /* can通道 */  
+#define UDS_CAN_CH                  CAN_CHN_2                  /* can通道 */  
 
 /* 流控帧参数 */
 #if EN_UDS_TRANS > 0

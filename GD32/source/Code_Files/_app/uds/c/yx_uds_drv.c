@@ -1217,7 +1217,7 @@ BOOLEAN YX_UDS_CanSendSingle(INT8U* data, INT8U datalen)
 ********************************************************************/
 void YX_UDS_SendMulCanData(INT8U *data, INT16U datalen)
 {
-    YX_MMI_UDS_CanSendMul(UDS_CAN_CH, data, datalen);
+    YX_MMI_CanSendMul(UDS_CAN_CH,UDS_PHSCL_RESPID, data, datalen);
 }
 /*******************************************************************
 ** º¯ÊýÃû: YX_UDS_NegativeResponse

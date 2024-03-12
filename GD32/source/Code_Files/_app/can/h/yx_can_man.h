@@ -154,6 +154,13 @@ void SetIDPara(IDPARA_T *idset, INT8U idcnts, INT8U channel);
 INT8U YX_CAN_SoftStatus(void);
 
 /*******************************************************************************
+**  函数名称:  SendTimeCan
+**  功能描述:  CAN时间报文发送
+**  输入参数:  CAN通道
+**  返回参数:  无
+*******************************************************************************/
+void SendTimeCan(INT8U* data);
+/*******************************************************************************
  ** 函数名:    YX_CAN_Init
  ** 函数描述:   CAN通讯驱动模块初始化
  ** 参数:       无
@@ -180,13 +187,13 @@ INT8U Can_GetRxStat(void);
 ********************************************************************/
 void Can_TxMsg(INT8U channel);
 /*****************************************************************************
-**  函数名:  YX_MMI_UDS_CanSendMul
+**  函数名:  YX_MMI_CanSendMul
 **  函数描述: uds发送多帧数据
 **  参数:    [in] data :
 **           [in] len  :
 **  返回:    FALSE:执行失败 TRUE:执行成功
 *****************************************************************************/
-BOOLEAN YX_MMI_UDS_CanSendMul(INT8U com,INT8U* data, INT16U len);
+BOOLEAN YX_MMI_CanSendMul(INT8U com,INT32U id, INT8U* data, INT16U len);
 
 #ifdef __cplusplus
 }
