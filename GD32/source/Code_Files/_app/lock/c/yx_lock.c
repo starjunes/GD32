@@ -31,6 +31,7 @@
 #include "yx_com_man.h"
 #if EN_UDS > 0
 #include "yx_uds_drv.h"
+#include "yx_uds_did.h"
 #endif
 #if 0
 #ifdef DEBUG_LOCK
@@ -1367,11 +1368,11 @@ void CanDelayTmr(void)
 **************************************************************************************************/
 static void LockTmrProc(void*index)
 {
-    INT8U acc_state;
+    INT8U acc_state,emstype;
     #if EN_KMS_LOCK > 0
     static INT16U acc_off_delay = 0;
     #endif
-    INT8U senddata[13] = {0x18,0xEA,0x00,0x17,0x08,0x00,0xFE,0xAF,0xFF,0xFF,0xFF,0xFF,0xFF}; /* 0x18ea0017 */
+    INT8U senddata[13] = {0x18,0xEA,0x00,0x17,0x08,0xAF,0xFE,0x00,0xFF,0xFF,0xFF,0xFF,0xFF}; /* 0x18ea0017 */
 	INT32U accpwrad;
     //acc_state = bal_input_ReadSensorFilterStatus(TYPE_ACC);
 	accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
@@ -1418,13 +1419,25 @@ static void LockTmrProc(void*index)
     }
     #else
     if(acc_state == TRUE){    //ACC ON
-        if(s_poweron_times_cnt++ < 12000 ){// 12000    /* 上电2分钟内检测有没有收到油耗报文ID:0x18FEE900 */
+        if(s_poweron_times_cnt++ < 6000 ){// 6000    /* 上电1分钟内检测有没有收到油耗报文ID:0x18FEE900 */
             s_oilsumreq = GetOilMsg_State();
             s_reqcnt = 0;                             /* 如果没读到该ID,可以马上上报油耗请求 */
-        }else{
+        } else {
+            s_poweron_times_cnt = 6000;
             if(s_oilsumreq == TRUE){
-                if (++s_reqcnt >= 1000) {                /* 2017-06-12 修改油耗请求周期为30秒 */
+                if (++s_reqcnt >= 1000) {                /* 油耗请求周期为1秒 */
                     s_reqcnt = 0;
+										emstype = YX_Get_EMSType();
+										if((emstype == 0x01) || (emstype == 0x02) || (emstype == 0x03) || (emstype == 0x06)
+										|| (emstype == 0x08) || (emstype == 0x0A) || (emstype == 0x0C) || (emstype == 0x0D)
+										|| (emstype == 0x0F) || (emstype == 0x11) || (emstype == 0x12) || (emstype == 0x14)
+										|| (emstype == 0x16) || (emstype == 0x18)) {
+										     senddata[5] = 0xE9;
+										}
+
+										if((emstype == 0x09) || (emstype == 0x0E) || (emstype == 0x15) || (emstype == 0x17)) {
+										     senddata[4] = 0x21;
+										}
                     CAN_TxData(senddata, false, LOCK_CAN_CH);
                 }
             }
