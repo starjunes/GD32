@@ -29,7 +29,7 @@
 #if EN_DEBUG > 0
 
 #undef DEBUG_DTC_BUS_OFF
-#define DEBUG_DTC_BUS_OFF   1
+#define DEBUG_DTC_BUS_OFF   0
 
 #undef DEBUG_DTC_PARA_SAVE 
 #define DEBUG_DTC_PARA_SAVE 0
@@ -38,7 +38,7 @@
 #define DEBUG_MAIN_PWR      0
 
 #undef  DEBUG_DTC
-#define DEBUG_DTC           1
+#define DEBUG_DTC           0
 
 #undef  DEBUG_NODE_LOST
 #define DEBUG_NODE_LOST     0
