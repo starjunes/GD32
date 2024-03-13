@@ -907,7 +907,7 @@ static void Can_RxMsg(INT8U channel)
 			s_canRxMsg = 0;
 			break;
 	}
-    s_canMsgLossTmr = 200;
+    s_canMsgLossTmr = 5000;
 }
 /*******************************************************************
 ** º¯ÊýÃû:     Can_TxMsg
@@ -928,7 +928,7 @@ void Can_TxMsg(INT8U channel)
 			s_canRxMsg = 0;
 			break;
 	}
-    s_canMsgLossTmr = 200;
+    s_canMsgLossTmr = 5000;
 }
 
 /*******************************************************************

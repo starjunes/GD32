@@ -68,6 +68,12 @@ static void SignalLedOut(void)
     INT8U /*gprs_status, */canrx_status;
 	//CANµÆ
     canrx_status = Can_GetRxStat();
+    if (PORT_GetBusOffStatus(CAN_CHN_1) == TRUE) {
+        canrx_status &= 0x02;
+    }
+    if (PORT_GetBusOffStatus(CAN_CHN_2) == TRUE) {
+        canrx_status &= 0x01;
+    }
     #if EN_DEBUG > 1
     debug_printf("CANÍ¨ÐÅ×´Ì¬:%d\r\n", canrx_status);
     #endif
