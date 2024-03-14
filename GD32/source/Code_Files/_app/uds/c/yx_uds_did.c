@@ -321,7 +321,8 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
     
 		{0x1007, DID_RO,  sizeof(s_uds_did_local.DID_1007),      s_uds_did_local.DID_1007,      DID_DATA_TYPE_BCD,   DID_Read1007, NULL}, 
     // 存在pp参数中
-    {0x0100, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_0100), s_uds_did_e2rom_data.DID_0100, DID_DATA_TYPE_HEX,   NULL, NULL},  
+    {0x0100, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_0100), s_uds_did_e2rom_data.DID_0100, DID_DATA_TYPE_HEX,   NULL, NULL}, 
+    {0x0110, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_0110), s_uds_did_e2rom_data.DID_0110, DID_DATA_TYPE_HEX,   NULL, NULL},  
 		{0x1002, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_1002), s_uds_did_e2rom_data.DID_1002, DID_DATA_TYPE_ASCII, NULL, NULL},
 		{0x1003, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_1003), s_uds_did_e2rom_data.DID_1003, DID_DATA_TYPE_ASCII, NULL, NULL},
 	  {0x1004, DID_RO,	sizeof(s_uds_did_e2rom_data.DID_1004), s_uds_did_e2rom_data.DID_1004, DID_DATA_TYPE_ASCII, NULL, NULL},
@@ -336,7 +337,8 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
 		{0xF182, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F182), s_uds_did_e2rom_data.DID_F182, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF187, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F187), s_uds_did_e2rom_data.DID_F187, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF190, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F190), s_uds_did_e2rom_data.DID_F190, DID_DATA_TYPE_ASCII, NULL, NULL},   
-    {0xF193, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F193), s_uds_did_e2rom_data.DID_F193, DID_DATA_TYPE_ASCII, NULL, NULL},   
+    {0xF193, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F193), s_uds_did_e2rom_data.DID_F193, DID_DATA_TYPE_ASCII, NULL, NULL},
+    {0xF194, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F194), s_uds_did_e2rom_data.DID_F194, DID_DATA_TYPE_ASCII, NULL, NULL},  
     {0xF195, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F195), s_uds_did_e2rom_data.DID_F195, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF19D, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F19D), s_uds_did_e2rom_data.DID_F19D, DID_DATA_TYPE_BCD,   NULL, NULL},   
     {0xF1A1, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F1A1), s_uds_did_e2rom_data.DID_F1A1, DID_DATA_TYPE_ASCII, NULL, NULL},     
@@ -904,7 +906,7 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
             /* did == 0xF1A1 ||did == 0xF182 || did == 0xF187 为MCU默认配置，无需主机同步 */
             if (did == 0xF190 || did == 0xF193 || did == 0xF195 || did == 0xF19D || did == 0x1004 ||
 							  did == 0x1002 || did == 0x1003 || did == 0x1028 || did == 0x1009 || did == 0x1010 || 
-							  did == 0x1015 || did == 0x3102 || did == 0x3103) {
+							  did == 0x1015 || did == 0x3102 || did == 0x3103 || did == 0xF194 ) {
 							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
                 DID_DataUpdate();
             }
