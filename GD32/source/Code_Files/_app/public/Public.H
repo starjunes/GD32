@@ -19,7 +19,7 @@
 #define _PUBLIC_FLASHSECTOR             (E_USRPARA_PAGE + 1 - BLOCK_IMAGESECTOR)     /* FLASH扇区号 */
 #define MAX_PARA_SIZE  	                1024     /* 注意,公共参数结构最大不得超过这个值 */
 #if EN_UDS > 0
-#define MAX_DID_NUM              31
+#define MAX_DID_NUM              33
 /* 故障码信息 */
 typedef struct {
     INT8U status;                       /* 故障状态 */
@@ -36,6 +36,7 @@ typedef struct {
 /* UDS DID数据 */
 typedef struct {
     INT8U DID_0100[16];    // 配置信息    
+    INT8U DID_0110[1];     // 产地配置   
     INT8U DID_1002[32];    // T-box APN1的名称
     INT8U DID_1003[64];    // 服务器 IP,port/域名（正式业务网关）
     INT8U DID_1004[15];    //  T-box的IMSI号
@@ -50,6 +51,7 @@ typedef struct {
 	  INT8U DID_F187[24]; 	 //整车厂零件号 
 		INT8U DID_F190[17];    // 车辆标识号 VIN
     INT8U DID_F193[8];     // 硬件版本号 
+    INT8U DID_F194[24];    // TBOX软件号 
     INT8U DID_F195[8];     // 软件版本号
     INT8U DID_F19D[4];     // 安装日期
     INT8U DID_F1A1[16];    // 厂家代码
@@ -94,7 +96,7 @@ static SCLOCKPARA_T     const i_sclockpara    = {0xff,
                                                  0x04,{0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb,0xcc,0xaa,0xbb},
                                                  0x01,
                                                  0x06,TRUE,
-                                                 6, 5, 5};
+                                                 5, 6, 5};
 static LOCK_RECORD      const i_LOCKRECORD    = {0,0,{{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},
                                                 {{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0},{{0,0,0,0,0,0},0}}};
 static GSENSOR_CALIBRATION_T  const i_GSENSOR_CALIBRATION   = {0, 0, 0, 0};
@@ -146,6 +148,9 @@ static DTC_OBJ_T const i_dtc_obj = {
 static const UDS_DID_DATA_E2ROM_T     i_uds_did_e2rom_data = {
 	  /* DID_0100 */
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x02
+    },
+    /* DID_0110 */
+    {0x00
     },
     /* DID_1002 */
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
@@ -200,10 +205,14 @@ static const UDS_DID_DATA_E2ROM_T     i_uds_did_e2rom_data = {
      0x00 
     }, 
     /* DID_F193 */
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    {'V', '6', '4', 'C', '0', '0', 'F', 0x00
+    }, 
+    /* DID_F194 */
+    {'V', '4', '.', '3', '5', 'Y', 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     }, 
     /* DID_F195 */
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    {'V', '4', '.', '3', '5', 'Y', 0x00, 0x00
     }, 
     /* DID_F19D */
     {0x00, 0x00, 0x00, 0x00
