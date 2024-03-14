@@ -21,6 +21,7 @@
 #include "yx_configure.h"
 #include "yx_lock.h"
 #include "hal_exrtc_sd2058_drv.h"
+#include "port_can.h"
 
 #define IG_ON_MASK    0x01
 #define BCALL_MASK    0x02
@@ -67,30 +68,30 @@ static void SignalLedOut(void)
     INT8U  gps_status,wifi_status;
     INT8U /*gprs_status, */canrx_status;
 	//CAN灯
-    canrx_status = Can_GetRxStat();
+    canrx_status = Can_GetRxStat()|0x02;
     if (PORT_GetBusOffStatus(CAN_CHN_1) == TRUE) {
         canrx_status &= 0x02;
     }
     if (PORT_GetBusOffStatus(CAN_CHN_2) == TRUE) {
         canrx_status &= 0x01;
     }
-    #if EN_DEBUG > 1
+    #if DEBUG_SIGNAL_STATUS > 0
     debug_printf("CAN通信状态:%d\r\n", canrx_status);
     #endif
     if (s_canrx_status != canrx_status) {
         if ((canrx_status & 0x03) == 0x03) {		//两路can通讯正常
             bal_output_InstallPermnentPort(PORT_CANLED, 5, 5);
-            #if EN_DEBUG > 1
+            #if DEBUG_SIGNAL_STATUS > 0
             debug_printf("CAN通信正常\r\n");
             #endif
         } else if((canrx_status & 0x03) != 0x00){	//一路can通讯正常
             bal_output_InstallPermnentPort(PORT_CANLED, 10, 10);
-            #if EN_DEBUG > 1
-            debug_printf("CAN通信正常\r\n");
+            #if DEBUG_SIGNAL_STATUS > 0
+            debug_printf("CAN通信一路正常\r\n");
             #endif
         }else{										//两路can通讯异常
 			bal_output_RemovePermnentPort(PORT_CANLED);
-            #if EN_DEBUG > 1
+            #if DEBUG_SIGNAL_STATUS > 0
             debug_printf("CAN通信异常\r\n");
 			#endif
 		}
