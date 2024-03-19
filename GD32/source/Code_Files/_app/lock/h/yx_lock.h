@@ -26,6 +26,7 @@ typedef enum {
 	ECU_YUCHAI,						/*Óñ²ñ¹úÁù*/
     ECU_DACHAI,                     /* ´ó²ñ */
     ECU_XICHAI,                  	/* Îý²ñ */
+    ECU_YUNNEI,                     /* ÔÆÄÚ */
     MAX_ECU_TYPE
 } ECU_TYPE_E;
 
