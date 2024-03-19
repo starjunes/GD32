@@ -20,8 +20,8 @@ goto End
 :AFTER
 fromelf .\Objects\ae64m4.axf --bin --output .\Objects\ae64m4.bin
 copy .\Objects\ae64m4.bin ae64m4.bin
-copy .\Objects\ae64m4.hex .\生成烧录文件\ae64m4.hex
+copy .\Objects\ae64m4.hex .\生成烧录文件\ae64m4_串口.hex
 copy /b ..\boot-ae64m4-dy.hex+.\Objects\ae64m4.hex .\生成烧录文件\ae64m4_Jlink.hex
-check_bin_app .\Objects\ae64m4.bin ae64gdm4 ae64gdm4 .\生成烧录文件\cortex-m4.bin
+check_bin_app .\Objects\ae64m4.bin ae64gdm4 ae64gdm4 .\生成烧录文件\cortex-m4_远程.bin
 goto End
 :End 
