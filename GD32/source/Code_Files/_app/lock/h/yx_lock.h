@@ -27,6 +27,9 @@ typedef enum {
     ECU_DACHAI,                     /* 大柴 */
     ECU_XICHAI,                  	/* 锡柴 */
     ECU_YUNNEI,                     /* 云内 */
+    ECU_XICHAI_EMSVI,				/* 锡柴EMSVI_需加密 */
+    ECU_XICHAI_EMSMDI,				/* 锡柴EMSMDI */
+    ECU_XICHAI_EMSECO,				/* 锡柴EMSEcontrol */
     MAX_ECU_TYPE
 } ECU_TYPE_E;
 
@@ -199,6 +202,25 @@ BOOLEAN YX_AddDataCollection(INT8U *canbuf);
 **  返回参数:  true:是 false:否
 **************************************************************************************************/
 BOOLEAN YX_IsLOCKCMD(INT32U id);
+
+/**************************************************************************************************
+**  函数名称:  XC_SecretDataTran
+**  功能描述:  锡柴数据加密转发
+**  输入参数:  data:参数内容
+			   datalen:数据长度
+**  返回参数:  false:失败 true:成功
+**************************************************************************************************/
+BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen);
+
+/**************************************************************************************************
+**  函数名称:  XC_ParaSet
+**  功能描述:  锡柴参数同步
+**  输入参数:  data:参数内容
+			   datalen:数据长度
+**  返回参数:  false:失败 true:成功
+**************************************************************************************************/
+BOOLEAN XC_ParaSet(INT8U* data, INT8U datalen);
+
 
 
 #endif
