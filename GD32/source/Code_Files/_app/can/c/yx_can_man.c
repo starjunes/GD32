@@ -659,7 +659,7 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
                 #if DEBUG_UDS > 0
                 debug_printf("遍历,%d recv%x send%x com%d channel%d\r\n",i,s_sendpacket[i].recvid,s_sendpacket[i].sendid,s_sendpacket[i].packet_com,s_sendpacket[i].channel);
                 #endif
-                if ((s_sendpacket[i].recvid == id) && (s_sendpacket[i].packet_com)) {
+                if ((s_sendpacket[i].recvid == id) && (s_sendpacket[i].packet_com) && (s_sendpacket[i].prot_type == UDS_TYPE)) {
                     break;
                 }
             }
@@ -982,6 +982,9 @@ void CANDataHdl(CAN_DATA_HANDLE_T *CAN_msg)
 		   return;
 		}
     #endif
+    if (UDS_CANMsgAnalyze((INT8U*)CAN_msg, sizeof(CAN_DATA_HANDLE_T))) {
+        return;
+    }
 
     for (i = 0; i < MAX_CANIDS; i++) {
         if ((id == s_msgbt[CAN_msg->channel].idcbt[i].id
@@ -1011,9 +1014,6 @@ void CANDataHdl(CAN_DATA_HANDLE_T *CAN_msg)
         return;
     }
 
-    if (UDS_CANMsgAnalyze((INT8U*)CAN_msg, sizeof(CAN_DATA_HANDLE_T))) {
-        return;
-    }
     switch (s_can_para[CAN_msg->channel].mode) {
         case CAN_MODE_LUCIDLY:                                        //透传模式
             tempbuf[0] = CAN_msg->channel + 1;

@@ -511,7 +511,9 @@ static void UDS_SID11_EcuReset(INT8U resettype)
             s_uds_module.reset_type = (resettype & (~SUPPRESS_RESP));
             s_uds_module.reset_cnt = 0;
             if (s_uds_module.reset_type == RESET_HARD) {
-                YX_UDS_NegativeResponse(SID_11, NRC_78);
+							  if(resettype == RESET_HARD) {
+                    YX_UDS_NegativeResponse(SID_11, NRC_78);
+							  }
                 /* 复位前先更新dtc的pp参数 */
                 YX_DTC_PP_Update_When_Reset();  
 
@@ -1485,6 +1487,7 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 }
                 YX_DTC_SID14_ClearDiagnosticInformation(p_data, (len - 1));
                 break;
+						#if 0
             case SID_19:
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
@@ -1508,6 +1511,7 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 //did = (INT16U)YX_BigEndModeToHWord(p_data);
                 YX_UDS_DID_SID22_ReadDataByIdentifier(p_data, len - 1);
                 break;
+						#endif
             case SID_28:
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
