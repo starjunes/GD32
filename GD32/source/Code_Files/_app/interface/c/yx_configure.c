@@ -552,7 +552,7 @@ static void exio_output(INT8U type, INT8U value)
 **********************************************************************************/
 void Client_FuntionDown_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U datalen)
 {
-    INT8U i;
+    INT8U i, ret;
     INT16U code, did,seq;
     INT8U cmdtye,num,len,type;
     INT8U ionum, iotype, iovalue;
@@ -672,6 +672,16 @@ void Client_FuntionDown_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U da
             #if LOCK_COLLECTION > 0
             Lock_KmsG5Cmd(&data[3], datalen - 3);
             #endif
+            break;
+		case 0x33:  /* TSC1填充报文同步 */
+            ret = XC_ParaSet(&data[3], datalen - 3);
+			ack[3] = (ret == TRUE)?0100:0x01;
+			YX_COM_DirSend( CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4);
+            break;
+		case 0x34:  /* 数据加密后can发送 */
+			ret = XC_SecretDataTran(&data[3], datalen - 3);
+			ack[3] = (ret == TRUE)?0100:0x01;
+			YX_COM_DirSend( CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4);
             break;
         default:
             break;

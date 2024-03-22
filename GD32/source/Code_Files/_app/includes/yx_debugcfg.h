@@ -44,13 +44,13 @@ extern INT8U DEBUG_UART_NO;
 *********************************************************
 */
 #if EN_DEBUG > 0
-#define     DEBUG_ERR                   1
-#define     DEBUG_INPUT_CMD             1       // 串口命令调试
+#define     DEBUG_ERR                   0
+#define     DEBUG_INPUT_CMD             0       // 串口命令调试
 #define     DEBUG_WIRELESS              0       // 无线下载
 #define     DEBUG_COM_REC               0       //串口服务接收
 #define     DEBUG_COM_SEND              0       //串口服务发送
 #define     DEBUG_COM_LINK              0       //串口连接状态调试
-#define     DEBUG_ADC_MAINPWR           1       //调试主电AD值
+#define     DEBUG_ADC_MAINPWR           0       //调试主电AD值
 #define     DEBUG_SIGNAL_STATUS         0       //调试外部输入信号量
 #define     DEBUG_CRASH_STATUS          0       //调试碰撞模块
 #define     DEBUG_GSEN_STATUS           0       //调试GSENSOR工作状态
@@ -59,12 +59,12 @@ extern INT8U DEBUG_UART_NO;
 #define     DEBUG_SLEEP_STATUS          0       //ACC休眠测试
 #define     DEBUG_IOTEST_STATUS         0       //(yx_signal_man.c)开关量的打印信息开关
 #define     DEBUG_DATA_STORE            0       //
-#define     DEBUG_CAN                   1
+#define     DEBUG_CAN                   0
 #define     DEBUG_CANSFLFSEND           0
-#define     DEBUG_LOCK                  0       //锁车程序调试
-#define     DEBUG_RTC_SLEEP             1       //设备休眠RTC唤醒调试
-#define     DEBUG_UDS                   1
-#define     DEBUG_J1939                 1
+#define     DEBUG_LOCK                  1       //锁车程序调试
+#define     DEBUG_RTC_SLEEP             0       //设备休眠RTC唤醒调试
+#define     DEBUG_UDS                   0
+#define     DEBUG_J1939                 0
 #define     DEBUG_ENC                   0       //加密芯片
 #define     DEBUG_ENC_TEST              0       //加密芯片过检定制
 #define     DEBUG_EXIO                  0       //扩展IO控制

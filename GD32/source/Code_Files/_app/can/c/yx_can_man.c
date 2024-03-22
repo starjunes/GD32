@@ -962,7 +962,7 @@ void CANDataHdl(CAN_DATA_HANDLE_T *CAN_msg)
     id = bal_chartolong(CAN_msg->id);
     if((id == 0x18FEE900) || (id == 0x18FEAF00) || (id == 0x1CFEAF00)){   //油耗报文
         s_oilsum_check = 1;
-		#if DEBUG_CAN > 0
+		#if DEBUG_CAN > 1
 	    debug_printf("can:%d, 接收到id = %x ",CAN_msg->channel, id);
 	    printf_hex(CAN_msg->databuf, CAN_msg->len);
 	    #endif
