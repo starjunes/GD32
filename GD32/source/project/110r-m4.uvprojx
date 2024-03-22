@@ -1108,6 +1108,11 @@
               <FileType>4</FileType>
               <FilePath>..\Code_Files\lib\tbox_seed2key.lib</FilePath>
             </File>
+            <File>
+              <FileName>libtsc1.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Code_Files\lib\libtsc1.lib</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
