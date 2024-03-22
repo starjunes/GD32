@@ -434,14 +434,15 @@ void DC_CanDelayTmr(void)
 **************************************************************************************************/
 BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 {
-	INT32U canid = bal_chartolong(data);
-	INT8U key[8], retlen, senddata[13 = {0};
+	INT8U key[8];
+	INT32U retlen;
+    INT8U senddata[13] = {0};
 	if (datalen != 8) {
 		return FALSE;
 	}
-	seedToKey(&data[4], 4, key, retlen);
+	seedToKey(&data[4], 4, key, &retlen);
 	memcpy(senddata, data, 4);		// canid
-	memcpy(&send[5], key, 4);
+	memcpy(&senddata[5], key, 4);
 	senddata[4] = retlen;
 	CAN_TxData(senddata, false, LOCK_CAN_CH);
 	return TRUE;
