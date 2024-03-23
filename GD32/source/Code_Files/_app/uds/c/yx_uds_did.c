@@ -108,6 +108,8 @@ static INT8U s_delay_save_to_flash;
 
 static CAN_SIGNAL_T      s_can_signal;
 static CAR_SIGNAL_TYPE_E s_car_signal;
+static INT16U s_vehSpeed = 0;
+static INT8U  s_vehSpeed_over = 0;
 /*
 ********************************************************************************
 * 定义本地接口
@@ -234,7 +236,7 @@ static BOOLEAN DID_Read1036(INT8U* pData, INT8U didLen)
     }
 
     val = PORT_GetADCValue(ADC_BAKPWR);
-    if (val == -1) {
+    if (val < 500) {
         pData[0] = 0xFF;
     } else {
         val *= 2;
@@ -319,7 +321,7 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
     {0x103C, DID_RO,  sizeof(s_uds_did_local.DID_103C), s_uds_did_local.DID_103C, DID_DATA_TYPE_HEX , DID_Read103C, NULL},
     {0x103D, DID_RO,  sizeof(s_uds_did_local.DID_103D), s_uds_did_local.DID_103D, DID_DATA_TYPE_HEX , DID_Read103D, NULL},
     
-		{0x1007, DID_RO,  sizeof(s_uds_did_local.DID_1007),      s_uds_did_local.DID_1007,      DID_DATA_TYPE_BCD,   DID_Read1007, NULL}, 
+		{0x1007, DID_RW,  sizeof(s_uds_did_local.DID_1007),      s_uds_did_local.DID_1007,      DID_DATA_TYPE_BCD,   DID_Read1007, NULL}, 
     // 存在pp参数中
     {0x0100, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_0100), s_uds_did_e2rom_data.DID_0100, DID_DATA_TYPE_HEX,   NULL, NULL}, 
     {0x0110, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_0110), s_uds_did_e2rom_data.DID_0110, DID_DATA_TYPE_HEX,   NULL, NULL},  
@@ -382,7 +384,14 @@ static void DID_HandleTmr(void* pdata)
 
     OS_StartTmr(s_did_tmr, _SECOND, 1);
     pdata = pdata;
-
+		
+		if(s_vehSpeed > 0) {                            /* 速度报文丢失1s恢复速度0 */
+        if(s_vehSpeed_over++ >= 3) {
+				    s_vehSpeed_over = 0;
+						s_vehSpeed = 0;
+        }
+		}
+		
     if (s_delay_save_to_flash) {
         s_delay_save_to_flash--;
         if (s_delay_save_to_flash == 0) {
@@ -970,7 +979,8 @@ void YX_UDS_DID_UpdataCanData(INT32U canId, INT8U* data, INT8U len)
     } else if (canId == 0x0CFE6C17) {   // 仪表车速
         s_can_signal.vehSpeed[0] = data[6];
         s_can_signal.vehSpeed[1] = data[7];
-        
+				s_vehSpeed = (data[6] << 8) + data[7]; 
+				s_vehSpeed_over = 0;
     } else if (canId == 0x0CF00400) {   // 发动机转速
         s_can_signal.engSpeed[0] = data[3];
         s_can_signal.engSpeed[1] = data[4];
@@ -1037,6 +1047,16 @@ CAR_SIGNAL_TYPE_E YX_Set_CarSignal(void)
 INT8U YX_Get_EMSType(void)
 {
     return s_uds_did_e2rom_data.DID_102A[0];
+}
+/*****************************************************************************
+**  函数名:   YX_Get_VehSpeed
+**  函数描述: 获取车速
+**  参数:     无
+**  返回:     无
+*****************************************************************************/
+INT16U YX_Get_VehSpeed(void)
+{
+    return s_vehSpeed;
 }
 /*******************************************************************
 ** 函数名: YX_UDS_DID_Init

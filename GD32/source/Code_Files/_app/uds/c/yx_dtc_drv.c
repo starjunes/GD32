@@ -79,11 +79,11 @@
 
 //杂项故障相关
 #define ID_MISC_START       B156D12                                        // MISC编号最小值(显示码编号)
-#define ID_MISC_END         B156E13                                        // MISC编号最大值(显示码编号)
+#define ID_MISC_END         B157900                                        // MISC编号最大值(显示码编号)
 #define MAX_MISC_NUM        (ID_MISC_END - ID_MISC_START + 1)              // MISC总数    
 
-#define MAIN_POW_LOW_19_5V   1545    // 19.5V(实测)
-#define MAIN_POW_RECV_20_5V  1630    // 20.5V(实测) 
+#define MAIN_POW_LOW_19_5V   1736    // 19.5V(实测)
+#define MAIN_POW_RECV_20_5V  1817    // 20.5V(实测) 
 
 #define MAIN_POW_HIGH_30_5V  2510    // 30.5V(实测)
 
@@ -180,8 +180,8 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
     /* 基础故障类型 */
     {U000100, 0xC00100, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON | EN_MASK_VOL_NORMAL),                      0, 40, BusIsOff ,         1,        1},     // CAN1 BusOff
     {U003700, 0xC03700, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON | EN_MASK_VOL_NORMAL),                      0, 40, BusIsOff ,         1,        1},     // CAN1 BusOff
-    {B157216, 0x957216, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, MainPowerIsLow,    6000,    50},     // 终端电源电压欠压(<19.5v故障，恢复到20.5v解除故障)
-    {B157F00, 0x957F00, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, BatPowerIsLow,     500,     500},    // 备用电池电压低(<3v故障，恢复到3.3解除故障)
+    {B157216, 0x957216, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, MainPowerIsLow,    200,     200},     // 终端电源电压欠压(<19.5v故障，恢复到20.5v解除故障)
+    {B157F00, 0x957F00, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, BatPowerIsLow,     200,     200},    // 备用电池电压低(<3v故障，恢复到3.3解除故障)
     /* 节点丢失故障类型 */
     {U000200, 0xC00200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // 所有伙伴ECU超时（J6低配节点超时）  
     {U010000, 0xC10000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // EMS节点超时  
@@ -209,9 +209,9 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
 		{B158200, 0x958200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},   // 国六企业平台连接失败
     {B158300, 0x958300, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六企业平台连接失败
     {B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},   // 4G天线开路
+    {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   1,		     100},	 // 终端检测gps开路
+		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   1,		     100},	 // 终端检测gps短路
     {B157900, 0x957900, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1000,     10},    // 国六模块电源线束断开
-    {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   100,		  100},		 // 终端检测gps开路
-		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   100,		  100},		 // 终端检测gps短路
 };
 
 /*
