@@ -90,7 +90,7 @@ typedef struct {
     SEND_STEP_E step;
     INT8U  sendcnt;
 }SEND_PARA_T;
-static INT8U s_seq1,s_seq2;
+
 static SEND_PARA_T s_sendpara;
 static CAN_PARA_T s_can_para[MAX_CAN_CHN];
 static AAPCAN_MSG_T  s_msgbt[MAX_CAN_CHN];                    /* 接收的CAN id表 */
@@ -2255,7 +2255,7 @@ static void SendLockMsg(void)
         return;
     }
 		
-		candata.id = 0x18FF02F4;
+		candata.can_id = 0x18FF02F4;
 		candata.can_DLC = 8;
 		candata.can_IDE  = 1;
 		candata.channel  = s_sendpara.com;
@@ -2268,12 +2268,12 @@ static void SendLockMsg(void)
 						        return;
 						    }
 						}
-            YX_MEMCPY(candata.Data, 8, s_sendpara.data, 8);
+            MMI_MEMCPY(candata.Data, 8, s_sendpara.data, 8);
             PORT_CanSend(&candata);
             s_sendpara.step++;
         break;
         case STEPPACK2:
-            YX_MEMCPY(candata.Data, 8, s_sendpara.data+8, 8);
+            MMI_MEMCPY(candata.Data, 8, s_sendpara.data+8, 8);
             PORT_CanSend(&candata);
             if (++s_sendpara.sendcnt < 3) {
                 s_sendpara.step = STEPPACK1;
