@@ -784,7 +784,7 @@ static BOOLEAN Set_DTCStatus(DTC_DISP_CODE_E dtc, INT8U mask, DTCSTATUS_OP_E op,
             }
         }
     } else if (op == OP_CLR) {
-        #if DEBUG_DTC > 0
+        #if DEBUG_DTC > 1
         debug_printf("<clr dtc:%d>status(%x) mask(%x)\r\n", dtc, s_dtc_obj.dtc[dtc].status, mask);
         #endif
 		if ((s_dtc_obj.dtc[dtc].status & mask) != 0) { /* 当前状态为已设置状态 */
@@ -1268,7 +1268,7 @@ void YX_DTC_SID19_ReadDTCInformation(INT8U *data, INT16U len)
                 mask = data[1];
                 dtcnum = Get_DTCNum(mask);
                 bal_WriteBYTE_Strm(wstrm, MASK_DEFAUTLT);
-                bal_WriteBYTE_Strm(wstrm, DTC_14229);
+                bal_WriteBYTE_Strm(wstrm, DTC_FORMAT_J2012);
                 bal_WriteHWORD_Strm(wstrm, dtcnum);
                 response = TRUE;
             }
@@ -1347,6 +1347,7 @@ void YX_DTC_NodeIdCheck(INT8U ch, INT32U node_id)
 
 		for(i = 0; i < MAX_NODE_LOST_NUM; i++) {
 		    if(node_id ==  s_nodelost_obj[i].id) {
+				    break;
 		    }
 		}
 
