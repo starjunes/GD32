@@ -77,6 +77,21 @@ typedef struct{
     INT32U send_id;                       /* uds收发id组 */
     INT32U recv_id;
 } RSP_FC_T;
+typedef enum {
+    STEPNONE   = 0,
+    STEPPACK1,
+    STEPPACK2,
+    STEPMAX
+} SEND_STEP_E;
+
+typedef struct {
+    INT8U com;
+    INT8U data[16];
+    SEND_STEP_E step;
+    INT8U  sendcnt;
+}SEND_PARA_T;
+static INT8U s_seq1,s_seq2;
+static SEND_PARA_T s_sendpara;
 static CAN_PARA_T s_can_para[MAX_CAN_CHN];
 static AAPCAN_MSG_T  s_msgbt[MAX_CAN_CHN];                    /* 接收的CAN id表 */
 #define MAXPACKETPARANUM         10                            /* 多包接收最多缓存包数 */
@@ -2226,7 +2241,52 @@ void CANScreenIDSetReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datal
 		break;
 	}
 }
+/*******************************************************************
+** 函数名:     SendLockMsg
+** 函数描述:   锁车数据转发
+** 参数:       无
+** 返回:       无
+********************************************************************/
+static void SendLockMsg(void)
+{
+    CAN_DATA_SEND_T candata;
+		static INT8U    s_send_delay = 0;
+    if (s_sendpara.step == STEPNONE) {
+        return;
+    }
+		
+		candata.id = 0x18FF02F4;
+		candata.can_DLC = 8;
+		candata.can_IDE  = 1;
+		candata.channel  = s_sendpara.com;
+		candata.period   = 0xffff;
 
+    switch (s_sendpara.step) {
+        case STEPPACK1:
+					  if(s_sendpara.sendcnt > 0) {
+						    if(++s_send_delay < 10) {
+						        return;
+						    }
+						}
+            YX_MEMCPY(candata.Data, 8, s_sendpara.data, 8);
+            PORT_CanSend(&candata);
+            s_sendpara.step++;
+        break;
+        case STEPPACK2:
+            YX_MEMCPY(candata.Data, 8, s_sendpara.data+8, 8);
+            PORT_CanSend(&candata);
+            if (++s_sendpara.sendcnt < 3) {
+                s_sendpara.step = STEPPACK1;
+								s_send_delay    = 0;
+            } else {
+                s_sendpara.step = STEPNONE;
+            }
+        break;
+        default:
+            s_sendpara.step = STEPNONE;
+        break;
+    }
+}
 /*******************************************************************************
  ** 函数名:     HdlMsg_DATA_TRANSF_CAN
  ** 函数描述:   CAN数据转发请求处理函数
@@ -2283,6 +2343,18 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
             #if DEBUG_CAN > 0
             debug_printf("长帧\r\n");
             #endif
+						if (id == 0x18FF02F4) {
+                if ((sendlen == 16)) {                     // 确保传输的数据是对，没有漏字节
+                    if (s_sendpara.step == STEPNONE) {
+                        s_sendpara.com = data[0] - 1;
+                        bal_ReadDATA_Strm(&strm, s_sendpara.data, 16);
+                        s_sendpara.step = STEPPACK1;
+                        s_sendpara.sendcnt = 0;
+                    }
+                } 
+                return;
+            }
+						
             j = FindFreeItem_SendList();
             if (j == MAXPACKETPARANUM) {
                 return;
@@ -2685,8 +2757,10 @@ void YX_CAN_Init(void)
         #endif
         PORT_CanEnable((CAN_CHN_E)i, true);
     }
+		memset(&s_sendpara, 0x00, sizeof(s_sendpara));
     Lock_Init();
 	PORT_RegCanCallbakFunc(CANDataHdl);
+	PORT_CanSeqCFSendCallbakFunc(SendLockMsg);
 
 	#if DEBUG_CANSFLFSEND > 0
 	YX_CAN_SelfCheckInit();//CAN自检初始化
