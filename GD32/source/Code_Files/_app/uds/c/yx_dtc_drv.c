@@ -82,13 +82,19 @@
 #define ID_MISC_END         B157900                                        // MISC编号最大值(显示码编号)
 #define MAX_MISC_NUM        (ID_MISC_END - ID_MISC_START + 1)              // MISC总数    
 
-#define MAIN_POW_LOW_19_5V   1736    // 19.5V(实测)
-#define MAIN_POW_RECV_20_5V  1817    // 20.5V(实测) 
+#define MAIN_POW_LOW_19_5V   1736         // 19.5V(实测)
+#define MAIN_POW_RECV_20_5V  1817        // 20.5V(实测) 
 
-#define MAIN_POW_HIGH_30_5V  2510    // 30.5V(实测)
+#define MAIN_POW_CLOSE_CAN_9V    745     // 9V(实测)
+#define MAIN_POW_OPEN_CAN_10V    853     // 10V(实测) 
 
-#define BAT_POW_LOW_3V       1500    // 3.0V
-#define BAT_POW_RECV_3_3V    1650    // 3.3V
+#define MAIN_POW_CLOSE_CAN_36V   3220    // 36V(实测)
+#define MAIN_POW_OPEN_CAN_35V    3125    // 35V  (实测) 
+
+#define MAIN_POW_HIGH_30_5V      2730        // 30.5V(实测)
+
+#define BAT_POW_LOW_3V       1500        // 3.0V
+#define BAT_POW_RECV_3_3V    1650        // 3.3V
 
 /*
 ********************************************************************************
@@ -122,7 +128,8 @@ typedef struct {
 } UPDATA_DTC_REC_T;
 
 static DM1_DTC_T s_dm1_dtc_tab[MAX_DISP_CODE];
-
+static INT8U   s_canonoff_delay = 0;
+static BOOLEAN s_canonoff = TRUE;          
 /*
 ********************************************************************************
 * 定义配置参数
@@ -484,6 +491,32 @@ static BOOLEAN MainPwrHdl(void)
     
     value = PORT_GetADCValue(ADC_MAINPWR);
 
+		if(s_canonoff) {
+		    if((value < MAIN_POW_CLOSE_CAN_9V) || (value > MAIN_POW_CLOSE_CAN_36V)) {
+				    if(s_canonoff_delay++ >= 100) {                                       /* 主电电压持续1s高压或者低压关闭can */
+						    s_canonoff_delay = 0;
+								s_canonoff = FALSE;
+								bal_Pulldown_CAN0STB();
+                bal_Pulldown_CAN1STB();
+                bal_Pulldown_CAN2STB();
+				    }
+		    } else {
+		        s_canonoff_delay = 0;
+		    }
+		} else {
+		    if((value > MAIN_POW_OPEN_CAN_10V) && (value < MAIN_POW_OPEN_CAN_35V)) {
+				    if(s_canonoff_delay++ >= 100) {                                       /* 主电电压恢复1s */
+						    s_canonoff_delay = 0;
+								s_canonoff = TRUE;
+								bal_Pullup_CAN0STB();
+                bal_Pullup_CAN1STB();
+                bal_Pullup_CAN2STB();
+				    }
+		    } else {
+		        s_canonoff_delay = 0;
+		    }
+		}
+		
     // 低于19.5V异常后，要恢复到20.5v以上才正常
     if (value > MAIN_POW_LOW_19_5V) {
         if (LowCheck) {
