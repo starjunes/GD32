@@ -2779,15 +2779,17 @@ void YX_CAN_Init(void)
     #if EN_UDS > 0
 		YX_UDS_Init();
 		#endif
-    #if DEBUG_CAN > 1
+    #if EN_DEBUG > 1
     // test
-    CAN_DATA_SEND_T candata;
-	memset(&candata, 0x00, sizeof(candata));
-	candata.can_DLC = 8;
-	candata.can_id = 0x401;
-	candata.can_IDE = 0;
-	candata.period = 0xffff;
-	candata.channel = 1;
-	PORT_CanSend(&candata);
+    CAN_DATA_SEND_T candata1;
+	memset(&candata, 0xFF, sizeof(candata));
+	candata1.can_DLC = 8;
+	candata1.can_id = 0x401;
+	candata1.can_IDE = 0;
+	candata1.period = 10;
+	candata1.channel = 1;
+	PORT_CanSend(&candata1);
+		candata1.channel = 0;
+	PORT_CanSend(&candata1);
     #endif
 }
