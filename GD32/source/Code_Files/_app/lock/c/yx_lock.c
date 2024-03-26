@@ -1126,10 +1126,10 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
     if (s_sclockpara.firmcodelen != len1) {
         change = TRUE;
         s_sclockpara.firmcodelen = len1;
-        //memcpy(s_sclockpara.firmcode, &userdata[len + 1], len1);
-		for (i = 0; i < len1; i++){
+        memcpy(s_sclockpara.firmcode, &userdata[len + 1], len1);
+		/*for (i = 0; i < len1; i++){
 			s_sclockpara.firmcode[i] = userdata[len + 1 + len1 - i - 1];
-		}
+		}*/
     } else {
     	/*for (i = 0; i < len1; i++){
 			buf[i] = userdata[len + 1 + len1 - i - 1];
@@ -1159,10 +1159,10 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
     if (s_sclockpara.srlnumberlen != len1) {
         change = TRUE;
         s_sclockpara.srlnumberlen = len1;
-        //memcpy(s_sclockpara.serialnumber, &userdata[len + 1], len1);
-        for (i = 0; i < len1; i++){
+        memcpy(s_sclockpara.serialnumber, &userdata[len + 1], len1);
+        /*for (i = 0; i < len1; i++){
 			s_sclockpara.serialnumber[i] = userdata[len + 1 + len1 - i - 1];
-		}
+		}*/
     } else {
 	    /*for (i = 0; i < len1; i++){
 			buf[i] = userdata[len + 1 + len1 - i - 1];

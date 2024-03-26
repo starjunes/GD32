@@ -1113,6 +1113,11 @@
               <FileType>4</FileType>
               <FilePath>..\Code_Files\lib\libtsc1.lib</FilePath>
             </File>
+            <File>
+              <FileName>xichai_ems_seedkey.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Code_Files\lib\xichai_ems_seedkey.lib</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
