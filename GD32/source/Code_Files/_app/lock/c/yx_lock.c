@@ -1555,7 +1555,7 @@ static void LockTmrProc(void*index)
 										}
 
 										if((emstype == 0x09) || (emstype == 0x0E) || (emstype == 0x15) || (emstype == 0x17)) {
-										     senddata[4] = 0x21;
+										     senddata[3] = 0x21;
 										}
                     CAN_TxData(senddata, false, LOCK_CAN_CH);
                 }
