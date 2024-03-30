@@ -755,7 +755,27 @@ static BOOLEAN  J1939_CANMsgAnalyze(INT8U *data, INT16U datalen)
 
    return FALSE;
 }
+/**************************************************************************************************
+**  函数名称:  YX_SendudsMul
+**  功能描述:  判断是否在发送uds多帧
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+BOOLEAN YX_SendudsMul(void)
+{
+    INT8U i;
 
+    for (i = 0; i < MAXPACKETPARANUM; i++) {
+			  if(!s_sendpacket[i].packet_com) {
+            continue;
+        }
+        if((UDS_PHSCL_RESPID == s_sendpacket[i].sendid) && (s_sendpacket[i].packet_com == TRUE)) {
+            return true;
+        }
+    }
+
+		return FALSE;
+}
 /**************************************************************************************************
 **  函数名称:  UDS_CANMsgAnalyze
 **  功能描述:  UDS CAN报文解析处理函数
@@ -794,7 +814,10 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
             if (i == MAXPACKETPARANUM) {
                 return FALSE;
             }
-
+            if(id == UDS_PHSCL_REQID) {                /* 发送完首帧，等待流控响应 */      
+                 s_sendpacket[i].wait_fc = FALSE;
+                 s_sendpacket[i].wait_fc_time_out = 0;
+				 	  }
             s_sendpacket[i].blocksize = CAN_msg->databuf[1];
             s_sendpacket[i].cf_cnt = s_sendpacket[i].blocksize;
 
@@ -832,6 +855,9 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
 						if (GetFcRspFlag(id) == FALSE) {
                 return FALSE;
             } 
+						if((id == UDS_PHSCL_REQID) && YX_SendudsMul()) {
+						    return FALSE;
+						}
             for (i = 0; i < MAXPACKETPARANUM; i++) {
                if(id == s_packetpara[i].packet_id && s_packetpara[i].packet_com == TRUE){/*修改相同id覆盖掉第一包*/
                   s_packetpara[i].packet_com = FALSE;
@@ -911,6 +937,12 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
                     debug_printf("流控不成功\r\n");
                     #endif
                 }
+								#if EN_UDS > 0
+                if (s_packetpara[i].packet_id == UDS_PHSCL_REQID) {
+                    s_packetpara[i].wait_cf = TRUE;
+                    s_packetpara[i].wait_cf_time_out = 0;
+                }
+                #endif
                 return TRUE;
             }
         }
@@ -943,6 +975,11 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
                 }
                 if ((s_packetpara[i].packet_total * 7 + 7) < s_packetpara[i].packet_totallen) {
                     memcpy(&s_packetpara[i].packet_buf[11 + s_packetpara[i].packet_total * 7], &CAN_msg->databuf[1], 7);
+										#if EN_UDS > 0
+                    if (s_packetpara[i].packet_id == UDS_PHSCL_REQID) {
+                        s_packetpara[i].wait_cf_time_out = 0;
+                    }
+                    #endif 
                     return true;
                 } else {
                     leftlen = s_packetpara[i].packet_totallen - ((s_packetpara[i].packet_total) * 7);
@@ -1655,17 +1692,46 @@ static void PacketTimeOut(void* pdata)
                   s_packetpara[i].packet_buf = NULL;
                }
             }
+						#if EN_UDS > 0
+            if (s_packetpara[i].wait_cf) {
+                if (++s_packetpara[i].wait_cf_time_out >= UDS_TRANS_TIMEOUT) {
+                    s_packetpara[i].wait_cf_time_out = 0;
+                    s_packetpara[i].wait_cf = 0;
+                    s_packetpara[i].packet_com = FALSE;
+                    if (s_packetpara[i].packet_buf != NULL) {
+                       PORT_Free(s_packetpara[i].packet_buf);
+                       s_packetpara[i].packet_buf = NULL;
+                    }
+                }
+            }
+            #endif
         }
 
         if (s_sendpacket[i].packet_com == TRUE) {               /* 多包发送超时处理 */
-            if (++s_sendpacket[i].packet_tmrcnt > PACKETOVERTMR) {
-               s_sendpacket[i].packet_com = FALSE;
-               s_sendpacket[i].sendcontinue = FALSE;
-               if (s_sendpacket[i].packet_buf != NULL ) {
-                  PORT_Free(s_sendpacket[i].packet_buf);
-                  s_sendpacket[i].packet_buf = NULL;
-               }
-            }
+					  if(s_sendpacket[i].sendid == UDS_PHSCL_RESPID) {                /* 发送完首帧，等待流控响应 */      
+                 if(s_sendpacket[i].wait_fc) {
+								 	   /* 等待流控响应超时80ms(N_BS = 80ms),结束多帧发送 */
+								 	   if(++s_sendpacket[i].wait_fc_time_out > 8) {
+                         s_sendpacket[i].wait_fc_time_out = 0;
+												 s_sendpacket[i].wait_fc = false;
+												 s_sendpacket[i].packet_com = FALSE;
+                         s_sendpacket[i].sendcontinue = FALSE;
+                         if (s_sendpacket[i].packet_buf != NULL ) {
+                            PORT_Free(s_sendpacket[i].packet_buf);
+                            s_sendpacket[i].packet_buf = NULL;
+                         }
+								 	   }
+                 }
+				 	  } else {
+                if (++s_sendpacket[i].packet_tmrcnt > PACKETOVERTMR) {
+                   s_sendpacket[i].packet_com = FALSE;
+                   s_sendpacket[i].sendcontinue = FALSE;
+                   if (s_sendpacket[i].packet_buf != NULL ) {
+                      PORT_Free(s_sendpacket[i].packet_buf);
+                      s_sendpacket[i].packet_buf = NULL;
+                   }
+                }
+				 	  }
         }
     }
 
@@ -2524,8 +2590,12 @@ BOOLEAN YX_MMI_CanSendMul(INT8U com,INT32U id,INT8U* data, INT16U len)
   	         #endif	
          }
 		 } else {	
-		     s_sendpacket[j].prot_type = UDS_TYPE;
+		     s_sendpacket[j].prot_type = UDS_TYPE;				 
        	 if (s_sendpacket[j].packet_com) {
+				 	   if(id == UDS_PHSCL_RESPID) {                /* 发送完首帧，等待流控响应 */      
+                 s_sendpacket[j].wait_fc = TRUE;
+                 s_sendpacket[j].wait_fc_time_out = 0;
+				 	   }
       			 SendFF(&s_sendpacket[j]);
       	 }  
 		 }
