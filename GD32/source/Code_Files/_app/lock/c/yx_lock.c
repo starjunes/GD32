@@ -31,6 +31,7 @@
 #include "yx_com_man.h"
 #include "xichai_ems_seedkey.h"
 #include "tbox_seed2key.h"
+#include "sha-256.h"
 #if EN_UDS > 0
 #include "yx_uds_drv.h"
 #include "yx_uds_did.h"
