@@ -33,7 +33,7 @@
 #define     MAX_ACCESS_SEND_ID_NUM  3
 #if SOFT_BUSOFF_RECOBRY > 0
 #define BUSOFF_RECOVER_FAST_WAIT    50       /* 快恢复100ms    */
-#define BUSOFF_RECOVER_SLOW_WAIT    1000      /* 慢恢复1000ms   */
+#define BUSOFF_RECOVER_SLOW_WAIT    200      /* 慢恢复1000ms   */
 #define BUSOFF_RECOVER_FAST_COUNT   5         /* 快恢复次数 */ 
 #define BUSOFF_CNT_CLEAR_WAIT       1000      /* 恢复后1秒内不再产生BUSOFF，清除计数，再次发生BUSOFF执行快速初始化 */
 static BOOLEAN s_can_busoff[MAX_CAN_CHN];     /* busoff开关 */
@@ -959,7 +959,6 @@ static void CAN_WorkModeInit(INT8U sjw, INT8U bs1, INT8U bs2, INT16U prescal,CAN
 		CAN_InitStructure.auto_bus_off_recovery = ENABLE;
 		#endif
 		CAN_InitStructure.time_triggered		= DISABLE;
-    CAN_InitStructure.auto_bus_off_recovery	= ENABLE;
     CAN_InitStructure.auto_wake_up			= DISABLE;
     CAN_InitStructure.no_auto_retrans		= DISABLE;
     CAN_InitStructure.rec_fifo_overwrite	= DISABLE;

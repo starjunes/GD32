@@ -40,7 +40,7 @@ typedef struct {
     void  (*lbhandle) (void);                 /* 回调函数指针 */
 } TIME_LBAPP_E;
 
-static INT16U  can_cnt;
+static INT16U  can_cnt,lock_can;
 static TIME_LBAPP_E    s_TMfunctionentry[TM_MAX];
 /*******************************************************************
 ** 函数名:     Dal_CANLBRepReg
@@ -68,11 +68,13 @@ __attribute__ ((section ("IRQ_HANDLE"))) static void ss_TIM6_IRQHandler(void) __
             SendCANMsg_Period();
         }
 				CanBusOffHal();
+				if (s_TMfunctionentry[TM_CANCF].lbhandle != PNULL) {
+				    if(++lock_can >= 5) {
+                s_TMfunctionentry[TM_CANCF].lbhandle();
+					  }
+        }
     }
 	timer_interrupt_flag_clear(TIMER6, TIMER_INT_FLAG_UP);
-    if (s_TMfunctionentry[TM_CANCF].lbhandle != PNULL) {
-        s_TMfunctionentry[TM_CANCF].lbhandle();
-    }
 }
 
 /**************************************************************************************************

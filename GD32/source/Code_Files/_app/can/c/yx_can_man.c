@@ -48,9 +48,13 @@
 #define UDS_ID_REC6             0x18DAF100
 #define UDS_ID_SEND6            0x18DA00F1
 
+#define UDS_ID_REC7             0x18DAFA00
+#define UDS_ID_SEND7            0x18DA00FA
 
 #define UDS_ID_FUNC             0x18DB33F1   /* 功能地址  */
 
+#define MAX_UDS_GROUPS          10           /* UDS组数（根据实际情况修改） */
+#define WAIT_FF_TIME_OUT        100            /* 等待首帧超时时间:500ms */
 
 #define NONE_TYPE   0
 #define UDS_TYPE    1
@@ -65,6 +69,29 @@ typedef struct {
     INT32U canId;
     INT8U  canData[8];
 } PERIOD_MSG_T;
+
+typedef struct{
+    BOOLEAN is_vaild;                     /* 是否需要限制流控,TRUE:限制，FALSE不限制 */
+    BOOLEAN is_rsp_flow_ctl;              /* 流控响应使能标志 */
+    INT16U time_out_cnt;                  /* 超时计时 */
+    INT32U send_id;                       /* uds收发id组 */
+    INT32U recv_id;
+} RSP_FC_T;
+typedef enum {
+    STEPNONE   = 0,
+    STEPPACK1,
+    STEPPACK2,
+    STEPMAX
+} SEND_STEP_E;
+
+typedef struct {
+    INT8U com;
+    INT8U data[16];
+    SEND_STEP_E step;
+    INT8U  sendcnt;
+}SEND_PARA_T;
+
+static SEND_PARA_T s_sendpara;
 static CAN_PARA_T s_can_para[MAX_CAN_CHN];
 static AAPCAN_MSG_T  s_msgbt[MAX_CAN_CHN];                    /* 接收的CAN id表 */
 #define MAXPACKETPARANUM         10                            /* 多包接收最多缓存包数 */
@@ -105,6 +132,103 @@ static PERIOD_MSG_T s_period_msg[] = {
     {0, 0xffff,1, PERIOD_MSG2, {0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF}},
 };
 #define PERIOD_NUM    (sizeof(s_period_msg) / sizeof(s_period_msg[0]))
+static RSP_FC_T s_rsp_fc[MAX_UDS_GROUPS] = {
+    {TRUE,   FALSE, 0, UDS_ID_SEND,      UDS_ID_REC},
+    {TRUE,   FALSE, 0, UDS_ID_SEND1,     UDS_ID_REC1},
+    {TRUE,   FALSE, 0, UDS_ID_SEND2,     UDS_ID_REC2},
+    {TRUE,   FALSE, 0, UDS_ID_SEND3,     UDS_ID_REC3},
+    {TRUE,   FALSE, 0, UDS_ID_SEND4,     UDS_ID_REC4},
+    {TRUE,   FALSE, 0, UDS_ID_SEND5,     UDS_ID_REC5},
+    {TRUE,   FALSE, 0, UDS_ID_SEND6,     UDS_ID_REC6},
+    {TRUE,   FALSE, 0, UDS_ID_SEND7,     UDS_ID_REC7},
+    {FALSE,  FALSE, 0, UDS_PHSCL_RESPID, UDS_PHSCL_REQID},
+    {FALSE,  FALSE, 0, UDS_PHSCL_RESPID, FUNC_REQID},
+    
+};
+/*****************************************************************************
+**  函数名:  SetFcFlagBySendid
+**  函数描述: 根据uds发送id设置流控响应标志
+**  参数:    [in] sendid : uds发送id
+**  返回:    无
+*****************************************************************************/
+static void SetFcFlagBySendid(INT32U sendid)
+{
+    INT8U i;
+    
+    for (i = 0; i < MAX_UDS_GROUPS; i++) {
+        if (s_rsp_fc[i].is_vaild == TRUE) {
+            if (s_rsp_fc[i].send_id == sendid) {
+                s_rsp_fc[i].is_rsp_flow_ctl = TRUE;
+                s_rsp_fc[i].time_out_cnt = WAIT_FF_TIME_OUT;    /* 1000ms */
+                #if DEBUG_CAN > 0
+                Debug_SysPrint("<sendid:0x%x, recvid:0x%x>\r\n", sendid,s_rsp_fc[i].send_id);
+                #endif
+                break;
+            }			
+        }
+    }
+}		
+/*****************************************************************************
+**  函数名:  Fc_Rsp_TimeOut_Hdl
+**  函数描述: 流控响应超时处理
+**  参数:    无
+**  返回:    无
+*****************************************************************************/
+static void Fc_Rsp_TimeOut_Hdl(void)
+{
+    INT8U i;
+    for (i = 0; i < MAX_UDS_GROUPS; i++) {
+        if (s_rsp_fc[i].is_rsp_flow_ctl) {
+        		if (s_rsp_fc[i].time_out_cnt) {
+        			s_rsp_fc[i].time_out_cnt--;
+        			if (s_rsp_fc[i].time_out_cnt == 0) {
+        				   /* 停止响应流控 */
+                  s_rsp_fc[i].is_rsp_flow_ctl = FALSE;
+                  #if DEBUG_CAN > 0
+                  Debug_SysPrint("<超时:sendid:0x%x, recvid:0x%x>\r\n", s_rsp_fc[i].send_id,s_rsp_fc[i].recv_id);
+                  #endif
+        			}
+        		} 
+    	}
+    }
+}
+/*****************************************************************************
+**  函数名:  GetFcRspFlag
+**  函数描述: 获取流控响应使能标志
+**  参数:    [in] recvid : uds接收id
+**  返回:    0:关闭流控响应 TRUE:使能流控响应
+*****************************************************************************/
+static BOOLEAN GetFcRspFlag(INT32U recvid)
+{
+    INT8U i;
+       
+    for (i = 0; i < MAX_UDS_GROUPS; i++) {
+        if (s_rsp_fc[i].is_vaild == TRUE) {
+            if (s_rsp_fc[i].recv_id == recvid) {
+                if (s_rsp_fc[i].is_rsp_flow_ctl == TRUE) {
+                    #if DEBUG_CAN > 0
+                    Debug_SysPrint("<(0)使能流控响应:recvid:0x%x>\r\n",s_rsp_fc[i].recv_id);
+                    #endif
+                    return TRUE;
+                } else {
+                   #if DEBUG_CAN > 0
+                   Debug_SysPrint("<关闭流控响应:recvid:0x%x>\r\n", s_rsp_fc[i].recv_id);
+                   #endif
+                   continue;//return FALSE;
+                }
+            }		
+        } else {
+            /* 不限制流控，直接返回TRUE; */
+            if (s_rsp_fc[i].recv_id == recvid) {
+                #if DEBUG_CAN > 0
+                Debug_SysPrint("<(1)使能流控响应:recvid:0x%x>\r\n",s_rsp_fc[i].recv_id);
+                #endif			
+                return TRUE;	
+            }
+        }
+    }
+    return FALSE;
+}
 /*****************************************************************************
 **  函数名:  StartCanResend
 **  函数描述: 启动重发
@@ -377,7 +501,7 @@ void SendCF(void)
     for (i = 0; i < MAXPACKETPARANUM; i++) {
         if(UDS_TYPE == s_sendpacket[i].prot_type){
             if ((s_sendpacket[i].packet_com) && (s_sendpacket[i].sendcontinue)) {
-                if (s_sendpacket[i].tmrcnt++ >= s_sendpacket[i].periods) {
+                if (++s_sendpacket[i].tmrcnt >= s_sendpacket[i].periods) {
                     if (s_sendpacket[i].blocksize > 0) {
                         if (s_sendpacket[i].cf_cnt > 0) {
                             s_sendpacket[i].cf_cnt--;
@@ -631,7 +755,27 @@ static BOOLEAN  J1939_CANMsgAnalyze(INT8U *data, INT16U datalen)
 
    return FALSE;
 }
+/**************************************************************************************************
+**  函数名称:  YX_SendudsMul
+**  功能描述:  判断是否在发送uds多帧
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+BOOLEAN YX_SendudsMul(void)
+{
+    INT8U i;
 
+    for (i = 0; i < MAXPACKETPARANUM; i++) {
+			  if(!s_sendpacket[i].packet_com) {
+            continue;
+        }
+        if((UDS_PHSCL_RESPID == s_sendpacket[i].sendid) && (s_sendpacket[i].packet_com == TRUE)) {
+            return true;
+        }
+    }
+
+		return FALSE;
+}
 /**************************************************************************************************
 **  函数名称:  UDS_CANMsgAnalyze
 **  功能描述:  UDS CAN报文解析处理函数
@@ -653,13 +797,13 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
     id = bal_chartolong(CAN_msg->id);
 
     if ((id == UDS_ID_REC) || (id == UDS_ID_REC1) || (id == UDS_ID_REC2) || (id == UDS_ID_REC3)
-     || (id == UDS_ID_REC4) || (id == UDS_ID_REC5) || (id == UDS_ID_REC6) || (id == FUNC_REQID) || (id == UDS_PHSCL_REQID)) {//--RF--  处理多包发送时候需要的流控回复
+     || (id == UDS_ID_REC4) || (id == UDS_ID_REC5) || (id == UDS_ID_REC6) ||(id == UDS_ID_REC7) || (id == FUNC_REQID) || (id == UDS_PHSCL_REQID)) {//--RF--  处理多包发送时候需要的流控回复
         if (CAN_msg->databuf[0] == 0x30) {
             for (i = 0; i < MAXPACKETPARANUM; i++) {
                 #if DEBUG_UDS > 0
                 debug_printf("遍历,%d recv%x send%x com%d channel%d\r\n",i,s_sendpacket[i].recvid,s_sendpacket[i].sendid,s_sendpacket[i].packet_com,s_sendpacket[i].channel);
                 #endif
-                if ((s_sendpacket[i].recvid == id) && (s_sendpacket[i].packet_com)) {
+                if ((s_sendpacket[i].recvid == id) && (s_sendpacket[i].packet_com) && (s_sendpacket[i].prot_type == UDS_TYPE)) {
                     break;
                 }
             }
@@ -670,7 +814,10 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
             if (i == MAXPACKETPARANUM) {
                 return FALSE;
             }
-
+            if(id == UDS_PHSCL_REQID) {                /* 发送完首帧，等待流控响应 */      
+                 s_sendpacket[i].wait_fc = FALSE;
+                 s_sendpacket[i].wait_fc_time_out = 0;
+				 	  }
             s_sendpacket[i].blocksize = CAN_msg->databuf[1];
             s_sendpacket[i].cf_cnt = s_sendpacket[i].blocksize;
 
@@ -695,7 +842,7 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
         }
     }
     if ((id == UDS_ID_REC) || (id == UDS_ID_REC1)|| (id == UDS_ID_REC2)|| (id == UDS_ID_REC3)
-        || (id == UDS_ID_REC4) || (id == UDS_ID_REC5) || (id == UDS_ID_REC6) || (id == UDS_PHSCL_REQID)) {//--RF--  多包接收处理
+        || (id == UDS_ID_REC4) || (id == UDS_ID_REC5) || (id == UDS_ID_REC6) || (id == UDS_ID_REC7) || (id == UDS_PHSCL_REQID)) {//--RF--  多包接收处理
         #if DEBUG_UDS > 1
         debug_printf("CAN帧 ");
         printf_hex(CAN_msg->databuf, CAN_msg->len);
@@ -705,6 +852,12 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
             #if DEBUG_UDS > 0
             debug_printf("UDS第一帧1\r\n");
             #endif
+						if (GetFcRspFlag(id) == FALSE) {
+                return FALSE;
+            } 
+						if((id == UDS_PHSCL_REQID) && YX_SendudsMul()) {
+						    return FALSE;
+						}
             for (i = 0; i < MAXPACKETPARANUM; i++) {
                if(id == s_packetpara[i].packet_id && s_packetpara[i].packet_com == TRUE){/*修改相同id覆盖掉第一包*/
                   s_packetpara[i].packet_com = FALSE;
@@ -784,6 +937,12 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
                     debug_printf("流控不成功\r\n");
                     #endif
                 }
+								#if EN_UDS > 0
+                if (s_packetpara[i].packet_id == UDS_PHSCL_REQID) {
+                    s_packetpara[i].wait_cf = TRUE;
+                    s_packetpara[i].wait_cf_time_out = 0;
+                }
+                #endif
                 return TRUE;
             }
         }
@@ -816,6 +975,11 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
                 }
                 if ((s_packetpara[i].packet_total * 7 + 7) < s_packetpara[i].packet_totallen) {
                     memcpy(&s_packetpara[i].packet_buf[11 + s_packetpara[i].packet_total * 7], &CAN_msg->databuf[1], 7);
+										#if EN_UDS > 0
+                    if (s_packetpara[i].packet_id == UDS_PHSCL_REQID) {
+                        s_packetpara[i].wait_cf_time_out = 0;
+                    }
+                    #endif 
                     return true;
                 } else {
                     leftlen = s_packetpara[i].packet_totallen - ((s_packetpara[i].packet_total) * 7);
@@ -982,6 +1146,9 @@ void CANDataHdl(CAN_DATA_HANDLE_T *CAN_msg)
 		   return;
 		}
     #endif
+    if (UDS_CANMsgAnalyze((INT8U*)CAN_msg, sizeof(CAN_DATA_HANDLE_T))) {
+        return;
+    }
 
     for (i = 0; i < MAX_CANIDS; i++) {
         if ((id == s_msgbt[CAN_msg->channel].idcbt[i].id
@@ -1011,9 +1178,6 @@ void CANDataHdl(CAN_DATA_HANDLE_T *CAN_msg)
         return;
     }
 
-    if (UDS_CANMsgAnalyze((INT8U*)CAN_msg, sizeof(CAN_DATA_HANDLE_T))) {
-        return;
-    }
     switch (s_can_para[CAN_msg->channel].mode) {
         case CAN_MODE_LUCIDLY:                                        //透传模式
             tempbuf[0] = CAN_msg->channel + 1;
@@ -1528,17 +1692,46 @@ static void PacketTimeOut(void* pdata)
                   s_packetpara[i].packet_buf = NULL;
                }
             }
+						#if EN_UDS > 0
+            if (s_packetpara[i].wait_cf) {
+                if (++s_packetpara[i].wait_cf_time_out >= UDS_TRANS_TIMEOUT) {
+                    s_packetpara[i].wait_cf_time_out = 0;
+                    s_packetpara[i].wait_cf = 0;
+                    s_packetpara[i].packet_com = FALSE;
+                    if (s_packetpara[i].packet_buf != NULL) {
+                       PORT_Free(s_packetpara[i].packet_buf);
+                       s_packetpara[i].packet_buf = NULL;
+                    }
+                }
+            }
+            #endif
         }
 
         if (s_sendpacket[i].packet_com == TRUE) {               /* 多包发送超时处理 */
-            if (++s_sendpacket[i].packet_tmrcnt > PACKETOVERTMR) {
-               s_sendpacket[i].packet_com = FALSE;
-               s_sendpacket[i].sendcontinue = FALSE;
-               if (s_sendpacket[i].packet_buf != NULL ) {
-                  PORT_Free(s_sendpacket[i].packet_buf);
-                  s_sendpacket[i].packet_buf = NULL;
-               }
-            }
+					  if(s_sendpacket[i].sendid == UDS_PHSCL_RESPID) {                /* 发送完首帧，等待流控响应 */      
+                 if(s_sendpacket[i].wait_fc) {
+								 	   /* 等待流控响应超时80ms(N_BS = 80ms),结束多帧发送 */
+								 	   if(++s_sendpacket[i].wait_fc_time_out > 8) {
+                         s_sendpacket[i].wait_fc_time_out = 0;
+												 s_sendpacket[i].wait_fc = false;
+												 s_sendpacket[i].packet_com = FALSE;
+                         s_sendpacket[i].sendcontinue = FALSE;
+                         if (s_sendpacket[i].packet_buf != NULL ) {
+                            PORT_Free(s_sendpacket[i].packet_buf);
+                            s_sendpacket[i].packet_buf = NULL;
+                         }
+								 	   }
+                 }
+				 	  } else {
+                if (++s_sendpacket[i].packet_tmrcnt > PACKETOVERTMR) {
+                   s_sendpacket[i].packet_com = FALSE;
+                   s_sendpacket[i].sendcontinue = FALSE;
+                   if (s_sendpacket[i].packet_buf != NULL ) {
+                      PORT_Free(s_sendpacket[i].packet_buf);
+                      s_sendpacket[i].packet_buf = NULL;
+                   }
+                }
+				 	  }
         }
     }
 
@@ -1549,6 +1742,7 @@ static void PacketTimeOut(void* pdata)
     SendCanMsg_OnOff();
 		#endif
 		CanSendDtcMsg();  /* 丢失节点故障发送 */
+		Fc_Rsp_TimeOut_Hdl();
 }
 
 /**************************************************************************************************
@@ -2113,7 +2307,52 @@ void CANScreenIDSetReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datal
 		break;
 	}
 }
+/*******************************************************************
+** 函数名:     SendLockMsg
+** 函数描述:   锁车数据转发
+** 参数:       无
+** 返回:       无
+********************************************************************/
+static void SendLockMsg(void)
+{
+    CAN_DATA_SEND_T candata;
+		static INT8U    s_send_delay = 0;
+    if (s_sendpara.step == STEPNONE) {
+        return;
+    }
+		
+		candata.can_id = 0x18FF02F4;
+		candata.can_DLC = 8;
+		candata.can_IDE  = 1;
+		candata.channel  = s_sendpara.com;
+		candata.period   = 0xffff;
 
+    switch (s_sendpara.step) {
+        case STEPPACK1:
+					  if(s_sendpara.sendcnt > 0) {
+						    if(++s_send_delay < 10) {
+						        return;
+						    }
+						}
+            MMI_MEMCPY(candata.Data, 8, s_sendpara.data, 8);
+            PORT_CanSend(&candata);
+            s_sendpara.step++;
+        break;
+        case STEPPACK2:
+            MMI_MEMCPY(candata.Data, 8, s_sendpara.data+8, 8);
+            PORT_CanSend(&candata);
+            if (++s_sendpara.sendcnt < 3) {
+                s_sendpara.step = STEPPACK1;
+								s_send_delay    = 0;
+            } else {
+                s_sendpara.step = STEPNONE;
+            }
+        break;
+        default:
+            s_sendpara.step = STEPNONE;
+        break;
+    }
+}
 /*******************************************************************************
  ** 函数名:     HdlMsg_DATA_TRANSF_CAN
  ** 函数描述:   CAN数据转发请求处理函数
@@ -2170,6 +2409,18 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
             #if DEBUG_CAN > 0
             debug_printf("长帧\r\n");
             #endif
+						if (id == 0x18FF02F4) {
+                if ((sendlen == 16)) {                     // 确保传输的数据是对，没有漏字节
+                    if (s_sendpara.step == STEPNONE) {
+                        s_sendpara.com = data[0] - 1;
+                        bal_ReadDATA_Strm(&strm, s_sendpara.data, 16);
+                        s_sendpara.step = STEPPACK1;
+                        s_sendpara.sendcnt = 0;
+                    }
+                } 
+                return;
+            }
+						
             j = FindFreeItem_SendList();
             if (j == MAXPACKETPARANUM) {
                 return;
@@ -2189,8 +2440,9 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
                 bal_ReadDATA_Strm(&strm, s_sendpacket[j].packet_buf, sendlen-1);
             }
             if((UDS_ID_SEND == id) || (UDS_ID_SEND1 == id)|| (id == UDS_ID_SEND2)|| (id == UDS_ID_SEND3)
-            || (UDS_ID_SEND4 == id)|| (id == UDS_ID_SEND5)|| (id == UDS_ID_SEND6)) {//UDS长帧
-                #if DEBUG_CAN > 0
+            || (UDS_ID_SEND4 == id)|| (id == UDS_ID_SEND5)|| (id == UDS_ID_SEND6)||(id ==UDS_ID_SEND7)) {//UDS长帧
+                SetFcFlagBySendid(id);
+								#if DEBUG_CAN > 0
                 debug_printf("UDS长帧长度,%d\r\n",s_sendpacket[j].packet_totallen);
                 #endif
                 s_sendpacket[j].prot_type = UDS_TYPE;
@@ -2239,13 +2491,14 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
         }
 		switch (type) {
 		case CAN_SEND_NOMAL:
-		    senddata.period = 0xffff;
-			if (false == PORT_CanSend(&senddata)){  //总线忙碌，出错
-				ack[3] = 0x02;
-			}
-            if ((id == 0x0CFE21EE) || (id == 0x18FFD034)) {
-                StartCanResend(senddata.channel, id, senddata.Data, sendlen);
-            }
+        senddata.period = 0xffff;
+			  if (false == PORT_CanSend(&senddata)){  //总线忙碌，出错
+				    ack[3] = 0x02;
+			  }
+			  SetFcFlagBySendid(id);
+        if ((id == 0x0CFE21EE) || (id == 0x18FFD034)) {
+            StartCanResend(senddata.channel, id, senddata.Data, sendlen);
+        }
 			break;
 		case CAN_SEND_PERIOD:
 			if (false == PORT_CanSend(&senddata)) {
@@ -2337,8 +2590,12 @@ BOOLEAN YX_MMI_CanSendMul(INT8U com,INT32U id,INT8U* data, INT16U len)
   	         #endif	
          }
 		 } else {	
-		     s_sendpacket[j].prot_type = UDS_TYPE;
+		     s_sendpacket[j].prot_type = UDS_TYPE;				 
        	 if (s_sendpacket[j].packet_com) {
+				 	   if(id == UDS_PHSCL_RESPID) {                /* 发送完首帧，等待流控响应 */      
+                 s_sendpacket[j].wait_fc = TRUE;
+                 s_sendpacket[j].wait_fc_time_out = 0;
+				 	   }
       			 SendFF(&s_sendpacket[j]);
       	 }  
 		 }
@@ -2570,8 +2827,10 @@ void YX_CAN_Init(void)
         #endif
         PORT_CanEnable((CAN_CHN_E)i, true);
     }
+		memset(&s_sendpara, 0x00, sizeof(s_sendpara));
     Lock_Init();
 	PORT_RegCanCallbakFunc(CANDataHdl);
+	PORT_CanSeqCFSendCallbakFunc(SendLockMsg);
 
 	#if DEBUG_CANSFLFSEND > 0
 	YX_CAN_SelfCheckInit();//CAN自检初始化
@@ -2590,15 +2849,17 @@ void YX_CAN_Init(void)
     #if EN_UDS > 0
 		YX_UDS_Init();
 		#endif
-    #if DEBUG_CAN > 1
+    #if EN_DEBUG > 1
     // test
-    CAN_DATA_SEND_T candata;
-	memset(&candata, 0x00, sizeof(candata));
-	candata.can_DLC = 8;
-	candata.can_id = 0x401;
-	candata.can_IDE = 0;
-	candata.period = 0xffff;
-	candata.channel = 1;
-	PORT_CanSend(&candata);
+    CAN_DATA_SEND_T candata1;
+	memset(&candata, 0xFF, sizeof(candata));
+	candata1.can_DLC = 8;
+	candata1.can_id = 0x401;
+	candata1.can_IDE = 0;
+	candata1.period = 10;
+	candata1.channel = 1;
+	PORT_CanSend(&candata1);
+		candata1.channel = 0;
+	PORT_CanSend(&candata1);
     #endif
 }

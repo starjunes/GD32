@@ -79,16 +79,22 @@
 
 //杂项故障相关
 #define ID_MISC_START       B156D12                                        // MISC编号最小值(显示码编号)
-#define ID_MISC_END         B156E13                                        // MISC编号最大值(显示码编号)
+#define ID_MISC_END         B157900                                        // MISC编号最大值(显示码编号)
 #define MAX_MISC_NUM        (ID_MISC_END - ID_MISC_START + 1)              // MISC总数    
 
-#define MAIN_POW_LOW_19_5V   1545    // 19.5V(实测)
-#define MAIN_POW_RECV_20_5V  1630    // 20.5V(实测) 
+#define MAIN_POW_LOW_19_5V   1736         // 19.5V(实测)
+#define MAIN_POW_RECV_20_5V  1817        // 20.5V(实测) 
 
-#define MAIN_POW_HIGH_30_5V  2510    // 30.5V(实测)
+#define MAIN_POW_CLOSE_CAN_9V    745     // 9V(实测)
+#define MAIN_POW_OPEN_CAN_10V    853     // 10V(实测) 
 
-#define BAT_POW_LOW_3V       1500    // 3.0V
-#define BAT_POW_RECV_3_3V    1650    // 3.3V
+#define MAIN_POW_CLOSE_CAN_36V   3220    // 36V(实测)
+#define MAIN_POW_OPEN_CAN_35V    3125    // 35V  (实测) 
+
+#define MAIN_POW_HIGH_30_5V      2730        // 30.5V(实测)
+
+#define BAT_POW_LOW_3V       1500        // 3.0V
+#define BAT_POW_RECV_3_3V    1650        // 3.3V
 
 /*
 ********************************************************************************
@@ -122,7 +128,8 @@ typedef struct {
 } UPDATA_DTC_REC_T;
 
 static DM1_DTC_T s_dm1_dtc_tab[MAX_DISP_CODE];
-
+static INT8U   s_canonoff_delay = 0;
+static BOOLEAN s_canonoff = TRUE;          
 /*
 ********************************************************************************
 * 定义配置参数
@@ -180,8 +187,8 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
     /* 基础故障类型 */
     {U000100, 0xC00100, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON | EN_MASK_VOL_NORMAL),                      0, 40, BusIsOff ,         1,        1},     // CAN1 BusOff
     {U003700, 0xC03700, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON | EN_MASK_VOL_NORMAL),                      0, 40, BusIsOff ,         1,        1},     // CAN1 BusOff
-    {B157216, 0x957216, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, MainPowerIsLow,    6000,    50},     // 终端电源电压欠压(<19.5v故障，恢复到20.5v解除故障)
-    {B157F00, 0x957F00, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, BatPowerIsLow,     500,     500},    // 备用电池电压低(<3v故障，恢复到3.3解除故障)
+    {B157216, 0x957216, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, MainPowerIsLow,    200,     200},     // 终端电源电压欠压(<19.5v故障，恢复到20.5v解除故障)
+    {B157F00, 0x957F00, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, BatPowerIsLow,     200,     200},    // 备用电池电压低(<3v故障，恢复到3.3解除故障)
     /* 节点丢失故障类型 */
     {U000200, 0xC00200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // 所有伙伴ECU超时（J6低配节点超时）  
     {U010000, 0xC10000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // EMS节点超时  
@@ -209,9 +216,9 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
 		{B158200, 0x958200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},   // 国六企业平台连接失败
     {B158300, 0x958300, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六企业平台连接失败
     {B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},   // 4G天线开路
+    {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   1,		     100},	 // 终端检测gps开路
+		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   1,		     100},	 // 终端检测gps短路
     {B157900, 0x957900, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1000,     10},    // 国六模块电源线束断开
-    {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   100,		  100},		 // 终端检测gps开路
-		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   100,		  100},		 // 终端检测gps短路
 };
 
 /*
@@ -484,6 +491,32 @@ static BOOLEAN MainPwrHdl(void)
     
     value = PORT_GetADCValue(ADC_MAINPWR);
 
+		if(s_canonoff) {
+		    if((value < MAIN_POW_CLOSE_CAN_9V) || (value > MAIN_POW_CLOSE_CAN_36V)) {
+				    if(s_canonoff_delay++ >= 100) {                                       /* 主电电压持续1s高压或者低压关闭can */
+						    s_canonoff_delay = 0;
+								s_canonoff = FALSE;
+								bal_Pulldown_CAN0STB();
+                bal_Pulldown_CAN1STB();
+                bal_Pulldown_CAN2STB();
+				    }
+		    } else {
+		        s_canonoff_delay = 0;
+		    }
+		} else {
+		    if((value > MAIN_POW_OPEN_CAN_10V) && (value < MAIN_POW_OPEN_CAN_35V)) {
+				    if(s_canonoff_delay++ >= 100) {                                       /* 主电电压恢复1s */
+						    s_canonoff_delay = 0;
+								s_canonoff = TRUE;
+								bal_Pullup_CAN0STB();
+                bal_Pullup_CAN1STB();
+                bal_Pullup_CAN2STB();
+				    }
+		    } else {
+		        s_canonoff_delay = 0;
+		    }
+		}
+		
     // 低于19.5V异常后，要恢复到20.5v以上才正常
     if (value > MAIN_POW_LOW_19_5V) {
         if (LowCheck) {
@@ -784,7 +817,7 @@ static BOOLEAN Set_DTCStatus(DTC_DISP_CODE_E dtc, INT8U mask, DTCSTATUS_OP_E op,
             }
         }
     } else if (op == OP_CLR) {
-        #if DEBUG_DTC > 0
+        #if DEBUG_DTC > 1
         debug_printf("<clr dtc:%d>status(%x) mask(%x)\r\n", dtc, s_dtc_obj.dtc[dtc].status, mask);
         #endif
 		if ((s_dtc_obj.dtc[dtc].status & mask) != 0) { /* 当前状态为已设置状态 */
@@ -1268,7 +1301,7 @@ void YX_DTC_SID19_ReadDTCInformation(INT8U *data, INT16U len)
                 mask = data[1];
                 dtcnum = Get_DTCNum(mask);
                 bal_WriteBYTE_Strm(wstrm, MASK_DEFAUTLT);
-                bal_WriteBYTE_Strm(wstrm, DTC_14229);
+                bal_WriteBYTE_Strm(wstrm, DTC_FORMAT_J2012);
                 bal_WriteHWORD_Strm(wstrm, dtcnum);
                 response = TRUE;
             }
@@ -1347,6 +1380,7 @@ void YX_DTC_NodeIdCheck(INT8U ch, INT32U node_id)
 
 		for(i = 0; i < MAX_NODE_LOST_NUM; i++) {
 		    if(node_id ==  s_nodelost_obj[i].id) {
+				    break;
 		    }
 		}
 

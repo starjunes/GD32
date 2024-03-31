@@ -511,7 +511,9 @@ static void UDS_SID11_EcuReset(INT8U resettype)
             s_uds_module.reset_type = (resettype & (~SUPPRESS_RESP));
             s_uds_module.reset_cnt = 0;
             if (s_uds_module.reset_type == RESET_HARD) {
-                YX_UDS_NegativeResponse(SID_11, NRC_78);
+							  if(resettype == RESET_HARD) {
+                    YX_UDS_NegativeResponse(SID_11, NRC_78);
+							  }
                 /* 复位前先更新dtc的pp参数 */
                 YX_DTC_PP_Update_When_Reset();  
 
@@ -1092,7 +1094,7 @@ static BOOLEAN UDS_CanDataHdl(INT32U id, INT8U* data, INT8U len)
             return TRUE;
         }
     }*/
-    
+    if(YX_SendudsMul())       return false;   /* 正在发送发送多帧  */
     /* 单帧处理 */
     if (YX_UDS_Recv(FALSE, id, data, (INT16U)len)) {
         #if DEBUG_UDS > 0
@@ -1263,7 +1265,7 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
     //INT16U did;
     INT16U  len;
     //BOOLEAN acc_sta;
-    BOOLEAN nrc_22_ack;
+    BOOLEAN nrc_22_ack = FALSE;
 	
     #if DEBUG_UDS > 0
     debug_printf("<收到UDS诊断数据(CANID:%x):", reqid);
@@ -1315,14 +1317,18 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
         nrc_22_ack = TRUE;
     }
     #endif
-
+    if(YX_Get_VehSpeed() != 0x00) {    /* 车速要为0 */
+		    nrc_22_ack = TRUE;   
+    }
 	if (reqid == UDS_PHSCL_REQID) {
         switch (sid) {
             case SID_10:
+							  #if 0
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
                     break;
-                }	                
+                }	  
+								#endif
                 if (len != 2) {
                     YX_UDS_NegativeResponse(sid, NRC_13);
                     break;
@@ -1341,10 +1347,12 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 UDS_SID11_EcuReset(p_data[0]);
                 break;
             case SID_14:
+							  #if 0
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
                     break;
-                }				
+                }	  
+								#endif			
                 if (len != 4) {
                     YX_UDS_NegativeResponse(sid, NRC_13);
                     break;
@@ -1352,10 +1360,12 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 YX_DTC_SID14_ClearDiagnosticInformation(p_data, (len - 1));
                 break;
             case SID_19:
+							  #if 0
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
                     break;
-                }	                
+                }	  
+								#endif              
                 if (len < 2) {
                     YX_UDS_NegativeResponse(sid, NRC_13);
                     break;
@@ -1363,10 +1373,12 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 YX_DTC_SID19_ReadDTCInformation(p_data, (len - 1));
                 break;
             case SID_22:
+							  #if 0
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
                     break;
-                }				
+                }	  
+								#endif				
                 if ((len < 3) || (len%2 != 1)) {
                     YX_UDS_NegativeResponse(sid, NRC_13);
                     break;
@@ -1375,10 +1387,12 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 YX_UDS_DID_SID22_ReadDataByIdentifier(p_data, len - 1);
                 break;
             case SID_27:
+							  #if 0
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
                     break;
-                }				
+                }	  
+								#endif		
                 if (len < 2) {
                     YX_UDS_NegativeResponse(sid, NRC_13);
                     break;
@@ -1397,10 +1411,12 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 UDS_SID28_CommunicationControl(p_data[0], p_data[1]);
                 break;
             case SID_2E:
+							  #if 0
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
                     break;
-                }				
+                }	  
+								#endif			
                 if (len < 3) {
                     YX_UDS_NegativeResponse(sid, NRC_13);
                     break;
@@ -1429,11 +1445,19 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 break;
                 
           #if EN_UDS_TRANS > 0
-            case SID_31:
+            case SID_31: 	
+                if (nrc_22_ack) {
+                    YX_UDS_NegativeResponse(sid, NRC_22);
+                    break;
+                }	  
                 YX_UDS_RoutineControl(sid, p_data, len - 1);
                 break;
                 
             case SID_34:
+							  if (nrc_22_ack) {
+                    YX_UDS_NegativeResponse(sid, NRC_22);
+                    break;
+                }		
                 YX_UDS_ReqDownload(sid, p_data, len - 1);
                 break;   
                 
@@ -1442,6 +1466,10 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 break;
                 
             case SID_37:
+							  if (nrc_22_ack) {
+                    YX_UDS_NegativeResponse(sid, NRC_22);
+                    break;
+                }		
                 YX_UDS_ReqTransExit(sid);
                 break;                  
           #endif
@@ -1453,10 +1481,12 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
     } else if (reqid == FUNC_REQID) {
         switch (sid) {
             case SID_10:
+							  #if 0
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
                     break;
-                }	                
+                }	  
+								#endif	                 
                 if (len != 2) {
                     YX_UDS_NegativeResponse(sid, NRC_13);
                     break;
@@ -1475,16 +1505,19 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 UDS_SID11_EcuReset(p_data[0]);
                 break;
             case SID_14:
+							  #if 0
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
                     break;
-                }				
+                }	  
+								#endif		
                 if (len != 4) {
                     YX_UDS_NegativeResponse(sid, NRC_13);
                     break;
                 }
                 YX_DTC_SID14_ClearDiagnosticInformation(p_data, (len - 1));
                 break;
+						#if 0
             case SID_19:
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
@@ -1508,6 +1541,7 @@ BOOLEAN YX_UDS_Recv(BOOLEAN is_mul_frame, INT32U reqid, INT8U *data, INT16U data
                 //did = (INT16U)YX_BigEndModeToHWord(p_data);
                 YX_UDS_DID_SID22_ReadDataByIdentifier(p_data, len - 1);
                 break;
+						#endif
             case SID_28:
                 if (nrc_22_ack) {
                     YX_UDS_NegativeResponse(sid, NRC_22);
