@@ -44,7 +44,7 @@ extern INT8U DEBUG_UART_NO;
 *********************************************************
 */
 #if EN_DEBUG > 0
-#define     DEBUG_ERR                   0
+#define     DEBUG_ERR                   1
 #define     DEBUG_INPUT_CMD             0       // 串口命令调试
 #define     DEBUG_WIRELESS              0       // 无线下载
 #define     DEBUG_COM_REC               0       //串口服务接收

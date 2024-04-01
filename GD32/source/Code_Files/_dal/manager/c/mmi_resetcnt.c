@@ -91,6 +91,10 @@ void mmi_resetinform(INT8U resettype, INT8U *filename, INT32U line, INT32U errid
     } else if (resettype == RESET_ABNORMAL) {
       #if DEBUG_RESET > 0
         Debug_SysPrint("“Ï≥£∏¥Œª\r\n");
+			  Debug_SysPrint(", File[%-15s]",  filename);
+        Debug_SysPrint(", Line[%.4d]",   line);
+        Debug_SysPrint(", ErrID[%.8X]",  errid);
+        Debug_SysPrint("\r\n");
       #endif
         if (ReadPubPara(RESETREC_, &s_resetcnt)) {
             s_resetcnt.rst_err++;

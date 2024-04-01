@@ -73,7 +73,7 @@
 #define DEBUG_PHONE          0
 #define DEBUG_CONFIG         0
 #define DEBUG_LOCK           0                                       /* 锁车 */
-#define DEBUG_RESET          0                                       /* 复位记录 */
+#define DEBUG_RESET          1                                       /* 复位记录 */
 #define DEBUG_RTC            0                                       /* 实时时钟 */
 #define DEBUG_CANERROR       0                                       /* CAN ERROR */
 #define DEBUG_HEAPMEM        0
