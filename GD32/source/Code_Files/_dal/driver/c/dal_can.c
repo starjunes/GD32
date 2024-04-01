@@ -392,8 +392,10 @@ __attribute__ ((section ("IRQ_HANDLE"))) static void USER_CAN0_RX0_IRQHandler(vo
     } else {
         CAN_msg.type = 0; // 数据帧
     }
-    MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
-    WriteBlockRoundBuf(&s_can_round, (INT8U*)&CAN_msg, sizeof(CAN_msg));
+		if(RxMessage.rx_dlen <= 8) { 
+        MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
+        WriteBlockRoundBuf(&s_can_round, (INT8U*)&CAN_msg, sizeof(CAN_msg));
+		}
 }
 
 /*******************************************************************
@@ -428,9 +430,10 @@ __attribute__ ((section ("IRQ_HANDLE"))) static void USER_CAN1_RX1_IRQHandler(vo
     } else {
         CAN_msg.type = 0; // 数据帧
     }
-    MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
-
-    WriteBlockRoundBuf(&s_can_round, (INT8U*)&CAN_msg, sizeof(CAN_msg));
+		if(RxMessage.rx_dlen <= 8) { 
+        MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
+        WriteBlockRoundBuf(&s_can_round, (INT8U*)&CAN_msg, sizeof(CAN_msg));
+		}
 
 #if EN_LOCK > 0
 
@@ -653,7 +656,17 @@ void SetIDPara(IDPARA_T *idset, INT8U idcnts, INT8U channel)
     }
 }
 #endif
-
+/*******************************************************************
+** 函数名:     DAL_CAN_ClearBuf
+** 函数描述:   内存错乱，清空发送缓存，重新开始
+** 参数:       [[in] channel            CAN 通道
+** 返回:       无
+********************************************************************/
+static void DAL_CAN_ClearBuf(INT8U channel)
+{
+	InitRoundBuf(&s_can_send_round[channel], (INT8U *)&s_can_send_buf[channel], sizeof(s_can_send_buf[channel]), NULL);
+	s_sendstat[channel] = CAN_SEND_IDLENOW;
+}
 /*******************************************************************
 ** 函数名:     DAL_CAN_TxData
 ** 函数描述:   CAN发送数据接口函数
@@ -687,6 +700,13 @@ BOOLEAN DAL_CAN_TxData_Dir(INT8U *data, INT8U channel)
 
     if (_FRAME_DATA == s_ccbt[channel].fmat) {                                  /* 根据帧格式指定帧数据的长度及其内容 */
         cdata.tx_dlen = data[4];
+				if (data[4] > 8){
+   			    #if DEBUG_CAN > 0
+   		      Debug_SysPrint("DAL_CAN_TxData_Dir,DLC:%d\r\n",data[4]);
+   		      #endif
+   			    DAL_CAN_ClearBuf(channel);
+   			    return FALSE;
+				}
         MMI_MEMCPY(cdata.tx_data, 8, &data[5], data[4]);
     } else {
         cdata.tx_dlen = 0;
