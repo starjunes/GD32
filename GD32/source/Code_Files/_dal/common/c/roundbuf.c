@@ -168,6 +168,7 @@ BOOLEAN WriteBlockRoundBuf(ROUNDBUF_T *round, INT8U *bptr, INT32U blksize)
     for (; blksize > 0; blksize--) {
         *round->wptr++ = *bptr++;
         if (round->wptr >= round->eptr) round->wptr = round->bptr;
+        round->used++;
     }
     EXIT_CRITICAL();
     return true;
