@@ -56,6 +56,7 @@ typedef struct {
 } FILTER_ID_CFG_T;
 /* 锁车参数 */
 static SCLOCKPARA_T s_sclockpara;
+
 /* 锁车日志 */
 static LOCK_RECORD     s_lockrecord;
 /* 锁车参数备份 */
@@ -139,11 +140,8 @@ static BOOLEAN can_speed_flag =TRUE;	//收到转速报文标识
 static KMS_LOCK_OBJ_T s_kms_obj = {KMS_CMD_NONE, {0xff, 0xff}};
 
 /* 锡柴 */
-static INT8U 			s_xichai_ctrmode = 0;					// 控制模式
-static INT32U           s_xichai_checkcode = 0;                 // 校验码
-static INT32U           s_xichai_msgId = 0x00;            		// 周期报文id
-static INT8U            s_xichai_speedH = 0, s_xichai_speedL = 0;// 锡柴转速
-
+static XCLOCKPARA_T s_xclockpara;
+static INT8U s_xichai_seed[8];
 
 /**************************************************************************************************
 **  函数名称:  KmsG5LockMsgSend
@@ -434,17 +432,18 @@ void DC_CanDelayTmr(void)
 **************************************************************************************************/
 BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 {
-	INT8U key[8];
+	INT8U key[8], ch;
 	INT32U retlen;
     INT8U senddata[13] = {0};
 	if (datalen != 8) {
 		return FALSE;
 	}
-	seedToKey(&data[4], 4, key, &retlen);
+	seedToKey(&data[5], 4, key, &retlen);
 	memcpy(senddata, data, 4);		// canid
 	memcpy(&senddata[5], key, 4);
 	senddata[4] = retlen;
-	CAN_TxData(senddata, false, LOCK_CAN_CH);
+    ch = data[4];
+	CAN_TxData(senddata, false, ch);
 	return TRUE;
 }
 
@@ -457,16 +456,95 @@ BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 **************************************************************************************************/
 BOOLEAN XC_ParaSet(INT8U* data, INT8U datalen)
 {
+    BOOLEAN change = FALSE;
+    INT32U checkcode, msgid;
 	if (datalen != 11) {
 		return FALSE;
 	}
-	s_xichai_ctrmode	= data[0];
-	s_xichai_speedL		= data[1];
-	s_xichai_speedH		= data[2];
-	s_xichai_checkcode	= bal_chartolong(&data[3]);
-	s_xichai_msgId		= bal_chartolong(&data[6]);
+    if (s_xclockpara.ctr_mode != data[0]) {
+        s_xclockpara.ctr_mode = data[0];
+        change = TRUE;
+    }
+    if (s_xclockpara.limitLR != data[1]) {
+        s_xclockpara.limitLR = data[1];
+        change = TRUE;
+    }
+    if (s_xclockpara.limitHR != data[2]) {
+        s_xclockpara.limitHR = data[2];
+        change = TRUE;
+    }
+	checkcode	= bal_chartolong(&data[3]);
+	msgid		= bal_chartolong(&data[6]);
+    if (s_xclockpara.checkcode != checkcode) {
+        s_xclockpara.checkcode = checkcode;
+        change = TRUE;
+    }
+    if (s_xclockpara.msgID != msgid) {
+        s_xclockpara.msgID = msgid;
+        change = TRUE;
+    }
+    if (change) {
+        #if DEBUG_LOCK > 0
+        debug_printf("XC_ParaSet 状态改变\r\n");
+        #endif
+        bal_pp_StoreParaByID(XCLOCKPARA_, (INT8U *)&s_xclockpara, sizeof(XCLOCKPARA_T));
+    }
 	return TRUE;
 }
+/**************************************************************************************************
+**  函数名称:  XC_HandShake
+**  功能描述:  锡柴握手（随机数请求）
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+void XC_HandShake(void)
+{
+	INT8U senddata[13] = {0x0C, 0x00, 0x00, 0x4A, 0x08, 0xc0, 0xff, 0xfa, 0xfa, 0xff, 0xf0, 0xff, 0xff};//周期报文
+	if ((s_sclockpara.ecutype != ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype != ECU_XICHAI_EMSVI)) return;
+    
+	#if DEBUG_LOCK > 0
+	debug_printf("XC_HandShake step:%d\r\n", s_sclockstep);
+	#endif
+    CAN_TxData(senddata, false, LOCK_CAN_CH);
+}
+/**************************************************************************************************
+**  函数名称:  XC_HandShake
+**  功能描述:  锡柴发送检验码
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+void XC_Checkcode(void)
+{
+    static INT8U xc_checkcounter = 0;// 锡柴周期报文(5s)
+    INT8U perioddata[13] = {0x0C,0x00,0x00,0x4A,0x08,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+	
+	if ((s_sclockpara.ecutype != ECU_XICHAI_EMSECO) || (s_sclockpara.ecutype != ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype != ECU_XICHAI_EMSVI)) {
+        #if DEBUG_LOCK > 0
+        debug_printf("XC_Checkcode ECU类型错误:%d\r\n", s_sclockpara.ecutype);
+        #endif   
+        return;
+    }
+    switch (s_sclockpara.ecutype)
+    {
+        case ECU_XICHAI_EMSVI:
+            MessageProcessEnCode(s_xclockpara.ctr_mode, s_xclockpara.limitLR, s_xclockpara.limitHR, s_xclockpara.checkcode, s_xclockpara.msgID, &perioddata[5], &xc_checkcounter);
+            CAN_TxData(perioddata, FALSE, LOCK_CAN_CH);
+            break;
+        case ECU_XICHAI_EMSMDI:
+        case ECU_XICHAI_EMSECO:
+            
+            break;
+        default:
+
+            break;
+    }
+	
+	#if DEBUG_LOCK > 0
+	debug_printf("WC_HandShake step:%d\r\n", s_sclockstep);
+	#endif
+    CAN_TxData(perioddata, false, LOCK_CAN_CH);
+}
+
 /**************************************************************************************************
 **  函数名称:  XC_CanDelayTmr
 **  功能描述:  锡柴锁车延时处理(MPU端处理，功能预留)
@@ -478,23 +556,23 @@ void XC_CanDelayTmr(void)
 	//static INT8U xc_cnt = 0;//上电发送3次
     static INT8U xc_period_cnt = 0,xc_checkcounter = 0;// 锡柴周期报文(5s)
     //INT8U senddata[13]   = {0x18,0xda,0x00,0xf1,0x08,0x22,0x02,0x9c,0xff,0xff,0xff,0xff,0xff};//握手报文
-    INT8U perioddata[13] = {0x0C,0x00,0x00,0x41,0x08,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};//周期报文
-    if (s_sclockpara.ecutype == ECU_XICHAI) {
-        /*if(s_sclockpara.unbindstat == 1){   //锡柴已激活
-            if (++xc_cnt > 3){
-                xc_cnt = 3;// 防止溢出
-            }else{
-                CAN_TxData(senddata, FALSE, LOCK_CAN_CH);
+    INT8U perioddata[13] = {0x0C, 0x00, 0x00, 0x41, 0x08, 0xc0, 0xff, 0xfa, 0xfa, 0xff, 0xf0, 0xff, 0xff};//周期报文
+    switch (s_sclockstep) {
+        case RAND_CODE_REC:         // 随机数请求
+            if ((xc_period_cnt++ % 500) == 0) {
+                xc_period_cnt = 0;
+                XC_HandShake();
             }
-            
-        }*/
-        if (xc_period_cnt++ % 500){     //5s周期
+            break;
+        case CHECK_CODE_SEND:       // 发送加密数据
+            if ((xc_period_cnt++ % 500) == 0) {
+                xc_period_cnt = 0;
+                XC_Checkcode();
+            }
+            break;
+        default:
             xc_period_cnt = 0;
-            s_xichai_speedH = s_sclockpara.serialnumber[0];
-            s_xichai_speedL = s_sclockpara.serialnumber[1];
-            MessageProcessEnCode(1,s_xichai_speedL,s_xichai_speedH,s_xichai_checkcode,s_xichai_msgId,&perioddata[5],&xc_checkcounter);
-            CAN_TxData(perioddata, FALSE, LOCK_CAN_CH);
-        }
+            break;
     }
 }
 
@@ -944,13 +1022,11 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
             memcpy(s_lockstatid + 4, CAN_msg->databuf, 8);
         }
     }
-
-	if (s_sclockpara.ecutype == ECU_XICHAI){
-        if(id == 0x18DAF100){
-            INT16U pid = (CAN_msg->databuf[1] << 8) + CAN_msg->databuf[2];
-            if ((CAN_msg->databuf[0] == 0x62) && (pid == 0x029C))
-            s_xichai_checkcode = (CAN_msg->databuf[3] << 24) + (CAN_msg->databuf[4] << 16) +
-                                (CAN_msg->databuf[5] << 8) + (CAN_msg->databuf[6]);
+    if ((s_sclockpara.ecutype == ECU_XICHAI_EMSECO) || (s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSVI)) {
+        if (id == 0x18FF7800) {
+            memcpy(s_xichai_seed, CAN_msg->databuf, 7);
+            s_sclockstep = CHECK_CODE_SEND;
+            XC_Checkcode();
         }
     }
 }
@@ -1882,17 +1958,26 @@ void ACCON_HandShake(void)
 		debug_printf("%s s_sclockpara.ecutype:%d limitfunction:%d\r\n",__FUNCTION__,s_sclockpara.ecutype,s_sclockpara.limitfunction);
 	 #endif
     if (s_sclockpara.ecutype == ECU_YUCHAI){
-         if (!s_sclockpara.unbindstat) {
-             f_handsk = FALSE;
-             s_sclockstep = CONFIG_REQ;
-			 #if DEBUG_LOCK> 0
-				debug_printf("%s s_sclockstep set CONFIG_REQ\r\n",__FUNCTION__);
-			 #endif
-             YC_HandShake();
-             #if DEBUG_LOCK > 0
-                 debug_printf("App_CAN_Init YC_HandShake\r\n");
-             #endif
-         }
+        if (!s_sclockpara.unbindstat) {
+            f_handsk = FALSE;
+            s_sclockstep = CONFIG_REQ;
+            #if DEBUG_LOCK> 0
+            debug_printf("ACCON_HandShake s_sclockstep set CONFIG_REQ\r\n",__FUNCTION__);
+            #endif
+            YC_HandShake();
+            #if DEBUG_LOCK > 0
+                debug_printf("App_CAN_Init YC_HandShake\r\n");
+            #endif
+        }
+    } else if ((s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSVI)) {
+        if (!s_sclockpara.unbindstat) {
+            f_handsk = FALSE;
+            s_sclockstep = RAND_CODE_REC;
+            #if DEBUG_LOCK> 0
+            debug_printf("%s s_sclockstep 请求随机数\r\n");
+            #endif
+            XC_HandShake();
+        }
     }
 
 	s_kms_delay_cnt = 0;
@@ -1905,22 +1990,6 @@ void ACCON_HandShake(void)
 	#if LOCK_COLLECTION > 0
 	YX_StartDataCollection(0x00);
 	#endif
-	
-	/*if (s_sclockpara.ecutype == ECU_KMS_Q6){
-        {
-            INT32U  delaycnt;
-            
-            //delaycnt = 0xA000 * 2 * 4;                                          // 约150ms*4  // ECU要求延时
-			delaycnt = 0xA000;  
-			while (delaycnt--) {
-            }
-
-        }
-        if (s_sclockpara.limitfunction < MAX_LC_CMD) {
-            s_kmslockstep = KMS_REQ_SEED;
-            KMS_HandShake(NULL, 0);
-        }
-    }*/
 }
 
 /**************************************************************************************************
@@ -2018,6 +2087,7 @@ void Lock_Init(void)
     INT32U id;
     bal_pp_ReadParaByID(LOCKRECORD_,(INT8U *)&s_lockrecord, sizeof(LOCK_RECORD));
     bal_pp_ReadParaByID(SCLOCKPARA_,(INT8U *)&s_sclockpara, sizeof(SCLOCKPARA_T));
+    bal_pp_ReadParaByID(XCLOCKPARA_,(INT8U *)&s_xclockpara, sizeof(XCLOCKPARA_T));
     #if EN_KMS_LOCK > 0
     bal_pp_ReadParaByID(KMS_LOCK_PARA_,(INT8U *)&s_kms_obj, sizeof(KMS_LOCK_OBJ_T));
     #endif

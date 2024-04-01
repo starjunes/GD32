@@ -641,7 +641,7 @@ void Client_FuntionDown_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U da
             break;
         case 0x26: /* 加密算法 */
             YX_Encrypt_Func(&data[3], datalen - 3);
-			      ack[3] = 0x00;
+            ack[3] = 0x00;
             break;
         case 0x2e:  /* 柳汽康明斯国五锁车指令 */
             #if EN_KMS_LOCK > 0
@@ -675,13 +675,16 @@ void Client_FuntionDown_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U da
             break;
 		case 0x33:  /* TSC1填充报文同步 */
             ret = XC_ParaSet(&data[3], datalen - 3);
-			ack[3] = (ret == TRUE)?0100:0x01;
+			ack[3] = (ret == TRUE)?0x00:0x01;
 			YX_COM_DirSend( CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4);
             break;
 		case 0x34:  /* 数据加密后can发送 */
 			ret = XC_SecretDataTran(&data[3], datalen - 3);
 			ack[3] = (ret == TRUE)?0100:0x01;
 			YX_COM_DirSend( CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4);
+            break;
+        case 0x35:  /* 数据上报回复 */
+            
             break;
         default:
             break;

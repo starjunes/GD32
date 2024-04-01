@@ -75,6 +75,7 @@ typedef struct {
 #define UDS_DID_PARA_                   8
 #define UDS_ERRCNT_PARA_                9
 #endif
+#define XCLOCKPARA_                     10
 #ifdef PUBLIC_C
 /*
 ********************************************************************************
@@ -226,6 +227,7 @@ static const UDS_DID_DATA_E2ROM_T     i_uds_did_e2rom_data = {
     }, */
 };
 static UDS_ERR_CNT_T const i_uds_fault_cnt = {0};
+static XCLOCKPARA_T const i_xclockpara = {0};
 #endif
 //static VEHICHEFACTOR_T  const i_VEHICHEFACTOR = {0};
 /*
@@ -251,6 +253,7 @@ static PUBTBL_STRUCT const PubTbl[] = {
             {&i_uds_did_e2rom_data,     sizeof(UDS_DID_DATA_E2ROM_T)},
             {&i_uds_fault_cnt,          sizeof(UDS_ERR_CNT_T)},
             #endif
+            {&i_xclockpara,             sizeof(XCLOCKPARA_T)},
           };
 #endif
 
