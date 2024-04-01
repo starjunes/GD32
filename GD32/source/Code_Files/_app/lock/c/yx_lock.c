@@ -142,7 +142,9 @@ static KMS_LOCK_OBJ_T s_kms_obj = {KMS_CMD_NONE, {0xff, 0xff}};
 
 /* 锡柴 */
 static XCLOCKPARA_T s_xclockpara;
-static INT8U s_xichai_seed[8];
+static INT8U s_xichai_seed[8];              // 锡柴随机数
+static INT8U hash[SIZE_OF_SHA_256_HASH];    // 计算的哈希值
+static INT8U hash_cnt = 0;                  // 发送哈希值计数
 
 /**************************************************************************************************
 **  函数名称:  KmsG5LockMsgSend
@@ -508,6 +510,28 @@ void XC_HandShake(void)
 	#endif
     CAN_TxData(senddata, false, LOCK_CAN_CH);
 }
+
+/**************************************************************************************************
+**  函数名称:  XC_Hashcal
+**  功能描述:  计算哈希值
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+static void XC_Hashcal(void)
+{
+    INT8U input[32] = {0x00};
+    UDS_DID_DATA_E2ROM_T uds_data;
+    bal_pp_StoreParaByID(UDS_DID_PARA_, (INT8U *)&uds_data, sizeof(UDS_DID_DATA_E2ROM_T));
+    
+    memcpy(input, s_xichai_seed, 7);
+    input[7] = 0xFF;
+    input[8] = 0xFF;
+    input[9] = 0xFF;
+    memcpy(&input[10], uds_data.DID_F190, sizeof(uds_data.DID_F190));
+    memcpy(&input[27], s_xichai_seed, 4);
+    input[31] = s_xichai_seed[5];
+    calc_sha_256(hash, input, 32);
+}
 /**************************************************************************************************
 **  函数名称:  XC_HandShake
 **  功能描述:  锡柴发送检验码
@@ -522,7 +546,7 @@ void XC_Checkcode(void)
 	if ((s_sclockpara.ecutype != ECU_XICHAI_EMSECO) || (s_sclockpara.ecutype != ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype != ECU_XICHAI_EMSVI)) {
         #if DEBUG_LOCK > 0
         debug_printf("XC_Checkcode ECU类型错误:%d\r\n", s_sclockpara.ecutype);
-        #endif   
+        #endif
         return;
     }
     switch (s_sclockpara.ecutype)
@@ -533,7 +557,21 @@ void XC_Checkcode(void)
             break;
         case ECU_XICHAI_EMSMDI:
         case ECU_XICHAI_EMSECO:
-            
+            perioddata[0] = 0xF0;
+            perioddata[1] = s_xclockpara.limitLR;
+            perioddata[2] = s_xclockpara.limitHR;
+            perioddata[3] = 0x7D;
+            perioddata[4] = 0xFF;
+            perioddata[5] = 0xF0;
+            perioddata[6] = 0xFF;
+            perioddata[7] = hash[hash_cnt++];
+            if (hash_cnt >= SIZE_OF_SHA_256_HASH) {
+                hash_cnt = 0;
+                memset(hash, 0xFF, SIZE_OF_SHA_256_HASH);
+                s_ishandover = TRUE;
+                s_handshake_ack = HANDSHAKE_OK;
+                f_handsk = TRUE; 
+            }
             break;
         default:
 
@@ -541,7 +579,8 @@ void XC_Checkcode(void)
     }
 	
 	#if DEBUG_LOCK > 0
-	debug_printf("WC_HandShake step:%d\r\n", s_sclockstep);
+	debug_printf("XC_Checkcode step:%d data:\r\n", s_sclockstep);
+    Debug_PrintHex(TRUE, perioddata, 13);
 	#endif
     CAN_TxData(perioddata, false, LOCK_CAN_CH);
 }
@@ -1025,8 +1064,14 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
     }
     if ((s_sclockpara.ecutype == ECU_XICHAI_EMSECO) || (s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSVI)) {
         if (id == 0x18FF7800) {
-            memcpy(s_xichai_seed, CAN_msg->databuf, 7);
+            memcpy(s_xichai_seed, CAN_msg->databuf, 8);
             s_sclockstep = CHECK_CODE_SEND;
+            XC_Hashcal();
+            if (hash_cnt != 0) {
+                s_ishandover = TRUE;
+                s_handshake_ack = HANDSHAKE_CHECKERR;
+                f_handsk = TRUE; 
+            }
             XC_Checkcode();
         }
     }

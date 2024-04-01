@@ -63,14 +63,14 @@ typedef enum {
 
 /* 终端上报平台握手结果 */
 typedef enum {
-    HANDSHAKE_ERR,                  /*  0-ECU握手失败 */
-    HANDSHAKE_OK,                   /*  1-ECU握手成功 */
-    HANDSHAKE_UNKNOWN,              /*  2-ECU状态未知 */
+    HANDSHAKE_OK,                   /*  0-ECU握手成功 */
+    HANDSHAKE_CHECKERR,				/*  1-握手校验失败 */
+    HANDSHAKE_ERR,                  /*  2-ECU握手失败 10s内未收到ECU握手校验报文 */
     HANDSHAKE_OVER,                 /*  3-ECU超时 */
-    HANDSHAKE_NOSEED,               /*  4-ECU未响应随机数请求 */
+    HANDSHAKE_UNKNOWN,              /*  4-ECU状态未知 */
     HANDSHAKE_NOACK,                /*  5-ECU未反馈握手结果 */
-    HANDSHAKE_BUSEXCEPTION,			/*  6-总线异常 */
-    HANDSHAKE_CHECKERR,				/*  7-握手校验失败 */
+    HANDSHAKE_NOSEED,               /*  6-ECU未响应随机数请求 */
+    HANDSHAKE_BUSEXCEPTION,			/*  7-总线异常 */
     MAX_STAT
 } HANDSHAKE_ACK_E;
 
