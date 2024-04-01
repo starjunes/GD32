@@ -65,11 +65,16 @@ INT8U *RoundBufStartPos(ROUNDBUF_T *round)
 **************************************************************************************************/
 BOOLEAN WriteRoundBuf(ROUNDBUF_T *round, INT8U data)
 {
-    if (PNULL == round) return false;
-    if (round->used >= round->bufsize) {
+	  ENTER_CRITICAL();
+    if (PNULL == round) {
+        EXIT_CRITICAL();
         return false;
     }
-    ENTER_CRITICAL();
+    if (round->used >= round->bufsize) {
+			  EXIT_CRITICAL();
+        return false;
+    }
+    
     *round->wptr++ = data;
     if (round->wptr >= round->eptr) {
         round->wptr = round->bptr;
@@ -89,9 +94,13 @@ BOOLEAN WriteRoundBuf(ROUNDBUF_T *round, INT8U data)
 INT32S ReadRoundBuf(ROUNDBUF_T *round)
 {
     INT32S ret;
-    
-    if (round->used == 0) return -1;
+		
     ENTER_CRITICAL();
+    if (round->used == 0) { 
+        EXIT_CRITICAL();
+			  return -1;
+    }
+   
     ret = *round->rptr++;
     if (round->rptr >= round->eptr) {
         round->rptr = round->bptr;
@@ -130,7 +139,7 @@ INT32U LeftOfRoundBuf(ROUNDBUF_T *round)
 {
     return (round->bufsize - round->used);
 }
-
+#if 0
 /**************************************************************************************************
 **  函数名称:  UsedOfRoundBuf
 **  功能描述:  获取缓冲区已用空间
@@ -141,7 +150,7 @@ INT32U UsedOfRoundBuf(ROUNDBUF_T *round)
 {
     return round->used;
 }
-
+#endif
 /**************************************************************************************************
 **  函数名称:  WriteBlockRoundBuf
 **  功能描述:  缓冲区写入连续数据
@@ -150,18 +159,18 @@ INT32U UsedOfRoundBuf(ROUNDBUF_T *round)
 **************************************************************************************************/
 BOOLEAN WriteBlockRoundBuf(ROUNDBUF_T *round, INT8U *bptr, INT32U blksize)
 {
+    ENTER_CRITICAL();
     if (blksize > LeftOfRoundBuf(round)) {
+			  EXIT_CRITICAL();
         return false;
     }
      
     for (; blksize > 0; blksize--) {
         *round->wptr++ = *bptr++;
         if (round->wptr >= round->eptr) round->wptr = round->bptr;
-        ENTER_CRITICAL();
         round->used++;
-        EXIT_CRITICAL();
     }
-    
+    EXIT_CRITICAL();
     return true;
 }
 

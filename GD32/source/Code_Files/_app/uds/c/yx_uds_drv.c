@@ -1094,7 +1094,7 @@ static BOOLEAN UDS_CanDataHdl(INT32U id, INT8U* data, INT8U len)
             return TRUE;
         }
     }*/
-    
+    if(YX_SendudsMul())       return false;   /* 正在发送发送多帧  */
     /* 单帧处理 */
     if (YX_UDS_Recv(FALSE, id, data, (INT16U)len)) {
         #if DEBUG_UDS > 0

@@ -82,6 +82,8 @@ typedef struct {
     INT16U   packet_tmrcnt;                                  /* 超时计数器 */
     INT16U  packet_totallen;                                /* 多包传输的总长度 */
     INT32U  packet_id;                                      /* 多包传输的参数组号 */
+		BOOLEAN wait_cf;                                        /* UDS:接收完首帧(FF),并响应流控帧(FC),开始等待连续帧(CF)响应超时150ms */
+    INT16U  wait_cf_time_out;                               /* UDS:等待连续帧(CF)超时时间计数 */  
 }PACKET_PARA_T;
 
 typedef struct {
@@ -105,6 +107,8 @@ typedef struct {
     INT32U  sendid;
     INT32U  recvid;
     INT8U   prot_type;
+		BOOLEAN wait_fc;                                           /* UDS:发送完首帧(FF),等待流控帧(FC)响应超时150ms */
+    INT16U  wait_fc_time_out;                                  /* UDS:等待流控帧(FC)超时时间计数 */    
 } MULTIPACKET_SEND_T;
 
 /**************************************************************************************************
@@ -167,7 +171,13 @@ void SendTimeCan(INT8U* data);
  ** 返回:       无
  ******************************************************************************/
 void YX_CAN_Init(void);
-
+/**************************************************************************************************
+**  函数名称:  YX_SendudsMul
+**  功能描述:  判断是否在发送uds多帧
+**  输入参数:  None
+**  返回参数:  None
+**************************************************************************************************/
+BOOLEAN YX_SendudsMul(void);
 BOOLEAN SetCANMsg_Period(INT32U id, INT8U *ptr, INT16U period, INT8U channel);
 BOOLEAN StopCANMsg_Period(INT32U id, INT8U channel);
 

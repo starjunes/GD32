@@ -95,6 +95,7 @@ typedef struct {
     INT8U DID_1030[2];    // 仪表车速
     INT8U DID_1031[2];    // 发动机转速
     INT8U DID_1036[1];    // TBOX备用电池电压
+    INT8U DID_103A[64];   // mcu版本号
     INT8U DID_103B[4];    // AI总里程/积分总里程
     INT8U DID_103C[4];    // AI总油耗/积分总油耗
     INT8U DID_103D[1];    // TSP连接状态  
@@ -110,6 +111,12 @@ static CAN_SIGNAL_T      s_can_signal;
 static CAR_SIGNAL_TYPE_E s_car_signal;
 static INT16U s_vehSpeed = 0;
 static INT8U  s_vehSpeed_over = 0;
+static const INT8U s_did_103a[64] = {
+     'V',  '4',  '.',  '3',  '5',  'Y',  0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
+};
 /*
 ********************************************************************************
 * 定义本地接口
@@ -317,6 +324,7 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
     {0x1030, DID_RO,  sizeof(s_uds_did_local.DID_1030), s_uds_did_local.DID_1030, DID_DATA_TYPE_HEX , DID_Read1030, NULL},
     {0x1031, DID_RO,  sizeof(s_uds_did_local.DID_1031), s_uds_did_local.DID_1031, DID_DATA_TYPE_HEX , DID_Read1031, NULL},
     {0x1036, DID_RO,  sizeof(s_uds_did_local.DID_1036), s_uds_did_local.DID_1036, DID_DATA_TYPE_HEX , DID_Read1036, NULL},
+    {0x103A, DID_RO,  sizeof(s_uds_did_local.DID_103A), s_uds_did_local.DID_103A, DID_DATA_TYPE_ASCII,NULL,         NULL},
     {0x103B, DID_RO,  sizeof(s_uds_did_local.DID_103B), s_uds_did_local.DID_103B, DID_DATA_TYPE_HEX , DID_Read103B, NULL},
     {0x103C, DID_RO,  sizeof(s_uds_did_local.DID_103C), s_uds_did_local.DID_103C, DID_DATA_TYPE_HEX , DID_Read103C, NULL},
     {0x103D, DID_RO,  sizeof(s_uds_did_local.DID_103D), s_uds_did_local.DID_103D, DID_DATA_TYPE_HEX , DID_Read103D, NULL},
@@ -334,14 +342,18 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
 		{0x102C, DID_RW,	sizeof(s_uds_did_e2rom_data.DID_102C), s_uds_did_e2rom_data.DID_102C, DID_DATA_TYPE_HEX,	 NULL, NULL},
 
 		{0x1035, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_1035), s_uds_did_e2rom_data.DID_1035, DID_DATA_TYPE_HEX,   NULL, NULL},	
+		{0x2100, DID_RO,	sizeof(s_uds_did_e2rom_data.DID_2100), s_uds_did_e2rom_data.DID_2100, DID_DATA_TYPE_ASCII, NULL, NULL}, 
 		{0x3102, DID_RO,	sizeof(s_uds_did_e2rom_data.DID_3102), s_uds_did_e2rom_data.DID_3102, DID_DATA_TYPE_HEX,	 NULL, NULL}, 
 		{0x3103, DID_RO,	sizeof(s_uds_did_e2rom_data.DID_3103), s_uds_did_e2rom_data.DID_3103, DID_DATA_TYPE_HEX,	 NULL, NULL}, 
 		{0xF182, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F182), s_uds_did_e2rom_data.DID_F182, DID_DATA_TYPE_ASCII, NULL, NULL},   
     {0xF187, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F187), s_uds_did_e2rom_data.DID_F187, DID_DATA_TYPE_ASCII, NULL, NULL},   
-    {0xF190, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F190), s_uds_did_e2rom_data.DID_F190, DID_DATA_TYPE_ASCII, NULL, NULL},   
+    {0xF190, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F190), s_uds_did_e2rom_data.DID_F190, DID_DATA_TYPE_ASCII, NULL, NULL}, 
+    {0xF192, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F192), s_uds_did_e2rom_data.DID_F192, DID_DATA_TYPE_ASCII, NULL, NULL},
     {0xF193, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F193), s_uds_did_e2rom_data.DID_F193, DID_DATA_TYPE_ASCII, NULL, NULL},
     {0xF194, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F194), s_uds_did_e2rom_data.DID_F194, DID_DATA_TYPE_ASCII, NULL, NULL},  
-    {0xF195, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F195), s_uds_did_e2rom_data.DID_F195, DID_DATA_TYPE_ASCII, NULL, NULL},   
+    {0xF195, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F195), s_uds_did_e2rom_data.DID_F195, DID_DATA_TYPE_ASCII, NULL, NULL}, 
+    {0xF198, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F198), s_uds_did_e2rom_data.DID_F198, DID_DATA_TYPE_ASCII, NULL, NULL}, 
+    {0xF199, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F199), s_uds_did_e2rom_data.DID_F199, DID_DATA_TYPE_BCD,   NULL, NULL},  
     {0xF19D, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F19D), s_uds_did_e2rom_data.DID_F19D, DID_DATA_TYPE_BCD,   NULL, NULL},   
     {0xF1A1, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F1A1), s_uds_did_e2rom_data.DID_F1A1, DID_DATA_TYPE_ASCII, NULL, NULL},     
 };
@@ -416,7 +428,9 @@ static void DID_HandleTmr(void* pdata)
                 for (i = 0; i < MAX_DID_NUM; i++) {
                     if (s_did_status[i] == 1) {
                         s_did_status[i] = 0;
-                        isNeedSaveToFlash = TRUE;
+												if(i != 9){
+                            isNeedSaveToFlash = TRUE;
+												}
                         /* 上报到屏 */
                         wstrm = bal_STREAM_GetBufferStream();
                         bal_WriteHWORD_Strm(wstrm, CLIENT_CODE);//CLIENT_CODE
@@ -913,9 +927,10 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
         #endif
         if (s_did_status[i] == 0) {         
             /* did == 0xF1A1 ||did == 0xF182 || did == 0xF187 为MCU默认配置，无需主机同步 */
-            if (did == 0xF190 || did == 0xF193 || did == 0xF195 || did == 0xF19D || did == 0x1004 ||
-							  did == 0x1002 || did == 0x1003 || did == 0x1028 || did == 0x1009 || did == 0x1010 || 
-							  did == 0x1015 || did == 0x3102 || did == 0x3103 || did == 0xF194 ) {
+            if ((did == 0xF190) || (did == 0xF193) || (did == 0xF195) || (did == 0xF19D) || (did == 0x1004) ||
+							  (did == 0x1002) || (did == 0x1003) || (did == 0x1028) || (did == 0x1009) || (did == 0x1010) || 
+							  (did == 0x1015) || (did == 0x3102) || (did == 0x3103) || (did == 0xF194) || (did == 0x2100) ||
+							  (did == 0xF192) || (did == 0xF199)) {
 							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
                 DID_DataUpdate();
             }
@@ -1074,8 +1089,8 @@ void YX_UDS_DID_Init(void)
     YX_UDS_DID_DataReset();
     
     //img_inf = YX_GetVersionDate();
-    //memcpy(s_uds_did_local.DID_F184, img_inf, sizeof(s_uds_did_local.DID_F184));
-    
+    memcpy(s_uds_did_local.DID_103A, s_did_103a, sizeof(s_uds_did_local.DID_103A));
+    s_did_status[9] = 1;
     s_delay_save_to_flash = 0;
     if (!bal_pp_ReadParaByID(UDS_DID_PARA_, (INT8U *)&s_uds_did_e2rom_data, sizeof(UDS_DID_DATA_E2ROM_T))) {
         #if DEBUG_DID > 0
