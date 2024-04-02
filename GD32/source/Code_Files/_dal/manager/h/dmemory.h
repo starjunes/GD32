@@ -15,6 +15,7 @@
 #ifndef __DMEMORY_H
 #define __DMEMORY_H
 
+#define SIZE_HEAP_MEM        (30 * 1024)                   /* ÄÚ´æ³Ø´óÐ¡ */
 
 
 

@@ -105,7 +105,7 @@ typedef enum {
 #define YC_CANID_LOCK                  0x18FE03FB                      /* 锁车/解锁指令 */
 #define YC_CANID_ACKSTATUS             0x18FD0100                     	/* ECU响应状态报文 */
 
-
+#if LOCK_COLLECTION > 0
 /* 平台D008监控数据 */
 typedef struct{
 	INT16U	restarttime;				//	重新点火后报文采集时间
@@ -117,7 +117,7 @@ typedef struct{
 	INT8U	lockcmdtotal;				//	收到锁车指令后采集到报文总条数
 	INT8U	lockcmddata[20][12];		//	收到锁车指令后5s内锁车相关数据 ID+报文
 }D008_DATA_T;
-
+#endif
 
 
 void    Lock_Init(void);

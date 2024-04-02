@@ -44,8 +44,10 @@ void PORT_Free(void *ptr)
 *****************************************************************************/
 INT32U PORT_GetFreeHeapSize(void)
 {
-    //return hal_GetFreeHeapSize();
-    return 0;
+	HEAPMEM_STATISTICS_T* p_dm_sta;
+    p_dm_sta = mmi_dmemory_getstatistics();
+    return (SIZE_HEAP_MEM - p_dm_sta->occupysize);
+    //return 0;
 }
 /*****************************************************************************
 **  º¯ÊýÃû:  PORT_GetDmSize
