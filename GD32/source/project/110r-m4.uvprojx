@@ -1118,6 +1118,11 @@
               <FileType>4</FileType>
               <FilePath>..\Code_Files\lib\xichai_ems_seedkey.lib</FilePath>
             </File>
+            <File>
+              <FileName>loan_sha256.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Code_Files\lib\loan_sha256.lib</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
