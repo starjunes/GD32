@@ -80,7 +80,7 @@ static void SignalLedOut(void)
     #endif
     if (s_canrx_status != canrx_status) {
         if ((canrx_status & 0x03) == 0x03) {		//两路can通讯正常
-            bal_output_InstallPermnentPort(PORT_CANLED, 5, 5);
+            bal_output_InstallPermnentPort(PORT_CANLED, 5, 0);
             #if DEBUG_SIGNAL_STATUS > 0
             debug_printf("CAN通信正常\r\n");
             #endif
