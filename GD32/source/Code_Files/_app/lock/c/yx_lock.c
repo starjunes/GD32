@@ -97,10 +97,10 @@ static INT8U           s_ycseed[4];
 static BOOLEAN         f_handsk = FALSE;						// 是否握手成功
 static BOOLEAN         f_handskcnt = 0;
 static INT32U 		   s_securitykey[4] = {0x32B162CD,0x729F6E13,0x5FAE2E12,0x12747A3E};
-
+#if LOCK_COLLECTION > 0
 static D008_DATA_T	   *s_d008data;				// 记录监控数据
 static INT16U		   s_d008locktime = 600;			// 收到指令后采集报文时间
-
+#endif
 
 static BOOLEAN		  	s_ishandover	= FALSE;	   			/* 握手结束标志 */
 static HANDSHAKE_ACK_E	s_handshake_ack = HANDSHAKE_UNKNOWN;    // 上报平台握手结果
@@ -2101,13 +2101,14 @@ void Lock_Init(void)
     id = bal_chartolong(onlinedata);
     CAN_TxData(onlinedata, false, LOCK_CAN_CH);
     SetCANMsg_Period(id, &onlinedata[4], 100, LOCK_CAN_CH);
-    
+    #if LOCK_COLLECTION > 0
     //memset(&g_d008data, 0, sizeof(D008_DATA_T));
     s_d008data = (D008_DATA_T*)YX_MemMalloc(sizeof(D008_DATA_T));
     if (s_d008data != NULL) {
         memset(s_d008data, 0, sizeof(D008_DATA_T));
         s_d008data->lockcmdtime = 1100;
     }
+	#endif
 }
 /**************************************************************************************************
 **  函数名称:  CanBaudSet
