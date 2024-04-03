@@ -391,8 +391,6 @@ static void GetSignalstatusTmr(void* pdata)
 	YX_MEMSET(data, 0x00, sizeof(data));
 		
 	ret = HAL_sd2058_ReadCalendar(data);
-	SendTimeCan(data);
-	HAL_sd2058_ReadCalendar(data);
 	if((count++ >= 2) && YX_COM_Islink()) { 
 		count = 0;
 		if(ret) {
@@ -419,6 +417,7 @@ static void GetSignalstatusTmr(void* pdata)
 			count = 0;
 		}
 	}
+	SendTimeCan(data);
 }
 /*******************************************************************************
  ** º¯ÊıÃû:    YX_Signal_Init
