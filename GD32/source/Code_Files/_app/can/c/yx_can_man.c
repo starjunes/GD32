@@ -2764,7 +2764,7 @@ INT8U YX_CAN_SoftStatus(void)
 *******************************************************************************/
 void SendTimeCan(INT8U* data)
 {
-    INT8U senddata[13] = {0x18,0xFE,0xE6,0x4A,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    INT8U senddata[13] = {0x18,0xFE,0xE6,0x4A,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}; /* 0x18FEE64A */
 
     if(data[6] || data[4] || data[0] ) {
 		    data[6] = 2000 + data[6] - 1985;
@@ -2782,6 +2782,26 @@ void SendTimeCan(INT8U* data)
 		#if DEBUG_EX_RTC > 0
    	debug_printf("SendTimeCan\r\n");
    	#endif
+}
+/*******************************************************************************
+**  函数名称:  Control_IdleWarmup
+**  功能描述:  控制怠速暖风机报文发送
+**  输入参数:  
+**  返回参数:  无
+*******************************************************************************/
+void Control_IdleWarmup(void)
+{
+    //INT8U senddata[13] = {0x18,0xFF,0x02,0x41,0x08,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xE3,0xFF}; /* 0x18FF0241 */
+		CAN_DATA_SEND_T candata;
+		
+    candata.can_DLC = 8;
+    candata.can_id = 0x18FF0241;
+    candata.can_IDE = FMAT_EXT;
+    candata.channel = CAN_CHN_1;
+    candata.period =  10;
+    memset(&candata.Data, 0xFF, sizeof(candata.Data));
+		candata.Data[6] = 0xE3;
+    PORT_CanSend(&candata);
 }
 
 /*******************************************************************************

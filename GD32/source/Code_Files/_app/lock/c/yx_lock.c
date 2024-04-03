@@ -1208,11 +1208,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
         printf_hex(userdata,userdatalen);
         debug_printf("\r\n");
     #endif
-	 #if DEBUG_TEMP > 0
-        debug_printf("下发锁车参数FD-01:");
-        printf_hex(userdata,userdatalen);
-        debug_printf("\r\n");
-    #endif
+
 	if (userdata[0] != ECU_KMS_Q6){						//康明斯长度不一样
 		if (userdatalen != 13) {                        // 总长度不符合
 			#if EN_DEBUG > 0

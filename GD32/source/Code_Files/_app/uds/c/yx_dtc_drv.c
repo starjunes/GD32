@@ -151,7 +151,7 @@ static BOOLEAN s_bat_pow_low_sta = FALSE;
 static NODE_LOST_T s_node_lost[MAX_NODE_LOST_NUM];
 static const NODE_LOST_OBJ_T s_nodelost_obj[MAX_NODE_LOST_NUM] = {
     {0x00,       500,   &s_node_lost[0]},    // 所有伙伴ECU超时（J6低配节点超时）  
-    {0x18FEF000, 100,   &s_node_lost[1]},    // EMS节点超时
+    {0x18FEF100, 100,   &s_node_lost[1]},    // EMS节点超时
     {0x0CFE6C17, 50,    &s_node_lost[2]},    // IC仪表节点超时    
     {0x18D00021, 100,   &s_node_lost[3]},    // BCM节点超时//
     {0x18FF6003, 50,    &s_node_lost[4]},    // TCU节点超时//
