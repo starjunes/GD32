@@ -2129,7 +2129,6 @@ void Lock_KmsG5Cmd(INT8U* data, INT16U len)
 **************************************************************************************************/
 void Lock_Init(void)
 {
-    INT8U onlinedata[13] = {0x18,0xFF,0xF2,0x4A,0x08,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};//ÁªÍø±¨ÎÄ
     INT32U id;
     bal_pp_ReadParaByID(LOCKRECORD_,(INT8U *)&s_lockrecord, sizeof(LOCK_RECORD));
     bal_pp_ReadParaByID(SCLOCKPARA_,(INT8U *)&s_sclockpara, sizeof(SCLOCKPARA_T));
@@ -2142,10 +2141,7 @@ void Lock_Init(void)
     s_lock_tmr = OS_InstallTmr(TSK_ID_OPT, 0, LockTmrProc);
     SecurityKeySet(s_sclockpara.securityKey, s_sclockpara.securityKeylen);
     ACCON_HandShake();
-    
-    id = bal_chartolong(onlinedata);
-    CAN_TxData(onlinedata, false, LOCK_CAN_CH);
-    SetCANMsg_Period(id, &onlinedata[4], 100, LOCK_CAN_CH);
+
     #if LOCK_COLLECTION > 0
     //memset(&g_d008data, 0, sizeof(D008_DATA_T));
     s_d008data = (D008_DATA_T*)YX_MemMalloc(sizeof(D008_DATA_T));
