@@ -392,7 +392,7 @@ static void GetSignalstatusTmr(void* pdata)
 		
 	ret = HAL_sd2058_ReadCalendar(data);
 	SendTimeCan(data);
-
+	HAL_sd2058_ReadCalendar(data);
 	if((count++ >= 2) && YX_COM_Islink()) { 
 		count = 0;
 		if(ret) {
