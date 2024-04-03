@@ -26,6 +26,7 @@
 #include "port_gpio.h"
 #include "yx_uds_did.h"
 #include "yx_com_send.h"
+#include "yx_can_man.h"
 #include "hal_exrtc_sd2058_drv.h"
 #include "public.h"
 #include "appmain.h"
@@ -562,6 +563,20 @@ void YX_EXT_PRO_Send(INT8U type, INT16U flow, INT8U* data, INT16U len)
          [in] len: 数据长度
 ** 返回: NULL
 ********************************************************************/
+static void UDS_DID102A_Handle(void)
+{
+    if((s_uds_did_e2rom_data.DID_102A[18] == 0x00) && (s_car_signal != CAR_SIGNAL_QINGQI)) {     /* 无VIST */
+		    Control_IdleWarmup();
+    }
+}
+/*******************************************************************
+** 函数名: UDS_SID22_Response
+** 函数描述: 通过标识符读数据肯定响应
+** 参数: [in] did: 数据标识符
+         [in] data: 肯定响应数据
+         [in] len: 数据长度
+** 返回: NULL
+********************************************************************/
 static void UDS_SID22_Response(INT16U did, INT8U *data, INT8U len)
 {
     STREAM_T wstrm;
@@ -843,8 +858,12 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
          memcpy(s_uds_did_obj[i].data, p_did, didLen);
 				 if(did == 0x0100) {
 				     YX_Set_CarSignal(s_uds_did_obj[i].data);	
+						 UDS_DID102A_Handle();
 				 }
-        if (did != 0xF184) {
+				 if(did == 0x102A) {
+				     UDS_DID102A_Handle();
+				 }
+         if (did != 0xF184) {
             DID_DataUpdateDelay();
             #if DEBUG_DID > 0
             debug_printf("<**** 保存2E服务下发的did(0x%x)到pp参数延时启动 ****>\r\n",did);
@@ -1098,6 +1117,7 @@ void YX_UDS_DID_Init(void)
         #endif
     } 
     YX_Set_CarSignal(s_uds_did_e2rom_data.DID_0100);
+		UDS_DID102A_Handle();
     s_did_tmr = OS_InstallTmr(TSK_ID_OPT, 0, DID_HandleTmr);
     OS_StartTmr(s_did_tmr, _SECOND, 1);
 
