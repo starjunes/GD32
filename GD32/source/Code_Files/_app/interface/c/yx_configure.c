@@ -684,7 +684,7 @@ void Client_FuntionDown_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U da
 			YX_COM_DirSend( CLIENT_FUNCTION_DOWN_REQ_ACK, ack, 4);
             break;
         case 0x35:  /* 数据上报回复 */
-            
+            LockSafeDataAck(&data[3], datalen - 3);
             break;
         default:
             break;

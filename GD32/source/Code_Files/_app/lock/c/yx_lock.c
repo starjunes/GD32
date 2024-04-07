@@ -48,7 +48,10 @@
 
 
 
-#define KMS_Q6_KEY_ID          0x18FFCA00   /* 康明斯ECU to 记录仪 */
+#define KMS_Q6_KEY_ID           0x18FFCA00          /* 康明斯ECU to 记录仪 */
+        
+static REUPSAFE_DATA_T*         s_lockmsg_buf;      // 锁车上报数据内存
+static INT8U                    s_req = 0;          // 上报流水号
 
 typedef struct {
     INT8U  chn;
@@ -145,6 +148,18 @@ static XCLOCKPARA_T s_xclockpara;
 static INT8U s_xichai_seed[8];              // 锡柴随机数
 static INT8U hash[SIZE_OF_SHA_256_HASH];    // 计算的哈希值
 static INT8U hash_cnt = 0;                  // 发送哈希值计数
+
+/**************************************************************************************************
+**  函数名称:  KmsG5LockMsgSend
+**  功能描述:  柳汽康明斯国5锁车指令发送
+**  输入参数:  无
+**  输出参数:  无
+**  返回参数:  无
+**************************************************************************************************/
+static void KmsG5LockMsgSend(void)
+{
+
+}
 
 /**************************************************************************************************
 **  函数名称:  KmsG5LockMsgSend
@@ -571,6 +586,7 @@ void XC_Checkcode(void)
                 s_ishandover = TRUE;
                 s_handshake_ack = HANDSHAKE_OK;
                 f_handsk = TRUE; 
+                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
             }
             break;
         default:
@@ -683,6 +699,7 @@ void WC_CanDelayTmr(void)
 				f_handsk = FALSE;		// 握手失败
 				s_handshake_ack = HANDSHAKE_CHECKERR;
 				s_ishandover = TRUE;
+                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 			}
 		default:
 		break;
@@ -694,6 +711,7 @@ void WC_CanDelayTmr(void)
 			f_handsk = FALSE;
 			s_handshake_ack = HANDSHAKE_BUSEXCEPTION;
 			s_ishandover = TRUE;
+            LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 		}
 	}
 	if ((s_wc_0100recv == FALSE) && (s_ishandover == FALSE)) {
@@ -701,6 +719,7 @@ void WC_CanDelayTmr(void)
 			s_wc_0800cnt = 1002;
 			s_handshake_ack = HANDSHAKE_ERR;
 			s_ishandover = TRUE;
+            LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 		}
 	}
 }
@@ -772,6 +791,7 @@ void YC_CanDelayTmr(void)
 				s_ishandover = TRUE;
 				f_handsk	= FALSE;
 				s_handshake_ack = HANDSHAKE_BUSEXCEPTION;
+                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 			}
 			break;
 		case CONFIG_CONFIRM_REC:
@@ -785,6 +805,7 @@ void YC_CanDelayTmr(void)
 				s_sclockstep = CONFIG_OVER;
 				s_ishandover = TRUE;
 				f_handsk	= FALSE;
+                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 			}
 			break;
 		default:
@@ -888,6 +909,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     f_handsk = true;
 					s_handshake_ack = HANDSHAKE_OK;
 					s_ishandover = TRUE;
+                    LockSafeDataAdd(0x00, 1, &s_handshake_ack);
                     //StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
                     s_handskenable = FALSE;
                     /* 握手成功，发送全0清除标志到0x18fe02fb */
@@ -905,6 +927,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     s_ishandover = TRUE;
                     s_handskenable = FALSE;
                     s_handshake_ack = HANDSHAKE_OK;
+                    LockSafeDataAdd(0x00, 1, &s_handshake_ack);
                     /* 握手成功，发送全0清除标志到0x18fe02fb */
                     CAN_TxData(senddata, false, LOCK_CAN_CH);
                     #if DEBUG_LOCK > 0
@@ -1026,6 +1049,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 					s_ishandover = TRUE;
 					s_handshake_ack = HANDSHAKE_OK;
 					f_handsk = TRUE;
+                    LockSafeDataAdd(0x00, 1, &s_handshake_ack);
                 }
                 memcpy(s_lockstatid,CAN_msg->id,4);
                 memcpy(s_lockstatid + 4,CAN_msg->databuf,8);
@@ -1071,6 +1095,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                 s_ishandover = TRUE;
                 s_handshake_ack = HANDSHAKE_CHECKERR;
                 f_handsk = TRUE; 
+                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
             }
             XC_Checkcode();
         }
@@ -1594,8 +1619,88 @@ void CanDelayTmr(void)
 			break;
 	}
 }
+/**************************************************************************************************
+**  函数名称:  LockSafeDataAdd
+**  功能描述:  锁车安全数据填充
+**  输入参数:  type--数据类型
+              len--数据长度
+              buf--数据内容
+**  输出参数:  无
+**  返回参数:  true:填充成功 false：数据缓存已满，填充失败
+**************************************************************************************************/
+static BOOLEAN LockSafeDataAdd(INT8U type, INT8U len, INT8U* buf)
+{
+    INT8U i = 0;
+    for (i = 0; i < HANDDATANUM;i++) {
+        if (s_lockmsg_buf->active[i] == FALSE) {
+            s_lockmsg_buf->buf[i][0] = s_req++;
+            s_lockmsg_buf->buf[i][1] = type;
+            s_lockmsg_buf->buf[i][2] = len;
+            memcpy(&s_lockmsg_buf->buf[i][3], buf, len);
+            break;
+        }
+    }
+    if (i >= HANDDATANUM) {
+        return FALSE;
+    } else {
+        return TRUE;
+    }
+}
+/**************************************************************************************************
+**  函数名称:  LockSafeDataTran
+**  功能描述:  锁车安全数据循环上报
+**  输入参数:  无
+**  输出参数:  无
+**  返回参数:  无
+**************************************************************************************************/
+static void LockSafeDataTran(void)
+{
+    static INT8U delay = 0;
+    INT8U sendbuf[64] = {0};
+    INT8U i = 0;
+    if (++delay < 100) {    // 周期1s
+        return;
+    }
+    delay = 0;
+
+    bal_shorttochar(sendbuf, CLIENT_CODE);      // 客户编号
+    sendbuf[2] = 0x35;                          // 协议命令
+    for (i = 0; i < HANDDATANUM;i++) {
+        if (s_lockmsg_buf->active[i] == TRUE) {
+            sendbuf[3] = s_lockmsg_buf->buf[i][0];      // 流水号
+            sendbuf[4] = s_lockmsg_buf->buf[i][1];      // 参数类型
+            memcpy(&sendbuf[5], &s_lockmsg_buf->buf[i][3], s_lockmsg_buf->buf[i][2]);
+            YX_COM_DirSend(CLIENT_FUNCTION_DOWN_REQ, sendbuf, s_lockmsg_buf->buf[i][2]+5);
+        }
+    }
+}
 
 
+/**************************************************************************************************
+**  函数名称:  LockSafeDataTran
+**  功能描述:  锁车安全数据回复解析
+**  输入参数:  无
+**  输出参数:  无
+**  返回参数:  无
+**************************************************************************************************/
+void LockSafeDataAck(INT8U *userdata, INT8U userdatalen)
+{
+    INT8U seq, result, i;
+    #if DEBUG_LOCK > 0
+    debug_printf("LockSafeDataAck data:");
+    Debug_PrintHex(TRUE, userdata, userdatalen);
+    #endif
+    seq     = userdata[0];
+    result  = userdata[1];
+    for (i = 0; i < HANDDATANUM; i++) {
+        if (s_lockmsg_buf->active[i] == TRUE) {
+            if ((s_lockmsg_buf->buf[i][0] == seq) && (result == 0x00)) {
+               s_lockmsg_buf->active[i] = FALSE;
+               break;
+            }
+        }
+    }
+}
 /**************************************************************************************************
 **  函数名称:  LockTmrProc
 **  功能描述:  锁车定时器 10ms
@@ -2138,6 +2243,7 @@ void Lock_Init(void)
     SecurityKeySet(s_sclockpara.securityKey, s_sclockpara.securityKeylen);
     ACCON_HandShake();
 
+    s_lockmsg_buf = (REUPSAFE_DATA_T*)YX_MemMalloc(sizeof(REUPSAFE_DATA_T));
     #if LOCK_COLLECTION > 0
     //memset(&g_d008data, 0, sizeof(D008_DATA_T));
     s_d008data = (D008_DATA_T*)YX_MemMalloc(sizeof(D008_DATA_T));

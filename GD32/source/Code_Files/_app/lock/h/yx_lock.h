@@ -118,7 +118,13 @@ typedef struct{
 	INT8U	lockcmddata[20][12];		//	收到锁车指令后5s内锁车相关数据 ID+报文
 }D008_DATA_T;
 #endif
-
+#define HANDDATANUM     10              // 数据深度
+#define HANDSATALENTH   20              // 数据长度
+/* 安全数据重复上报 */
+typedef struct{
+	BOOLEAN active[HANDDATANUM];              // 数据发送使能
+    INT8U   buf[HANDDATANUM][HANDSATALENTH];  // 流水号(1)+数据类型(1)+数据长度(1)+数据内容(N)
+}REUPSAFE_DATA_T;
 
 void    Lock_Init(void);
 BOOLEAN LockParaBak(INT8U *userdata, INT8U userdatalen);
@@ -142,6 +148,15 @@ void 	CanBaudSet(INT16U baud,INT8U channel);
 **  返回参数:  无
 **************************************************************************************************/
 void Lock_KmsG5Cmd(INT8U* data, INT16U len);
+
+/**************************************************************************************************
+**  函数名称:  LockSafeDataTran
+**  功能描述:  锁车安全数据回复解析
+**  输入参数:  无
+**  输出参数:  无
+**  返回参数:  无
+**************************************************************************************************/
+void LockSafeDataAck(INT8U *userdata, INT8U userdatalen);
 
 /**************************************************************************************************
 **  函数名称:  KMS_Hand_Send_Set
