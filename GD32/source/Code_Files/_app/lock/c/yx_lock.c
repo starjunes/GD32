@@ -150,15 +150,31 @@ static INT8U hash[SIZE_OF_SHA_256_HASH];    // 计算的哈希值
 static INT8U hash_cnt = 0;                  // 发送哈希值计数
 
 /**************************************************************************************************
-**  函数名称:  KmsG5LockMsgSend
-**  功能描述:  柳汽康明斯国5锁车指令发送
-**  输入参数:  无
+**  函数名称:  LockSafeDataAdd
+**  功能描述:  锁车安全数据填充
+**  输入参数:  type--数据类型
+              len--数据长度
+              buf--数据内容
 **  输出参数:  无
-**  返回参数:  无
+**  返回参数:  true:填充成功 false：数据缓存已满，填充失败
 **************************************************************************************************/
-static void KmsG5LockMsgSend(void)
+static BOOLEAN LockSafeDataAdd(INT8U type, INT8U len, INT8U* buf)
 {
-
+    INT8U i = 0;
+    for (i = 0; i < HANDDATANUM;i++) {
+        if (s_lockmsg_buf->active[i] == FALSE) {
+            s_lockmsg_buf->buf[i][0] = s_req++;
+            s_lockmsg_buf->buf[i][1] = type;
+            s_lockmsg_buf->buf[i][2] = len;
+            memcpy(&s_lockmsg_buf->buf[i][3], buf, len);
+            break;
+        }
+    }
+    if (i >= HANDDATANUM) {
+        return FALSE;
+    } else {
+        return TRUE;
+    }
 }
 
 /**************************************************************************************************
@@ -1619,33 +1635,7 @@ void CanDelayTmr(void)
 			break;
 	}
 }
-/**************************************************************************************************
-**  函数名称:  LockSafeDataAdd
-**  功能描述:  锁车安全数据填充
-**  输入参数:  type--数据类型
-              len--数据长度
-              buf--数据内容
-**  输出参数:  无
-**  返回参数:  true:填充成功 false：数据缓存已满，填充失败
-**************************************************************************************************/
-static BOOLEAN LockSafeDataAdd(INT8U type, INT8U len, INT8U* buf)
-{
-    INT8U i = 0;
-    for (i = 0; i < HANDDATANUM;i++) {
-        if (s_lockmsg_buf->active[i] == FALSE) {
-            s_lockmsg_buf->buf[i][0] = s_req++;
-            s_lockmsg_buf->buf[i][1] = type;
-            s_lockmsg_buf->buf[i][2] = len;
-            memcpy(&s_lockmsg_buf->buf[i][3], buf, len);
-            break;
-        }
-    }
-    if (i >= HANDDATANUM) {
-        return FALSE;
-    } else {
-        return TRUE;
-    }
-}
+
 /**************************************************************************************************
 **  函数名称:  LockSafeDataTran
 **  功能描述:  锁车安全数据循环上报
