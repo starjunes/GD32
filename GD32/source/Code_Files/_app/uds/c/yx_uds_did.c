@@ -566,45 +566,125 @@ void YX_EXT_PRO_Send(INT8U type, INT16U flow, INT8U* data, INT16U len)
 static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
 {
     INT8U j;
-		
+    INT16U phy_range;
+    
     switch (did) {
-				case 0x0110:
-						for (j = 0; j < len; j++) {
-								if (data[j] > 0x01) {
-										return FALSE;
-								}
-						} 					 
-						break;
-				case 0x0100:
-						for (j = 0; j < len - 1; j++) {
-								if (data[j] > 0x01) {
-										return FALSE;
-								}
-						}
-						if(data[len - 1] > 0x0E) {
-						    return FALSE;	
-						}
-						break;
-				case 0x102B:
-					  for (j = 0; j < len; j++) {
-								if (data[j] > 0x0A) {
-										return FALSE;
-								}
-						} 					 	 
-						break;
-				case 0x102C:
-						for (j = 0; j < len; j++) {
-								if (data[j] > 0x04) {
-										return FALSE;
-								}
-						} 						 
-				break;
-
-				default:
-						break;
-		}
-		
-		return true;
+        case 0x0110:
+            for (j = 0; j < len; j++) {
+                if (data[j] > 0x01) {
+                    return FALSE;
+                }
+            } 					 
+        break;
+        case 0x0100:
+            for (j = 0; j < len - 1; j++) {
+                if (data[j] > 0x01) {
+                    return FALSE;
+                }
+            }
+            if(data[len - 1] > 0x0E) {
+                return FALSE;	
+            }
+        break;
+        case 0x1002:
+        case 0x1003:
+            for (j = 0; j < len; j++) {
+                if (((data[j] > 0x39) && (data[j] < 0x41)) || ((data[j] > 0x5A) && (data[j] < 0x61))) {
+                    return FALSE;
+                }
+            }
+        break;
+        case 0x102A:
+            for (j = 0; j < len; j++) {
+                switch (j) {
+                    case 0x00:
+                        if(data[j] > 18) {
+                            return FALSE;
+                        }
+                    break;
+                    case 0x01:
+                        if(data[j] > 6) {
+                            return FALSE;
+                        }
+                    break;
+                    case 0x02:
+                    case 0x08:
+                    case 0x09:
+                    case 0x13:
+                    case 0x15:
+                    case 0x17:
+                    case 0x18:
+                        if(data[j] > 2) {
+                            return FALSE;
+                        }
+                    break;
+                    case 0x03:
+                    case 0x0C
+                        if(data[j] > 7) {
+                            return FALSE;
+                        }
+                    break;
+                    case 0x04:
+                    case 0x11:
+                        if(data[j] > 4) {
+                            return FALSE;
+                        }
+                    break;
+                    case 0x05:
+                    case 0x06:
+                    case 0x10:
+                    case 0x14:
+                    case 0x16:
+                    case 0x19:
+                        if(data[j] > 1) {
+                            return FALSE;
+                        }
+                    break;
+                    case 0x07:
+                    case 0x0B:
+                    case 0x0D:
+                    case 0x0E:
+                    case 0x0F:
+                    case 0x12:
+                        if(data[j] > 3) {
+                            return FALSE;
+                        }
+                    break;
+                    case 0x0A:
+                        if(data[j] > 5) {
+                            return FALSE;
+                        }
+                    break;
+                    default:
+                    break;
+                }
+        } 
+        break;
+        case 0x102B:
+            for (j = 0; j < len; j++) {
+                if (data[j] > 0x0A) {
+                    return FALSE;
+                }
+            } 					 	 
+        break;
+        case 0x102C:
+            for (j = 0; j < len; j++) {
+                if (data[j] > 0x04) {
+                   return FALSE;
+                }
+            } 						 
+        break;
+        case 0x1035:
+        phy_range = (data[0] << 8) + data[1];
+        if (phy_range > 5000) {
+        return FALSE;
+        }				 
+        break;
+        
+        default:
+        break;
+    }
+    return true;
 }
 /*******************************************************************
 ** º¯ÊýÃû: UDS_SID22_Response
