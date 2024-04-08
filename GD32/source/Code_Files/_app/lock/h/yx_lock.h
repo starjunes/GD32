@@ -118,9 +118,9 @@ typedef struct{
 	INT8U	lockcmddata[20][12];		//	收到锁车指令后5s内锁车相关数据 ID+报文
 }D008_DATA_T;
 #endif
-#define HANDDATANUM     10              // 数据深度
+#define HANDDATANUM     15              // 数据深度
 #define HANDSATALENTH   20              // 数据长度
-/* 安全数据重复上报 */
+/* 安全数据重复上报 0~7组存放握手结果*/
 typedef struct{
 	BOOLEAN active[HANDDATANUM];              // 数据发送使能
     INT8U   buf[HANDDATANUM][HANDSATALENTH];  // 流水号(1)+数据类型(1)+数据长度(1)+数据内容(N)

@@ -52,7 +52,7 @@
         
 static REUPSAFE_DATA_T*         s_lockmsg_buf;      // 锁车上报数据内存
 static INT8U                    s_req = 0;          // 上报流水号
-
+static INT32U                   s_igoncnt = 0;      // igon后时间戳/10ms
 typedef struct {
     INT8U  chn;
     INT32U filtrid;
@@ -161,19 +161,28 @@ static INT8U hash_cnt = 0;                  // 发送哈希值计数
 static BOOLEAN LockSafeDataAdd(INT8U type, INT8U len, INT8U* buf)
 {
     INT8U i = 0;
-    for (i = 0; i < HANDDATANUM;i++) {
-        if (s_lockmsg_buf->active[i] == FALSE) {
-            s_lockmsg_buf->buf[i][0] = s_req++;
-            s_lockmsg_buf->buf[i][1] = type;
-            s_lockmsg_buf->buf[i][2] = len;
-			s_lockmsg_buf->active[i] = TRUE;
-            memcpy(&s_lockmsg_buf->buf[i][3], buf, len);
-			#if DEBUG_LOCK > 0
-			debug_printf("LockSafeDataAdd type:%d result:%d\r\n", type, buf[0]);
-			#endif
-            break;
+    if ((type == 0x00) && (buf[0] <  MAX_STAT)) {
+        i = buf[0];
+        s_lockmsg_buf->active[i] = TRUE;
+        s_lockmsg_buf->buf[i][0] = s_req++;
+        s_lockmsg_buf->buf[i][1] = type;
+        s_lockmsg_buf->buf[i][2] = len;
+        memcpy(&s_lockmsg_buf->buf[i][3], buf, len);
+    } else {
+        for (i = MAX_STAT; i < HANDDATANUM;i++) {
+            if (s_lockmsg_buf->active[i] == FALSE) {
+                s_lockmsg_buf->buf[i][0] = s_req++;
+                s_lockmsg_buf->buf[i][1] = type;
+                s_lockmsg_buf->buf[i][2] = len;
+                s_lockmsg_buf->active[i] = TRUE;
+                memcpy(&s_lockmsg_buf->buf[i][3], buf, len);
+                break;
+            }
         }
     }
+    #if DEBUG_LOCK > 0
+    debug_printf("LockSafeDataAdd type:%d result:%d\r\n", type, buf[0]);
+    #endif
     if (i >= HANDDATANUM) {
         return FALSE;
     } else {
@@ -750,7 +759,7 @@ void WC_CanDelayTmr(void)
 		break;
 	}
 
-	if ((s_wc_0800recv == FALSE) && (s_ishandover == FALSE)) {
+	if ((s_wc_0800recv == FALSE) && (s_igoncnt < 110)) {
 		if (++s_wc_0800cnt >= 100) {
 			s_wc_0800cnt = 102;
 			f_handsk = FALSE;
@@ -762,7 +771,7 @@ void WC_CanDelayTmr(void)
             LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 		}
 	}
-	if ((s_wc_0100recv == FALSE) && (s_ishandover == FALSE)) {
+	if ((s_wc_0100recv == FALSE) && ((s_igoncnt < 1010))) {
 		if (++s_wc_0100cnt >= 1000) {
 			s_wc_0800cnt = 1002;
 			s_handshake_ack = HANDSHAKE_ERR;
@@ -1094,7 +1103,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 			s_wc_0800recv = TRUE; 
 			s_wc_0800cnt  = 0;
             if (s_sclockpara.ecutype == ECU_WEICHAI) {
-                if ((s_ishandover == FALSE) || ((CAN_msg->databuf[2] & WC_KEY_BIT) == WC_KEY_BIT)) {
+                if ((s_ishandover == FALSE) && ((CAN_msg->databuf[2] & WC_KEY_BIT) == WC_KEY_BIT)) {
                     s_idfiltenable = TRUE;
                     s_sclockstep = CONFIG_OVER;
 					s_ishandover = TRUE;
@@ -1672,6 +1681,9 @@ void CanDelayTmr(void)
 		default:
 			break;
 	}
+    if (++s_igoncnt > 100*1000) {   // 暂定最大值1000s
+        s_igoncnt    = 100*1000;
+    }
 }
 
 /**************************************************************************************************
@@ -2130,6 +2142,7 @@ void ACCON_HandShake(void)
     s_idfiltcnt    = 0;
     s_parasendcnt  = 0;
 	s_yc_state	   = 0;
+    s_igoncnt      = 0;
     memset(&s_ycseed, 0, sizeof(s_ycseed));
 
     OS_StartTmr(s_lock_tmr, MILTICK, 1);
@@ -2192,6 +2205,7 @@ void ACCOFF_HandShake(void)
 	s_wc_0100recv = 0;
 	s_wc_0800cnt = 0;
 	s_wc_0800recv = 0;
+    s_igoncnt    = 0;
 	s_sclockstep = CONFIG_OVER;
 }
 
