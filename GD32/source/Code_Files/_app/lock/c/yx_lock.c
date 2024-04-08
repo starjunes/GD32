@@ -163,8 +163,10 @@ static BOOLEAN LockSafeDataAdd(INT8U type, INT8U len, INT8U* buf)
     INT8U i = 0;
     if ((type == 0x00) && (buf[0] <  MAX_STAT)) {
         i = buf[0];
-        s_lockmsg_buf->active[i] = TRUE;
-        s_lockmsg_buf->buf[i][0] = s_req++;
+		if (s_lockmsg_buf->active[i] == FALSE) {
+			s_lockmsg_buf->active[i] = TRUE;
+			s_lockmsg_buf->buf[i][0] = s_req++;
+		}
         s_lockmsg_buf->buf[i][1] = type;
         s_lockmsg_buf->buf[i][2] = len;
         memcpy(&s_lockmsg_buf->buf[i][3], buf, len);
@@ -492,12 +494,19 @@ BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 	{
 		case ECU_XICHAI_EMSVI:
 			seedToKey(&data[5], 4, key, &retlen);
-			memcpy(&senddata[5], key, 4);
-			senddata[4] = retlen;
+			memcpy(&senddata[8], key, 4);
+			senddata[4] = retlen+3;
+			senddata[5] = 0x06;
+			senddata[6] = 0x27;
+			senddata[7] = 0x02;
 			break;
 		case ECU_XICHAI_EMSMDI:
 			seedToKey_EControl_app(&data[5], 4, key, &retlen);
-			senddata[4] = retlen;
+			memcpy(&senddata[8], key, 4);
+			senddata[4] = retlen+3;
+			senddata[5] = 0x06;
+			senddata[6] = 0x27;
+			senddata[7] = 0x02;
 			break;
 		case ECU_XICHAI_EMSECO:
 			MessageProcessEnCode(s_xclockpara.ctr_mode, s_xclockpara.limitLR, s_xclockpara.limitHR, s_xclockpara.checkcode, s_xclockpara.msgID, &senddata[5], &xc_checkcounter);
@@ -508,6 +517,14 @@ BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 	}
 	memcpy(senddata, data, 4);		// canid
     ch = data[4];
+	if ((ch > 0) && (ch < CAN_CHN_3)) {
+        ch -= 1;
+    } else {
+        #if DEBUG_LOCK > 0
+        debug_printf("XC_SecretDataTran ch:%d err\r\n", ch);
+        #endif
+        return FALSE;
+    }
 	#if DEBUG_LOCK > 0
 	debug_printf("XC_SecretDataTran ecutype:%d ch:%d ", s_sclockpara.ecutype, ch);
 	Debug_PrintHex(TRUE, senddata, 13);
@@ -759,7 +776,7 @@ void WC_CanDelayTmr(void)
 		break;
 	}
 
-	if ((s_wc_0800recv == FALSE) && (s_igoncnt < 110)) {
+	if ((s_wc_0800recv == FALSE) && (s_wc_0800cnt < 102)) {
 		if (++s_wc_0800cnt >= 100) {
 			s_wc_0800cnt = 102;
 			f_handsk = FALSE;
@@ -771,7 +788,7 @@ void WC_CanDelayTmr(void)
             LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 		}
 	}
-	if ((s_wc_0100recv == FALSE) && ((s_igoncnt < 1010))) {
+	if ((s_wc_0100recv == FALSE) && ((s_wc_0800cnt < 1002))) {
 		if (++s_wc_0100cnt >= 1000) {
 			s_wc_0800cnt = 1002;
 			s_handshake_ack = HANDSHAKE_ERR;
@@ -1075,11 +1092,10 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 		}
 	    #endif
         if (id == 0x18fd0100) {
-			
-			//if ((s_ishandover == TRUE) || (s_wc_0800recv == FALSE)) {
-			if ((s_wc_0100recv == TRUE) || (s_wc_0800recv == FALSE)) {
-				return;		// 握手流程已结束或未收到消贷报文，不响应握手
+			if (s_wc_0800recv == FALSE) {
+				return;		// 未收到消贷报文，不响应握手
 			}
+			s_ishandover = FALSE;
             if(!s_sclockpara.unbindstat){
                 s_md5source[0] = s_sclockpara.firmcode[0];
                 s_md5source[1] = s_sclockpara.firmcode[1];
@@ -2143,6 +2159,11 @@ void ACCON_HandShake(void)
     s_parasendcnt  = 0;
 	s_yc_state	   = 0;
     s_igoncnt      = 0;
+	s_wc_0100cnt   = 0;
+	s_wc_0100recv  = 0;
+	s_wc_0800cnt   = 0;
+	s_wc_0800recv  = 0;
+    s_igoncnt      = 0;
     memset(&s_ycseed, 0, sizeof(s_ycseed));
 
     OS_StartTmr(s_lock_tmr, MILTICK, 1);
@@ -2192,20 +2213,15 @@ void ACCON_HandShake(void)
 **************************************************************************************************/
 void ACCOFF_HandShake(void)
 {
-   if (s_sclockpara.ecutype == ECU_YUCHAI){
-     #if DEBUG_LOCK > 0
-         debug_printf("stop\r\n");
-      #endif
-      s_idfiltenable = FALSE;
-      StopCANMsg_Period(0x18ea0021, LOCK_CAN_CH);
-      StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
-   }
-
-	s_wc_0100cnt = 0;
-	s_wc_0100recv = 0;
-	s_wc_0800cnt = 0;
-	s_wc_0800recv = 0;
-    s_igoncnt    = 0;
+	if (s_sclockpara.ecutype == ECU_YUCHAI){
+		#if DEBUG_LOCK > 0
+		debug_printf("stop\r\n");
+		#endif
+		s_idfiltenable = FALSE;
+		StopCANMsg_Period(0x18ea0021, LOCK_CAN_CH);
+		StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
+	}
+   
 	s_sclockstep = CONFIG_OVER;
 }
 
