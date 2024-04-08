@@ -218,13 +218,15 @@ void VersionNumberReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datale
 {
     char *get_vernum;
     INT8U ack[50];
-
-    get_vernum = YX_GetVersion();
-
-    ack[0] = strlen(get_vernum);
-    memcpy(&ack[1],get_vernum,strlen(get_vernum));
-
-	YX_COM_DirSend( VERSION_REQ_ACK, ack, strlen(get_vernum)+1);
+	ack[0] = data[0];
+	if (ack[0] == 0x01) {
+	    get_vernum = YX_GetVersion();
+	} else if (ack[0] == 0x02) {
+		get_vernum = YX_GetClientVersion();
+	}
+	ack[1] = strlen(get_vernum);
+	memcpy(&ack[2],get_vernum,strlen(get_vernum));
+	YX_COM_DirSend( VERSION_REQ_ACK, ack, strlen(get_vernum)+2);
 }
 /**************************************************************************************************
 **  º¯ÊýÃû³Æ:  DeviceConfigurationQueryHdl
