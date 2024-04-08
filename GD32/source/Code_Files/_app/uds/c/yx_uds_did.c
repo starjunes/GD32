@@ -556,6 +556,57 @@ void YX_EXT_PRO_Send(INT8U type, INT16U flow, INT8U* data, INT16U len)
 }
 #endif
 /*******************************************************************
+** 函数名: Jude_Diddata_Validity
+** 函数描述: 判断DID数据合法性
+** 参数: [in] did: 数据标识符
+         [in] data: 写入数据
+         [in] len: 数据长度
+** 返回: TRUE:合法数据 FALSE: 不合法
+********************************************************************/
+static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
+{
+    INT8U j;
+		
+    switch (did) {
+				case 0x0110:
+						for (j = 0; j < len; j++) {
+								if (data[j] > 0x01) {
+										return FALSE;
+								}
+						} 					 
+						break;
+				case 0x0100:
+						for (j = 0; j < len - 1; j++) {
+								if (data[j] > 0x01) {
+										return FALSE;
+								}
+						}
+						if(data[len - 1] > 0x0E) {
+						    return FALSE;	
+						}
+						break;
+				case 0x102B:
+					  for (j = 0; j < len; j++) {
+								if (data[j] > 0x0A) {
+										return FALSE;
+								}
+						} 					 	 
+						break;
+				case 0x102C:
+						for (j = 0; j < len; j++) {
+								if (data[j] > 0x04) {
+										return FALSE;
+								}
+						} 						 
+				break;
+
+				default:
+						break;
+		}
+		
+		return true;
+}
+/*******************************************************************
 ** 函数名: UDS_SID22_Response
 ** 函数描述: 通过标识符读数据肯定响应
 ** 参数: [in] did: 数据标识符
@@ -840,7 +891,10 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
             break;
     }
 
-
+    if(!Jude_Diddata_Validity(did, p_did, didLen)) {
+        YX_UDS_NegativeResponse(SID_2E, NRC_31);
+        return;
+    }
     is_save_pp = FALSE;
 
     /* 检查是否有更新数据 */
