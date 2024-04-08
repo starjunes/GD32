@@ -127,7 +127,7 @@ static INT8U s_yc_state = 0;		// 握手状态
 
 
 // 康明斯
-#if EN_KMS_LOCK > 0
+
 static KMS_LOCK_STEP_E s_kmslockstep = KMS_REQ_SEED;
 static BOOLEAN s_kms_hand_send_enable = TRUE;//康明斯握手报文发送使能标志
 static INT8U   s_kms_delay_cnt = 0;//康明斯延时计数
@@ -166,7 +166,11 @@ static BOOLEAN LockSafeDataAdd(INT8U type, INT8U len, INT8U* buf)
             s_lockmsg_buf->buf[i][0] = s_req++;
             s_lockmsg_buf->buf[i][1] = type;
             s_lockmsg_buf->buf[i][2] = len;
+			s_lockmsg_buf->active[i] = TRUE;
             memcpy(&s_lockmsg_buf->buf[i][3], buf, len);
+			#if DEBUG_LOCK > 0
+			debug_printf("LockSafeDataAdd type:%d result:%d\r\n", type, buf[0]);
+			#endif
             break;
         }
     }
@@ -220,7 +224,7 @@ static void KmsG5LockMsgSend(void)
         send_period_cnt = 0;
     }
 }
-#endif
+
 #if LOCK_COLLECTION > 0
 /**************************************************************************************************
 **  函数名称:  YX_StartDataCollection
@@ -466,17 +470,39 @@ void DC_CanDelayTmr(void)
 **************************************************************************************************/
 BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 {
-	INT8U key[8], ch;
+	INT8U key[8], ch, xc_checkcounter;
 	INT32U retlen;
     INT8U senddata[13] = {0};
-	if (datalen != 8) {
+	if (datalen != 9) {
+		#if DEBUG_LOCK > 0
+		debug_printf("XC_SecretDataTran datalen:%d err\r\n", datalen);
+		#endif
 		return FALSE;
 	}
-	seedToKey(&data[5], 4, key, &retlen);
+	switch (s_sclockpara.ecutype) 
+	{
+		case ECU_XICHAI_EMSVI:
+			seedToKey(&data[5], 4, key, &retlen);
+			memcpy(&senddata[5], key, 4);
+			senddata[4] = retlen;
+			break;
+		case ECU_XICHAI_EMSMDI:
+			seedToKey_EControl_app(&data[5], 4, key, &retlen);
+			senddata[4] = retlen;
+			break;
+		case ECU_XICHAI_EMSECO:
+			MessageProcessEnCode(s_xclockpara.ctr_mode, s_xclockpara.limitLR, s_xclockpara.limitHR, s_xclockpara.checkcode, s_xclockpara.msgID, &senddata[5], &xc_checkcounter);
+			senddata[4] = 8;
+			break;
+		default:
+			return FALSE;
+	}
 	memcpy(senddata, data, 4);		// canid
-	memcpy(&senddata[5], key, 4);
-	senddata[4] = retlen;
     ch = data[4];
+	#if DEBUG_LOCK > 0
+	debug_printf("XC_SecretDataTran ecutype:%d ch:%d ", s_sclockpara.ecutype, ch);
+	Debug_PrintHex(TRUE, senddata, 13);
+	#endif
 	CAN_TxData(senddata, false, ch);
 	return TRUE;
 }
@@ -715,6 +741,9 @@ void WC_CanDelayTmr(void)
 				f_handsk = FALSE;		// 握手失败
 				s_handshake_ack = HANDSHAKE_CHECKERR;
 				s_ishandover = TRUE;
+				#if DEBUG_LOCK > 0
+				debug_printf("WC HANDSHAKE_CHECKERR\r\n");
+				#endif
                 LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 			}
 		default:
@@ -727,6 +756,9 @@ void WC_CanDelayTmr(void)
 			f_handsk = FALSE;
 			s_handshake_ack = HANDSHAKE_BUSEXCEPTION;
 			s_ishandover = TRUE;
+			#if DEBUG_LOCK > 0
+			debug_printf("WC HANDSHAKE_BUSEXCEPTION\r\n");
+			#endif
             LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 		}
 	}
@@ -735,6 +767,9 @@ void WC_CanDelayTmr(void)
 			s_wc_0800cnt = 1002;
 			s_handshake_ack = HANDSHAKE_ERR;
 			s_ishandover = TRUE;
+			#if DEBUG_LOCK > 0
+			debug_printf("WC HANDSHAKE_ERR\r\n");
+			#endif
             LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 		}
 	}
@@ -1065,6 +1100,9 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 					s_ishandover = TRUE;
 					s_handshake_ack = HANDSHAKE_OK;
 					f_handsk = TRUE;
+					#if DEBUG_LOCK > 0
+					debug_printf("WC HANDSHAKE_OK\r\n");
+					#endif
                     LockSafeDataAdd(0x00, 1, &s_handshake_ack);
                 }
                 memcpy(s_lockstatid,CAN_msg->id,4);
@@ -1661,6 +1699,10 @@ static void LockSafeDataTran(void)
             sendbuf[4] = s_lockmsg_buf->buf[i][1];      // 参数类型
             memcpy(&sendbuf[5], &s_lockmsg_buf->buf[i][3], s_lockmsg_buf->buf[i][2]);
             YX_COM_DirSend(CLIENT_FUNCTION_DOWN_REQ, sendbuf, s_lockmsg_buf->buf[i][2]+5);
+			#if DEBUG_LOCK > 0
+			debug_printf("LockSafeDataTran %d\r\n", i);
+			Debug_PrintHex(TRUE, sendbuf, s_lockmsg_buf->buf[i][2]+5);
+			#endif
         }
     }
 }
@@ -1715,7 +1757,7 @@ static void LockTmrProc(void*index)
 	}
 
 	CanDelayTmr();
-	
+	LockSafeDataTran();
     #if EN_KMS_LOCK > 0
     if (!acc_state) {
         acc_off_delay = 3000;    /* 延时30秒 */
