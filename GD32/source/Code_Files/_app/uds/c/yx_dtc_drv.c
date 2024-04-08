@@ -218,7 +218,7 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
     {B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},   // 4G天线开路
     {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   1,		     100},	 // 终端检测gps开路
 		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   1,		     100},	 // 终端检测gps短路
-    {B157900, 0x957900, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1000,     10},    // 国六模块电源线束断开
+    {B157900, 0x957900, (EN_MASK_85_IS_SET /*| EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON*/),                      0, 40, MiscIsDetect,      200,      200},    // 国六模块电源线束断开
 };
 
 /*
@@ -705,7 +705,7 @@ static void MiscStatusCheck(void)
         YX_DTC_SetMpuStatus(B157900-ID_MISC_START, FALSE);
     } 
 		
-		if (bal_input_ReadSensorFilterStatus(TYPE_GPSSHORT)) {
+		/*if (bal_input_ReadSensorFilterStatus(TYPE_GPSSHORT)) {
         YX_DTC_SetMpuStatus(B156E11 - ID_MISC_START, TRUE);
     } else {
         YX_DTC_SetMpuStatus(B156E11 - ID_MISC_START, FALSE);
@@ -715,7 +715,7 @@ static void MiscStatusCheck(void)
         YX_DTC_SetMpuStatus(B156E13 - ID_MISC_START, TRUE);
     } else {
         YX_DTC_SetMpuStatus(B156E13 - ID_MISC_START, FALSE);
-    } 
+    }*/ 
 }
 
 /*******************************************************************************
