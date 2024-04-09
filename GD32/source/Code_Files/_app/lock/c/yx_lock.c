@@ -788,7 +788,7 @@ void WC_CanDelayTmr(void)
             LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 		}
 	}
-	if ((s_wc_0100recv == FALSE) && ((s_wc_0100cnt < 1002))) {
+	if ((s_wc_0100recv == FALSE) && ((s_wc_0800cnt < 1002))) {
 		if (++s_wc_0100cnt >= 1000) {
 			s_wc_0800cnt = 1002;
 			s_handshake_ack = HANDSHAKE_ERR;

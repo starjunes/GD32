@@ -2580,26 +2580,26 @@ BOOLEAN YX_MMI_CanSendMul(INT8U com,INT32U id,INT8U* data, INT16U len)
     		#endif
     }
          
-		 if((id > 0x7ff) && (id != UDS_PHSCL_RESPID)) {
-		 	   s_sendpacket[j].prot_type = J1939_TYPE;
-         if ((s_sendpacket[j].packet_com) && (FALSE == Find_J1939Sending())) {//没找到正在发送的J1939长帧
-             SendJ1939FirPacket(&s_sendpacket[j]);
-         } else {
-             #if DEBUG_CAN > 0
-  	         debug_printf("CanSendMul_ERROR \r\n");
-  	         #endif	
-         }
-		 } else {	
-		     s_sendpacket[j].prot_type = UDS_TYPE;				 
-       	 if (s_sendpacket[j].packet_com) {
-				 	   if(id == UDS_PHSCL_RESPID) {                /* 发送完首帧，等待流控响应 */      
-                 s_sendpacket[j].wait_fc = TRUE;
-                 s_sendpacket[j].wait_fc_time_out = 0;
-				 	   }
-      			 SendFF(&s_sendpacket[j]);
-      	 }  
-		 }
-		 return TRUE;
+    if((id > 0x7ff) && (id != UDS_PHSCL_RESPID)) {
+        s_sendpacket[j].prot_type = J1939_TYPE;
+    if ((s_sendpacket[j].packet_com) && (FALSE == Find_J1939Sending())) {//没找到正在发送的J1939长帧
+        SendJ1939FirPacket(&s_sendpacket[j]);
+    } else {
+        #if DEBUG_CAN > 0
+        debug_printf("CanSendMul_ERROR \r\n");
+        #endif	
+    }
+    } else {	
+        s_sendpacket[j].prot_type = UDS_TYPE;				 
+    if (s_sendpacket[j].packet_com) {
+                if(id == UDS_PHSCL_RESPID) {                /* 发送完首帧，等待流控响应 */      
+            s_sendpacket[j].wait_fc = TRUE;
+            s_sendpacket[j].wait_fc_time_out = 0;
+                }
+            SendFF(&s_sendpacket[j]);
+    }  
+    }
+    return TRUE;
 }
 /**************************************************************************************************
 **  函数名称:  GetCANDataReqHdl
