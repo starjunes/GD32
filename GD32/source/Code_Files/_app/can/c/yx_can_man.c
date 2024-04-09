@@ -2580,7 +2580,7 @@ BOOLEAN YX_MMI_CanSendMul(INT8U com,INT32U id,INT8U* data, INT16U len)
     		#endif
     }
          
-    if((id > 0x7ff) && ((id != UDS_PHSCL_RESPID) || (id != 0x18DA00F1) || (id != 0x18DA00FA))) {
+    if((id > 0x7ff) && (id != UDS_PHSCL_RESPID) && (id != 0x18DA00F1) && (id != 0x18DA00FA)) {
         s_sendpacket[j].prot_type = J1939_TYPE;
         if ((s_sendpacket[j].packet_com) && (FALSE == Find_J1939Sending())) {//没找到正在发送的J1939长帧
             SendJ1939FirPacket(&s_sendpacket[j]);
