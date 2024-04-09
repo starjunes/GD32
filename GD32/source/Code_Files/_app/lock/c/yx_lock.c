@@ -163,6 +163,9 @@ static BOOLEAN LockSafeDataAdd(INT8U type, INT8U len, INT8U* buf)
     INT8U i = 0;
     if ((type == 0x00) && (buf[0] <  MAX_STAT)) {
         i = buf[0];
+		if (s_sclockpara.unbindstat == 1) {
+			return FALSE;
+		}
 		if (s_lockmsg_buf->active[i] == FALSE) {
 			s_lockmsg_buf->active[i] = TRUE;
 			s_lockmsg_buf->buf[i][0] = s_req++;
@@ -790,11 +793,11 @@ void WC_CanDelayTmr(void)
 	}
 	if ((s_wc_0100recv == FALSE) && ((s_wc_0100cnt < 1002))) {
 		if (++s_wc_0100cnt >= 1000) {
-			s_wc_0800cnt = 1002;
+			s_wc_0100cnt = 1002;
 			s_handshake_ack = HANDSHAKE_ERR;
 			s_ishandover = TRUE;
 			#if DEBUG_LOCK > 0
-			debug_printf("WC HANDSHAKE_ERR\r\n");
+			debug_printf("WC HANDSHAKE_ERR s_wc_0100cnt:%d\r\n", s_wc_0100cnt);
 			#endif
             LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 		}
