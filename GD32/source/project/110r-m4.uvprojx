@@ -1123,6 +1123,11 @@
               <FileType>4</FileType>
               <FilePath>..\Code_Files\lib\loan_sha256.lib</FilePath>
             </File>
+            <File>
+              <FileName>seedkey_econtrol_cng.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Code_Files\lib\seedkey_econtrol_cng.lib</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
