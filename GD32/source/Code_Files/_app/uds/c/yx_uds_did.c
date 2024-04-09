@@ -586,14 +586,14 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
                 return FALSE;	
             }
         break;
-        case 0x1002:
+        /*case 0x1002:
         case 0x1003:
             for (j = 0; j < len; j++) {
                 if (((data[j] > 0x39) && (data[j] < 0x41)) || ((data[j] > 0x5A) && (data[j] < 0x61))) {
                     return FALSE;
                 }
             }
-        break;
+        break;*/
         case 0x102A:
             for (j = 0; j < len; j++) {
                 switch (j) {
