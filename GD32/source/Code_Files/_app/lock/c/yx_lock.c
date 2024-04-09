@@ -485,7 +485,7 @@ void DC_CanDelayTmr(void)
 BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 {
 	INT8U key[8], ch, xc_checkcounter;
-	INT32U retlen;
+	INT32U retlen, id;
     INT8U senddata[13] = {0};
 	if (datalen != 9) {
 		#if DEBUG_LOCK > 0
@@ -493,6 +493,7 @@ BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 		#endif
 		return FALSE;
 	}
+    id = bal_chartolong(data);
 	switch (s_sclockpara.ecutype) 
 	{
 		case ECU_XICHAI_EMSVI:
@@ -512,9 +513,16 @@ BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 			senddata[7] = 0x02;
 			break;
 		case ECU_XICHAI_EMSECO:
-			MessageProcessEnCode(s_xclockpara.ctr_mode, s_xclockpara.limitLR, s_xclockpara.limitHR, s_xclockpara.checkcode, s_xclockpara.msgID, &senddata[5], &xc_checkcounter);
-			senddata[4] = 8;
-			break;
+			MessageProcessEnCode(s_xclockpara.ctr_mode, s_xclockpara.limitLR, s_xclockpara.limitHR, s_xclockpara.checkcode, s_xclockpara.msgID, &senddata[3], &xc_checkcounter);
+			senddata[0] = 0x0A;
+            senddata[1] = 0x27;
+            senddata[2] = 0x04;
+            YX_MMI_CanSendMul(data[4]-1, id, senddata, 11);
+            #if DEBUG_LOCK > 0
+            debug_printf("XC_SecretDataTran ecutype:%d--", s_sclockpara.ecutype);
+            Debug_PrintHex(TRUE, senddata, 11);
+            #endif
+			return TRUE;
 		default:
 			return FALSE;
 	}
@@ -791,7 +799,7 @@ void WC_CanDelayTmr(void)
             LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 		}
 	}
-	if ((s_wc_0100recv == FALSE) && ((s_wc_0800cnt < 1002))) {
+	if ((s_wc_0100recv == FALSE) && ((s_wc_0100cnt < 1002))) {
 		if (++s_wc_0100cnt >= 1000) {
 			s_wc_0100cnt = 1002;
 			s_handshake_ack = HANDSHAKE_ERR;
