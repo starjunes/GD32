@@ -601,12 +601,14 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
                         if(data[j] > 18) {
                             return FALSE;
                         }
-                    break;
+                    break;
+
                     case 0x01:
                         if(data[j] > 6) {
                             return FALSE;
                         }
-                    break;
+                    break;
+
                     case 0x02:
                     case 0x08:
                     case 0x09:
@@ -619,7 +621,7 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
                         }
                     break;
                     case 0x03:
-                    case 0x0C
+                    case 0x0C:
                         if(data[j] > 7) {
                             return FALSE;
                         }
