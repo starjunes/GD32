@@ -484,51 +484,14 @@ void DC_CanDelayTmr(void)
 **************************************************************************************************/
 BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 {
-	INT8U key[8], ch, xc_checkcounter;
-	INT32U retlen, id;
-    INT8U senddata[13] = {0};
-	if (datalen != 9) {
-		#if DEBUG_LOCK > 0
-		debug_printf("XC_SecretDataTran datalen:%d err\r\n", datalen);
-		#endif
-		return FALSE;
-	}
-    id = bal_chartolong(data);
-	switch (s_sclockpara.ecutype) 
-	{
-		case ECU_XICHAI_EMSVI:
-			seedToKey(&data[5], 4, key, &retlen);
-			memcpy(&senddata[8], key, 4);
-			senddata[4] = retlen+3;
-			senddata[5] = 0x06;
-			senddata[6] = 0x27;
-			senddata[7] = 0x02;
-			break;
-		case ECU_XICHAI_EMSMDI:
-			seedToKey_EControl_app(&data[5], 4, key, &retlen);
-			memcpy(&senddata[8], key, 4);
-			senddata[4] = retlen+3;
-			senddata[5] = 0x06;
-			senddata[6] = 0x27;
-			senddata[7] = 0x02;
-			break;
-		case ECU_XICHAI_EMSECO:
-			MessageProcessEnCode(s_xclockpara.ctr_mode, s_xclockpara.limitLR, s_xclockpara.limitHR, s_xclockpara.checkcode, s_xclockpara.msgID, &senddata[3], &xc_checkcounter);
-			senddata[0] = 0x0A;
-            senddata[1] = 0x27;
-            senddata[2] = 0x04;
-            YX_MMI_CanSendMul(data[4]-1, id, senddata, 11);
-            #if DEBUG_LOCK > 0
-            debug_printf("XC_SecretDataTran ecutype:%d--", s_sclockpara.ecutype);
-            Debug_PrintHex(TRUE, senddata, 11);
-            #endif
-			return TRUE;
-		default:
-			return FALSE;
-	}
-	memcpy(senddata, data, 4);		// canid
-    ch = data[4];
-	if ((ch > 0) && (ch < CAN_CHN_3)) {
+	INT8U key[64], ch, xc_checkcounter;
+	INT32U seedlen, id;
+    INT8U senddata[32] = {0};
+	
+    id 		= bal_chartolong(data);
+	seedlen = data[5];
+	ch = data[4];
+	if ((ch > 0) && (ch < 3)) {
         ch -= 1;
     } else {
         #if DEBUG_LOCK > 0
@@ -536,6 +499,39 @@ BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
         #endif
         return FALSE;
     }
+	switch (s_sclockpara.ecutype) 
+	{
+		case ECU_XICHAI_EMSVI:
+			seedToKey(&data[6], seedlen, key, &seedlen);
+			memcpy(&senddata[8], key, 4);
+			senddata[4] = seedlen+3;
+			senddata[5] = 0x06;
+			senddata[6] = 0x27;
+			senddata[7] = 0x02;
+			break;
+		case ECU_XICHAI_EMSMDI:
+			seedToKey_EControl_app(&data[6], seedlen, key, &seedlen);
+			memcpy(&senddata[8], key, seedlen);
+			senddata[4] = seedlen+3;
+			senddata[5] = 0x06;
+			senddata[6] = 0x27;
+			senddata[7] = 0x02;
+			break;
+		case ECU_XICHAI_EMSECO:
+			seedToKey_bosch_cng_app(&data[6], seedlen, key, seedlen);
+			senddata[5] = 0x06;
+			senddata[6] = 0x27;
+			senddata[7] = 0x04;
+			memcpy(&senddata[8], key, seedlen);
+			if (seedlen == 8) {
+				YX_MMI_CanSendMul(ch, id, senddata, seedlen+8);
+			}
+            return;
+		default:
+			return FALSE;
+	}
+	memcpy(senddata, data, 4);		// canid
+    
 	#if DEBUG_LOCK > 0
 	debug_printf("XC_SecretDataTran ecutype:%d ch:%d ", s_sclockpara.ecutype, ch);
 	Debug_PrintHex(TRUE, senddata, 13);
@@ -616,7 +612,10 @@ static void XC_Hashcal(void)
     INT8U input[32] = {0x00};
     UDS_DID_DATA_E2ROM_T uds_data;
     bal_pp_StoreParaByID(UDS_DID_PARA_, (INT8U *)&uds_data, sizeof(UDS_DID_DATA_E2ROM_T));
-    
+    #if DEBUG_LOCK > 0
+	debug_printf("XC_Hashcal VIN:");
+	Debug_PrintHex(TRUE, uds_data.DID_F190, sizeof(uds_data.DID_F190));
+	#endif
     memcpy(input, s_xichai_seed, 7);
     input[7] = 0xFF;
     input[8] = 0xFF;
