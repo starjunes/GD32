@@ -215,7 +215,8 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
 		{B157C00, 0x957C00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 1, 			 10}, 	 // 国六模块获取发动机VIN不一致
 		{B158200, 0x958200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},   // 国六企业平台连接失败
     {B158300, 0x958300, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六企业平台连接失败
-    {B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},   // 4G天线开路
+		{B157511, 0x957511, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 10,			 500},	 // 4G天线短路
+		{B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},   // 4G天线开路
     {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   1,		     100},	 // 终端检测gps开路
 		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   1,		     100},	 // 终端检测gps短路
     {B157900, 0x957900, (EN_MASK_85_IS_SET /*| EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON*/),                      0, 40, MiscIsDetect,      200,      200},    // 国六模块电源线束断开
@@ -235,7 +236,7 @@ static void DTC_Dm1Init(void)
         s_dm1_dtc_tab[idx].bitFiled._OC = 127;    // 127表示未知次数
         if ((idx == B157216) || (idx == B156E13)) {
             s_dm1_dtc_tab[idx].bitFiled._FMI = 5;
-        } else if(idx == B156E11) {
+        } else if((idx == B156E11) || (idx == B157511)) {
             s_dm1_dtc_tab[idx].bitFiled._FMI = 6;
         } else {
             s_dm1_dtc_tab[idx].bitFiled._FMI = 12;
@@ -270,9 +271,13 @@ static void DTC_Dm1Init(void)
     s_dm1_dtc_tab[B158000].bitFiled._SPN_LOW = 0x0DFE;    // VIST节点USB通讯失效 //
     s_dm1_dtc_tab[B157C00].bitFiled._SPN_LOW = 0x09FE;    // wifi 热点(公网)拨号不成功 //
     s_dm1_dtc_tab[B158200].bitFiled._SPN_LOW = 0x0FFE;    // 国六地方平台连接失败  //
-    s_dm1_dtc_tab[B157513].bitFiled._SPN_LOW = 0xECFD;    // 4G天线开路//
+    s_dm1_dtc_tab[B157511].bitFiled._SPN_LOW = 0xFCFD;    // 4G天线开路//
+    s_dm1_dtc_tab[B157513].bitFiled._SPN_LOW = 0xFCFD;    // 4G天线开路//
     s_dm1_dtc_tab[B156E11].bitFiled._SPN_LOW = 0xE7FD;    // GPS短路//
     s_dm1_dtc_tab[B156E13].bitFiled._SPN_LOW = 0xE7FD;    // GPS开路//
+
+    s_dm1_dtc_tab[U003700].bitFiled._SPN_LOW = 0xEAFD;    // GCAN2 BusOff//
+    s_dm1_dtc_tab[U014600].bitFiled._SPN_LOW = 0xFDFD;    // GATWAY节点超时 //
 }
 
 /*******************************************************************************
