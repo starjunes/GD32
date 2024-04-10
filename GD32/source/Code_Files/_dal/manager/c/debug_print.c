@@ -121,7 +121,7 @@ void Debug_PrintHex(BOOLEAN end, INT8U *ptr, INT16U size)
 
     for (i = 0; i < size; i++) {
         //ch = ;
-		sprintf(ch, "%02x ", *ptr++);
+		sprintf(ch, "%02X ", *ptr++);
         Debug_PrintByte(ch[0]);
         Debug_PrintByte(ch[1]);
         Debug_PrintByte(ch[2]);
