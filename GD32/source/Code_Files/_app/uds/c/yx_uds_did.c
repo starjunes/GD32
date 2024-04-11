@@ -112,12 +112,6 @@ static CAN_SIGNAL_T      s_can_signal;
 static CAR_SIGNAL_TYPE_E s_car_signal;
 static INT16U s_vehSpeed = 0;
 static INT8U  s_vehSpeed_over = 0;
-static const INT8U s_did_103a[64] = {
-     'V',  '4',  '.',  '3',  '5',  'Y',  0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,
-};
 /*
 ********************************************************************************
 * 定义本地接口
@@ -1236,15 +1230,15 @@ INT16U YX_Get_VehSpeed(void)
 ********************************************************************/
 void YX_UDS_DID_Init(void)
 {
-    //char* img_inf;
+    char* img_inf;
 
     YX_MEMSET((INT8U*)&s_can_signal, 0x00, sizeof(s_can_signal));
     YX_MEMSET((INT8U *)&s_uds_did_local, 0x00, sizeof(UDS_DID_LOCAL_T));
     
     YX_UDS_DID_DataReset();
     
-    //img_inf = YX_GetVersionDate();
-    memcpy(s_uds_did_local.DID_103A, s_did_103a, sizeof(s_uds_did_local.DID_103A));
+    img_inf = YX_GetClientVersion();
+    memcpy(s_uds_did_local.DID_103A, img_inf, strlen(img_inf));
     s_did_status[9] = 1;
     s_delay_save_to_flash = 0;
     if (!bal_pp_ReadParaByID(UDS_DID_PARA_, (INT8U *)&s_uds_did_e2rom_data, sizeof(UDS_DID_DATA_E2ROM_T))) {
