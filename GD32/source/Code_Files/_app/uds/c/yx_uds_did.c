@@ -290,21 +290,21 @@ static BOOLEAN DID_Read1007(INT8U* pData, INT8U didLen)
     }
                
     if(HAL_sd2058_ReadCalendar(data)) {      
-        pData[0] = 20; 	        //YEAR
-        pData[1] = data[6]; 		//YEAR
-        pData[2] = data[5]; 	  //MONTH
-        pData[3] = data[4]; 		//DATE
-        pData[4] = data[2]; 		//HOUR
-        pData[5] = data[1]; 		//MINITE
-        pData[6] = data[0]; 		//TICK
+        pData[0] = 0x20; 	        //YEAR
+        pData[1] = sd_Hex2BCD(data[6]); 		//YEAR
+        pData[2] = sd_Hex2BCD(data[5]); 	  //MONTH
+        pData[3] = sd_Hex2BCD(data[4]); 		//DATE
+        pData[4] = sd_Hex2BCD(data[2]); 		//HOUR
+        pData[5] = sd_Hex2BCD(data[1]); 		//MINITE
+        pData[6] = sd_Hex2BCD(data[0]); 		//TICK
     } else { 
-        pData[0] = 20; 	        //YEAR
-        pData[1] = 24; 		//YEAR
-        pData[2] = 03; 	  //MONTH
-        pData[3] = 01; 		//DATE
-        pData[4] = 13; 		//HOUR
-        pData[5] = 43; 		//MINITE
-        pData[6] = 58; 		//TICK
+        pData[0] = 0x20; 	        //YEAR
+        pData[1] = 0x24; 		//YEAR
+        pData[2] = 0x04; 	  //MONTH
+        pData[3] = 0x11; 		//DATE
+        pData[4] = 0x11; 		//HOUR
+        pData[5] = 0x52; 		//MINITE
+        pData[6] = 0x58; 		//TICK
         return FALSE;
     }
 
@@ -354,7 +354,7 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
     {0xF194, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F194), s_uds_did_e2rom_data.DID_F194, DID_DATA_TYPE_ASCII, NULL, NULL},  
     {0xF195, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F195), s_uds_did_e2rom_data.DID_F195, DID_DATA_TYPE_ASCII, NULL, NULL}, 
     {0xF198, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F198), s_uds_did_e2rom_data.DID_F198, DID_DATA_TYPE_ASCII, NULL, NULL}, 
-    {0xF199, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F199), s_uds_did_e2rom_data.DID_F199, DID_DATA_TYPE_BCD,   NULL, NULL},  
+    {0xF199, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F199), s_uds_did_e2rom_data.DID_F199, DID_DATA_TYPE_BCD,   NULL, NULL},  
     {0xF19D, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F19D), s_uds_did_e2rom_data.DID_F19D, DID_DATA_TYPE_BCD,   NULL, NULL},   
     {0xF1A1, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F1A1), s_uds_did_e2rom_data.DID_F1A1, DID_DATA_TYPE_ASCII, NULL, NULL},     
 };

@@ -87,6 +87,7 @@ BOOLEAN HAL_sd2058_readbyte(INT8U regaddr,INT8U *rbuf);
           FALSE Ê§°Ü
 *****************************************************************************/
 BOOLEAN HAL_sd2058_read(INT8U regaddr,INT8U* buf,INT8U buflen);
+INT8U sd_Hex2BCD(INT8U hex);
 
 #endif /* __DAL_SD2058_H */
 

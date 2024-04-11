@@ -36,7 +36,7 @@ static INT8U s_sd2058_rst = 0;  /* 1首次上电 */
 *********************************************************************************/
 
 //hex转BCD
-static INT8U sd_Hex2BCD(INT8U hex)
+INT8U sd_Hex2BCD(INT8U hex)
 {
     INT8U tmpl,tmph;
     tmpl = hex % 10;
