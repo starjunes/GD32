@@ -200,8 +200,8 @@ typedef struct {
     INT8U ctr_mode;                                                 /* 控制模式 */
     INT8U limitLR;                                                  /* 限速低字节 */
     INT8U limitHR;                                                  /* 限速高字节 */
-    INT8U checkcode;                                                /* 校验码 */
-    INT8U msgID;                                                    /* 消息ID */
+    INT32U checkcode;                                                /* 校验码 */
+    INT32U msgID;                                                    /* 消息ID */
 } XCLOCKPARA_T;
 /*************************************************************************************************/
 /*                           锁车日志结构体                                                 */

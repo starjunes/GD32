@@ -32,6 +32,8 @@
 #include "xichai_ems_seedkey.h"
 #include "tbox_seed2key.h"
 #include "sha-256.h"
+#include "EControl_Seedkey_Algorithm.h"
+#include "NaturalGasEMS_SecurityAccessAlgorithm.h"
 #if EN_UDS > 0
 #include "yx_uds_drv.h"
 #include "yx_uds_did.h"
@@ -491,6 +493,7 @@ BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
     id 		= bal_chartolong(data);
 	seedlen = data[5];
 	ch = data[4];
+	memcpy(senddata, data, 4);		// canid
 	if ((ch > 0) && (ch < 3)) {
         ch -= 1;
     } else {
@@ -503,40 +506,67 @@ BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen)
 	{
 		case ECU_XICHAI_EMSVI:
 			seedToKey(&data[6], seedlen, key, &seedlen);
-			memcpy(&senddata[8], key, 4);
-			senddata[4] = seedlen+3;
+			memcpy(&senddata[8], key, seedlen);
+			senddata[4] = 8;
 			senddata[5] = 0x06;
 			senddata[6] = 0x27;
 			senddata[7] = 0x02;
+			CAN_TxData(senddata, false, ch);
 			break;
 		case ECU_XICHAI_EMSMDI:
-			seedToKey_EControl_app(&data[6], seedlen, key, &seedlen);
-			memcpy(&senddata[8], key, seedlen);
-			senddata[4] = seedlen+3;
-			senddata[5] = 0x06;
-			senddata[6] = 0x27;
-			senddata[7] = 0x02;
+			seedToKey_bosch_cng_app(&data[6], seedlen, key, seedlen);
+			if (seedlen > 5) {
+				senddata[0] = 0x27;
+				senddata[1] = 0x02;
+				memcpy(&senddata[2], key, seedlen);
+				YX_MMI_CanSendMul(ch, id, senddata, seedlen+2);
+				#if DEBUG_LOCK > 0
+				debug_printf("XC_SecretDataTran seed:");
+				Debug_PrintHex(TRUE, &data[6], seedlen);
+				debug_printf("XC_SecretDataTran ecutype:%d seedlen:%d ch:%d ", s_sclockpara.ecutype, seedlen, ch);
+				Debug_PrintHex(TRUE, senddata, 2+seedlen);
+				#endif
+				return TRUE;
+			} else {
+				memcpy(&senddata[8], key, seedlen);
+				senddata[4] = 8;
+				senddata[5] = 0x06;
+				senddata[6] = 0x27;
+				senddata[7] = 0x02;
+			}
 			break;
 		case ECU_XICHAI_EMSECO:
-			seedToKey_bosch_cng_app(&data[6], seedlen, key, seedlen);
-			senddata[5] = 0x06;
-			senddata[6] = 0x27;
-			senddata[7] = 0x04;
-			memcpy(&senddata[8], key, seedlen);
-			if (seedlen == 8) {
-				YX_MMI_CanSendMul(ch, id, senddata, seedlen+8);
+			seedToKey_EControl_app(&data[6], seedlen, key, &seedlen);
+			if (seedlen > 5) {
+				senddata[0] = 0x27;
+				senddata[1] = 0x04;
+				memcpy(&senddata[2], key, seedlen);
+				YX_MMI_CanSendMul(ch, id, senddata, seedlen+2);
+				#if DEBUG_LOCK > 0
+				debug_printf("XC_SecretDataTran seed:");
+				Debug_PrintHex(TRUE, &data[6], seedlen);
+				debug_printf("XC_SecretDataTran ecutype:%d seedlen:%d ch:%d ", s_sclockpara.ecutype, seedlen, ch);
+				Debug_PrintHex(TRUE, senddata, 2+seedlen);
+				#endif
+				return TRUE;
+			} else {
+				memcpy(&senddata[8], key, seedlen);
+				senddata[4] = 8;
+				senddata[5] = 0x06;
+				senddata[6] = 0x27;
+				senddata[7] = 0x04;
 			}
-            return;
+			CAN_TxData(senddata, false, ch);
+            break;
 		default:
 			return FALSE;
 	}
-	memcpy(senddata, data, 4);		// canid
-    
+	
 	#if DEBUG_LOCK > 0
-	debug_printf("XC_SecretDataTran ecutype:%d ch:%d ", s_sclockpara.ecutype, ch);
-	Debug_PrintHex(TRUE, senddata, 13);
+	debug_printf("XC_SecretDataTran ecutype:%d seedlen:%d ch:%d ", s_sclockpara.ecutype, seedlen, ch);
+	Debug_PrintHex(TRUE, senddata, 8+seedlen);
 	#endif
-	CAN_TxData(senddata, false, ch);
+	
 	return TRUE;
 }
 
@@ -552,6 +582,9 @@ BOOLEAN XC_ParaSet(INT8U* data, INT8U datalen)
     BOOLEAN change = FALSE;
     INT32U checkcode, msgid;
 	if (datalen != 11) {
+		#if DEBUG_LOCK > 0
+        debug_printf("XC_ParaSet datalen:%d errr\n", datalen);
+        #endif
 		return FALSE;
 	}
     if (s_xclockpara.ctr_mode != data[0]) {
@@ -567,7 +600,7 @@ BOOLEAN XC_ParaSet(INT8U* data, INT8U datalen)
         change = TRUE;
     }
 	checkcode	= bal_chartolong(&data[3]);
-	msgid		= bal_chartolong(&data[6]);
+	msgid		= bal_chartolong(&data[7]);
     if (s_xclockpara.checkcode != checkcode) {
         s_xclockpara.checkcode = checkcode;
         change = TRUE;
@@ -576,6 +609,12 @@ BOOLEAN XC_ParaSet(INT8U* data, INT8U datalen)
         s_xclockpara.msgID = msgid;
         change = TRUE;
     }
+	#if DEBUG_LOCK > 0
+	debug_printf("XC_ParaSet data:");
+	Debug_PrintHex(TRUE, data, datalen);
+    debug_printf("XC_ParaSet ctr_mode:%02X limitLR:%02X limitHR:%02X checkcode:%04X msgID:%04X\r\n",s_xclockpara.ctr_mode,
+    	s_xclockpara.limitLR, s_xclockpara.limitHR, s_xclockpara.checkcode, s_xclockpara.msgID);
+    #endif
     if (change) {
         #if DEBUG_LOCK > 0
         debug_printf("XC_ParaSet 状态改变\r\n");
@@ -636,17 +675,24 @@ void XC_Checkcode(void)
     static INT8U xc_checkcounter = 0;// 锡柴周期报文(5s)
     INT8U perioddata[13] = {0x0C,0x00,0x00,0x4A,0x08,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 	
-	if ((s_sclockpara.ecutype != ECU_XICHAI_EMSECO) || (s_sclockpara.ecutype != ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype != ECU_XICHAI_EMSVI)) {
+	if ((s_sclockpara.ecutype != ECU_XICHAI_EMSECO) && (s_sclockpara.ecutype != ECU_XICHAI_EMSMDI) && (s_sclockpara.ecutype != ECU_XICHAI_EMSVI)) {
         #if DEBUG_LOCK > 0
         debug_printf("XC_Checkcode ECU类型错误:%d\r\n", s_sclockpara.ecutype);
         #endif
         return;
     }
+	#if DEBUG_LOCK > 0
+    debug_printf("XC_Checkcode ecutype:%d\r\n", s_sclockpara.ecutype);
+    #endif
     switch (s_sclockpara.ecutype)
     {
         case ECU_XICHAI_EMSVI:
+			#if DEBUG_LOCK > 0
+			debug_printf("XC_Checkcode ECU_XICHAI_EMSVI ctr_mode:%02X limitLR:%02X limitHR:%02X checkcode:%08X msgID:%08X\r\n", s_xclockpara.ctr_mode, s_xclockpara.limitLR,
+				s_xclockpara.limitHR, s_xclockpara.checkcode, s_xclockpara.msgID);
+			#endif
             MessageProcessEnCode(s_xclockpara.ctr_mode, s_xclockpara.limitLR, s_xclockpara.limitHR, s_xclockpara.checkcode, s_xclockpara.msgID, &perioddata[5], &xc_checkcounter);
-            CAN_TxData(perioddata, FALSE, LOCK_CAN_CH);
+            //CAN_TxData(perioddata, FALSE, LOCK_CAN_CH);
             break;
         case ECU_XICHAI_EMSMDI:
         case ECU_XICHAI_EMSECO:
@@ -688,18 +734,18 @@ void XC_Checkcode(void)
 void XC_CanDelayTmr(void)
 {
 	//static INT8U xc_cnt = 0;//上电发送3次
-    static INT8U xc_period_cnt = 0,xc_checkcounter = 0;// 锡柴周期报文(5s)
+    static INT16U xc_period_cnt = 0,xc_checkcounter = 0;// 锡柴周期报文(5s)
     //INT8U senddata[13]   = {0x18,0xda,0x00,0xf1,0x08,0x22,0x02,0x9c,0xff,0xff,0xff,0xff,0xff};//握手报文
     INT8U perioddata[13] = {0x0C, 0x00, 0x00, 0x41, 0x08, 0xc0, 0xff, 0xfa, 0xfa, 0xff, 0xf0, 0xff, 0xff};//周期报文
     switch (s_sclockstep) {
         case RAND_CODE_REC:         // 随机数请求
-            if ((xc_period_cnt++ % 500) == 0) {
+            if (++xc_period_cnt >= 500) {
                 xc_period_cnt = 0;
                 XC_HandShake();
             }
             break;
         case CHECK_CODE_SEND:       // 发送加密数据
-            if ((xc_period_cnt++ % 500) == 0) {
+            if (++xc_period_cnt >= 500) {
                 xc_period_cnt = 0;
                 XC_Checkcode();
             }
@@ -1332,7 +1378,6 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
 	        return;
 	    }
 	}
-
     if (s_sclockpara.ecutype != userdata[len]) {
         //if (userdata[len] >= MAX_ECU_TYPE) {        // 发动机类型非法
         //    SendLockPara();
@@ -1465,14 +1510,29 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
         change = TRUE;
         unbindchange = TRUE;
         if(!s_sclockpara.unbindstat){
-            s_sclockstep = CONFIG_REQ;
-			#if DEBUG_LOCK > 0
+			if (s_sclockpara.ecutype == ECU_YUCHAI) {
+	            s_sclockstep = CONFIG_REQ;
+				#if DEBUG_LOCK > 0
 				debug_printf("%s s_sclockstep set CONFIG_REQ\r\n",__FUNCTION__);
-			 #endif
-            YC_HandShake();
+				#endif
+	            YC_HandShake();
+			} else if (s_sclockpara.ecutype == ECU_XICHAI_EMSVI) {
+				s_sclockstep = CHECK_CODE_SEND;
+				#if DEBUG_LOCK > 0
+				debug_printf("ECU_XICHAI_EMSVI CHECK_CODE_SEND\r\n");
+				#endif
+			}
         }else{
-            f_handsk = FALSE;
-            StopCANMsg_Period(0x18ea0021, LOCK_CAN_CH);
+        	if (s_sclockpara.ecutype == ECU_YUCHAI) {
+	            f_handsk = FALSE;
+            	StopCANMsg_Period(0x18ea0021, LOCK_CAN_CH);
+			} else  {
+				s_sclockstep = CONFIG_OVER;
+				#if DEBUG_LOCK > 0
+				debug_printf("ECU_XICHAI_EMSVI CHECK_CODE_SEND\r\n");
+				#endif
+			}
+            
         }
 
         #if EN_DEBUG > 0
@@ -1699,6 +1759,9 @@ void CanDelayTmr(void)
 			DC_CanDelayTmr();
 			break;
 		case ECU_XICHAI:
+		case ECU_XICHAI_EMSVI:
+		case ECU_XICHAI_EMSMDI:
+		case ECU_XICHAI_EMSECO:
 			XC_CanDelayTmr();
 			break;
         case ECU_YUNNEI:
@@ -1793,7 +1856,35 @@ static void LockTmrProc(void*index)
 	}else{
 		acc_state = FALSE;
 	}
-
+	#if 0 //DEBUG_LOCK > 0
+	static INT8U cnt = 0;
+	INT8U seedbuf[8] = {0x7A, 0x1D, 0x77, 0xB3, 0x94, 0x1C, 0x6E, 0xEC};
+	INT8U key[32];
+	INT32U seedlen = 8;
+	if (++cnt >= 100) {
+		cnt = 0;
+		seedToKey_EControl_app(seedbuf, seedlen, key, &seedlen);
+		debug_printf("seedToKey_EControl_app seedbuf:");
+		Debug_PrintHex(TRUE, seedbuf, seedlen);
+		debug_printf("key:");
+		Debug_PrintHex(TRUE, key, 16);
+		seedToKey_EControl_ota(seedbuf, seedlen, key, &seedlen);
+		debug_printf("seedToKey_EControl_ota seedbuf:");
+		Debug_PrintHex(TRUE, seedbuf, seedlen);
+		debug_printf("key:");
+		Debug_PrintHex(TRUE, key, 16);
+		seedToKey_bosch_cng_app(seedbuf, seedlen, key, seedlen);
+		debug_printf("seedToKey_bosch_cng_app seedbuf:");
+		Debug_PrintHex(TRUE, seedbuf, seedlen);
+		debug_printf("key:");
+		Debug_PrintHex(TRUE, key, 16);
+		seedToKey_bosch_cng_ota(seedbuf, seedlen, key, seedlen);
+		debug_printf("seedToKey_bosch_cng_ota seedbuf:");
+		Debug_PrintHex(TRUE, seedbuf, seedlen);
+		debug_printf("key:");
+		Debug_PrintHex(TRUE, key, 16);
+	}
+	#endif
 	CanDelayTmr();
 	LockSafeDataTran();
     #if EN_KMS_LOCK > 0
@@ -2178,8 +2269,8 @@ void ACCON_HandShake(void)
 
     OS_StartTmr(s_lock_tmr, MILTICK, 1);
 	#if DEBUG_LOCK > 0
-		debug_printf("%s s_sclockpara.ecutype:%d limitfunction:%d\r\n",__FUNCTION__,s_sclockpara.ecutype,s_sclockpara.limitfunction);
-	 #endif
+		debug_printf("%s s_sclockpara.ecutype:%d \r\n",__FUNCTION__,s_sclockpara.ecutype);
+	#endif
     if (s_sclockpara.ecutype == ECU_YUCHAI){
         if (!s_sclockpara.unbindstat) {
             f_handsk = FALSE;
@@ -2192,14 +2283,22 @@ void ACCON_HandShake(void)
                 debug_printf("App_CAN_Init YC_HandShake\r\n");
             #endif
         }
-    } else if ((s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSVI)) {
+    } else if ((s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSECO)) {
         if (!s_sclockpara.unbindstat) {
             f_handsk = FALSE;
             s_sclockstep = RAND_CODE_REC;
             #if DEBUG_LOCK> 0
-            debug_printf("%s s_sclockstep 请求随机数\r\n");
+            debug_printf("s_sclockstep 请求随机数\r\n");
             #endif
             XC_HandShake();
+        }
+    } else if (s_sclockpara.ecutype == ECU_XICHAI_EMSVI) {
+        if (!s_sclockpara.unbindstat) {
+            f_handsk = FALSE;
+            s_sclockstep = CHECK_CODE_SEND;
+            #if DEBUG_LOCK> 0
+            debug_printf("s_sclockstep:%d 发送加密数据\r\n", s_sclockstep);
+            #endif
         }
     }
 
