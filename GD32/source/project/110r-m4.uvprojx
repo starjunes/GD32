@@ -1128,6 +1128,16 @@
               <FileType>4</FileType>
               <FilePath>..\Code_Files\lib\seedkey_econtrol_cng.lib</FilePath>
             </File>
+            <File>
+              <FileName>EControl_Seedkey_Algorithm.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Code_Files\lib\EControl_Seedkey_Algorithm.lib</FilePath>
+            </File>
+            <File>
+              <FileName>NaturalGasEMS_SecurityAccessAlgorithm.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Code_Files\lib\NaturalGasEMS_SecurityAccessAlgorithm.lib</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
