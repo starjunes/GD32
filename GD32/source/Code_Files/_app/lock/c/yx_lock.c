@@ -109,6 +109,7 @@ static INT16U		   s_d008locktime = 600;			// 收到指令后采集报文时间
 
 static BOOLEAN		  	s_ishandover	= FALSE;	   			/* 握手结束标志 */
 static HANDSHAKE_ACK_E	s_handshake_ack = HANDSHAKE_UNKNOWN;    // 上报平台握手结果
+static BOOLEAN 			s_isseedrec		= FALSE;				// 是否收到随机数
 
 //潍柴
 #define ACK_HANFSHARK	0x18FE02FB  //握手回复报文
@@ -673,7 +674,7 @@ static void XC_Hashcal(void)
 void XC_Checkcode(void)
 {
     static INT8U xc_checkcounter = 0;// 锡柴周期报文(5s)
-    INT8U perioddata[13] = {0x0C,0x00,0x00,0x4A,0x08,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+    INT8U perioddata[13] = {0x0C,0x00,0x00,0x4A,0x08,0xC0,0xFF,0xFA,0xFA,0xFF,0xF0,0xFF,0xFF};
 	
 	if ((s_sclockpara.ecutype != ECU_XICHAI_EMSECO) && (s_sclockpara.ecutype != ECU_XICHAI_EMSMDI) && (s_sclockpara.ecutype != ECU_XICHAI_EMSVI)) {
         #if DEBUG_LOCK > 0
@@ -682,7 +683,7 @@ void XC_Checkcode(void)
         return;
     }
 	#if DEBUG_LOCK > 0
-    debug_printf("XC_Checkcode ecutype:%d\r\n", s_sclockpara.ecutype);
+    debug_printf("XC_Checkcode ecutype:%d hash_cnt:%d s_isseedrec:%d s_ishandover:%d\r\n", s_sclockpara.ecutype, hash_cnt, s_isseedrec, s_ishandover);
     #endif
     switch (s_sclockpara.ecutype)
     {
@@ -696,22 +697,42 @@ void XC_Checkcode(void)
             break;
         case ECU_XICHAI_EMSMDI:
         case ECU_XICHAI_EMSECO:
-            perioddata[0] = 0xF0;
-            perioddata[1] = s_xclockpara.limitLR;
-            perioddata[2] = s_xclockpara.limitHR;
-            perioddata[3] = 0x7D;
-            perioddata[4] = 0xFF;
-            perioddata[5] = 0xF0;
+            perioddata[5] = 0xC0 | (s_xclockpara.ctr_mode & 0x03);
             perioddata[6] = 0xFF;
-            perioddata[7] = hash[hash_cnt++];
+            perioddata[7] = 0xFA;
+            perioddata[8] = s_xclockpara.limitLR;
+            perioddata[9] = 0xFF;
+            perioddata[10] = 0xF0;
+            perioddata[11] = 0xFF;
+			if (s_isseedrec == TRUE) {
+				perioddata[5]  = 0xF0 | (s_xclockpara.ctr_mode & 0x03);
+            	perioddata[12] = hash[hash_cnt];
+			}
+			hash_cnt++;
             if (hash_cnt >= SIZE_OF_SHA_256_HASH) {
                 hash_cnt = 0;
+				memset(hash, 0xFF, SIZE_OF_SHA_256_HASH);
+				if (s_ishandover == FALSE) {
+	                s_ishandover = TRUE;
+	                s_handshake_ack = HANDSHAKE_OK;
+	                f_handsk = TRUE; 
+					#if DEBUG_LOCK > 0
+					debug_printf("XC HANDSHAKE_OK\r\n");
+					#endif
+	                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+				}
+            }
+			if ((hash_cnt >= 3) && (s_isseedrec == FALSE) && (s_ishandover == FALSE)) {
+				hash_cnt = 0;
                 memset(hash, 0xFF, SIZE_OF_SHA_256_HASH);
                 s_ishandover = TRUE;
-                s_handshake_ack = HANDSHAKE_OK;
-                f_handsk = TRUE; 
+                s_handshake_ack = HANDSHAKE_NOSEED;
+                f_handsk = FALSE; 
+				#if DEBUG_LOCK > 0
+				debug_printf("XC HANDSHAKE_NOSEED\r\n");
+				#endif
                 LockSafeDataAdd(0x00, 1, &s_handshake_ack);
-            }
+			}
             break;
         default:
 
@@ -1210,7 +1231,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
         }
 		if ((CAN_msg->databuf[0] == 0xB1) && ((CAN_msg->databuf[1] & 0xC1) == 0xC1)){
 			#if DEBUG_LOCK > 0
-				debug_printf("databuf[0]:%02x databuf[1] & 0xC1=%02x\r\n",CAN_msg->databuf[0],CAN_msg->databuf[1] & 0xC1);
+			debug_printf("databuf[0]:%02x databuf[1] & 0xC1=%02x\r\n",CAN_msg->databuf[0],CAN_msg->databuf[1] & 0xC1);
 			#endif
 			s_kmslockstep = KMS_REQ_SEED;
             KMS_HandShake(NULL, 0);
@@ -1225,13 +1246,18 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
         if (id == 0x18FF7800) {
             memcpy(s_xichai_seed, CAN_msg->databuf, 8);
             s_sclockstep = CHECK_CODE_SEND;
+			
             XC_Hashcal();
-            if (hash_cnt != 0) {
+            if ((hash_cnt != 0) && (s_ishandover == FALSE) && (s_isseedrec == TRUE)) {
                 s_ishandover = TRUE;
                 s_handshake_ack = HANDSHAKE_CHECKERR;
                 f_handsk = TRUE; 
+				#if DEBUG_LOCK > 0
+				debug_printf("XC HANDSHAKE_CHECKERR\r\n");
+				#endif
                 LockSafeDataAdd(0x00, 1, &s_handshake_ack);
             }
+			s_isseedrec	 = TRUE;
             XC_Checkcode();
         }
     }
@@ -1516,10 +1542,10 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
 				debug_printf("%s s_sclockstep set CONFIG_REQ\r\n",__FUNCTION__);
 				#endif
 	            YC_HandShake();
-			} else if (s_sclockpara.ecutype == ECU_XICHAI_EMSVI) {
+			} else if ((s_sclockpara.ecutype == ECU_XICHAI_EMSVI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSECO)) {
 				s_sclockstep = CHECK_CODE_SEND;
 				#if DEBUG_LOCK > 0
-				debug_printf("ECU_XICHAI_EMSVI CHECK_CODE_SEND\r\n");
+				debug_printf("ECU_XICHAI CHECK_CODE_SEND\r\n");
 				#endif
 			}
         }else{
@@ -1540,6 +1566,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
         #endif
     }
     len++;
+	
     if (s_sclockpara.limitfunction != userdata[len]) {
         change = TRUE;
 
@@ -2256,6 +2283,7 @@ void ACCON_HandShake(void)
     s_parasendstat = TRUE;
     s_handskenable = TRUE;
     s_idfiltenable = FALSE;
+	s_ishandover   = FALSE;
     s_idfiltcnt    = 0;
     s_parasendcnt  = 0;
 	s_yc_state	   = 0;
@@ -2265,8 +2293,10 @@ void ACCON_HandShake(void)
 	s_wc_0800cnt   = 0;
 	s_wc_0800recv  = 0;
     s_igoncnt      = 0;
+	s_isseedrec	   = FALSE;
+	hash_cnt       = 0x00;
     memset(&s_ycseed, 0, sizeof(s_ycseed));
-
+	memset(hash, 0xFF, SIZE_OF_SHA_256_HASH);
     OS_StartTmr(s_lock_tmr, MILTICK, 1);
 	#if DEBUG_LOCK > 0
 		debug_printf("%s s_sclockpara.ecutype:%d \r\n",__FUNCTION__,s_sclockpara.ecutype);
@@ -2286,9 +2316,9 @@ void ACCON_HandShake(void)
     } else if ((s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSECO)) {
         if (!s_sclockpara.unbindstat) {
             f_handsk = FALSE;
-            s_sclockstep = RAND_CODE_REC;
+            s_sclockstep = CHECK_CODE_SEND;
             #if DEBUG_LOCK> 0
-            debug_printf("s_sclockstep 请求随机数\r\n");
+            debug_printf("发送加密数据\r\n");
             #endif
             XC_HandShake();
         }
@@ -2297,7 +2327,7 @@ void ACCON_HandShake(void)
             f_handsk = FALSE;
             s_sclockstep = CHECK_CODE_SEND;
             #if DEBUG_LOCK> 0
-            debug_printf("s_sclockstep:%d 发送加密数据\r\n", s_sclockstep);
+            debug_printf("发送加密数据\r\n");
             #endif
         }
     }
@@ -2332,6 +2362,7 @@ void ACCOFF_HandShake(void)
 	}
    
 	s_sclockstep = CONFIG_OVER;
+	
 }
 
 #if EN_KMS_LOCK > 0
