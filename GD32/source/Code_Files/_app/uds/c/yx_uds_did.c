@@ -248,6 +248,19 @@ static BOOLEAN DID_Read1036(INT8U* pData, INT8U didLen)
 
     return TRUE;
 }
+static BOOLEAN DID_Read103A(INT8U* pData, INT8U didLen)
+{
+    if ((pData == NULL) || (didLen == 0)) {
+        return FALSE;
+    }
+		
+    pData  = YX_GetClientVersion();
+		//didLen = strlen(pData);
+    memcpy(s_uds_did_local.DID_103A, pData, strlen(pData));  
+
+		return true;
+}
+
 static BOOLEAN DID_Read103B(INT8U* pData, INT8U didLen)
 {
     if ((pData == NULL) || (didLen == 0)) {
@@ -319,7 +332,7 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
     {0x1030, DID_RO,  sizeof(s_uds_did_local.DID_1030), s_uds_did_local.DID_1030, DID_DATA_TYPE_HEX , DID_Read1030, NULL},
     {0x1031, DID_RO,  sizeof(s_uds_did_local.DID_1031), s_uds_did_local.DID_1031, DID_DATA_TYPE_HEX , DID_Read1031, NULL},
     {0x1036, DID_RO,  sizeof(s_uds_did_local.DID_1036), s_uds_did_local.DID_1036, DID_DATA_TYPE_HEX , DID_Read1036, NULL},
-    {0x103A, DID_RO,  sizeof(s_uds_did_local.DID_103A), s_uds_did_local.DID_103A, DID_DATA_TYPE_ASCII,NULL,         NULL},
+    {0x103A, DID_RO,  sizeof(s_uds_did_local.DID_103A), s_uds_did_local.DID_103A, DID_DATA_TYPE_ASCII,DID_Read103A, NULL},
     {0x103B, DID_RO,  sizeof(s_uds_did_local.DID_103B), s_uds_did_local.DID_103B, DID_DATA_TYPE_HEX , DID_Read103B, NULL},
     {0x103C, DID_RO,  sizeof(s_uds_did_local.DID_103C), s_uds_did_local.DID_103C, DID_DATA_TYPE_HEX , DID_Read103C, NULL},
     {0x103D, DID_RO,  sizeof(s_uds_did_local.DID_103D), s_uds_did_local.DID_103D, DID_DATA_TYPE_HEX , DID_Read103D, NULL},
@@ -1213,6 +1226,16 @@ INT8U YX_Get_EMSType(void)
     return s_uds_did_e2rom_data.DID_102A[0];
 }
 /*****************************************************************************
+**  函数名:   YX_Get_Did0110
+**  函数描述: 产地配置
+**  参数:     无
+**  返回:     无
+*****************************************************************************/
+INT8U YX_Get_Did0110(void)
+{
+    return s_uds_did_e2rom_data.DID_0110[0];
+}
+/*****************************************************************************
 **  函数名:   YX_Get_VehSpeed
 **  函数描述: 获取车速
 **  参数:     无
@@ -1230,15 +1253,15 @@ INT16U YX_Get_VehSpeed(void)
 ********************************************************************/
 void YX_UDS_DID_Init(void)
 {
-    char* img_inf;
+   //char* img_inf;
 
     YX_MEMSET((INT8U*)&s_can_signal, 0x00, sizeof(s_can_signal));
     YX_MEMSET((INT8U *)&s_uds_did_local, 0x00, sizeof(UDS_DID_LOCAL_T));
     
     YX_UDS_DID_DataReset();
     
-    img_inf = YX_GetClientVersion();
-    memcpy(s_uds_did_local.DID_103A, img_inf, strlen(img_inf));
+    //img_inf = YX_GetClientVersion();
+    //memcpy(s_uds_did_local.DID_103A, img_inf, strlen(img_inf));
     s_did_status[9] = 1;
     s_delay_save_to_flash = 0;
     if (!bal_pp_ReadParaByID(UDS_DID_PARA_, (INT8U *)&s_uds_did_e2rom_data, sizeof(UDS_DID_DATA_E2ROM_T))) {

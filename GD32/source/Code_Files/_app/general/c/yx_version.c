@@ -15,6 +15,7 @@
 #include "yx_version.h"
 #include "bal_tools.h"
 #include "build_file.h"
+#include "yx_uds_did.h"
 /*
 ********************************************************************************
 *                   模块数据类型、变量及宏定义
@@ -54,7 +55,22 @@ char* YX_GetVersionTime(void)
 ********************************************************************************/
 char *YX_GetClientVersion(void)
 {
-	return (char*)CLIENT_VERSION_STR;
+    char p_ver[11];
+		char *tmpptr;
+		INT8U pos;
+		
+    tmpptr = (char*)CLIENT_VERSION_STR;
+		pos = strlen(CLIENT_VERSION_STR);
+    memcpy(p_ver, tmpptr, pos);
+		
+    if(YX_Get_Did0110()) {
+			 tmpptr = (char*)QINGDAO;
+    } else {
+       tmpptr = (char*)CHANGCHUN; 
+    }
+		strcat(p_ver, tmpptr);
+
+		return p_ver;
 }
 
 /********************************************************************************
