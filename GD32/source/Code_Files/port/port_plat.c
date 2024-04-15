@@ -15,6 +15,7 @@
 #include "port_plat.h"
 #include "port_gpio.h"
 #include "app_include.h"
+#include "time.h"
 
 /*
 *********************************************************************************
@@ -40,6 +41,32 @@
 SYSTIME_T systime;
 
 /********************************************************************************
+**  函数名:     PORT_GetSysTimestamp
+**  函数描述:   获取系统时间戳
+**  参数:       [in] rtc_time:系统时间数组
+**  返回:       成功返回时间戳
+********************************************************************************/
+INT32U PORT_GetSysTimestamp(INT8U* rtc_time)
+{
+	struct tm time;
+	INT32U stamp;
+	INT16U len = sizeof(rtc_time);
+
+	time.tm_year = rtc_time[6]+100;
+	time.tm_mon	 = rtc_time[5]-1;
+	time.tm_mday = rtc_time[4];
+	time.tm_hour = rtc_time[2];
+	time.tm_min	 = rtc_time[1];
+	time.tm_sec	 = rtc_time[0];
+	stamp = mktime(&time);
+	#if DEBUG_TEMP > 0
+	debug_printf("PORT_GetSysTimestamp :%d/%d/%d %d:%d:%d stamp:%d\r\n",time.tm_year,time.tm_mon,time.tm_mday,time.tm_hour,\
+				time.tm_min,time.tm_sec, stamp);
+	#endif
+	return stamp;
+}
+
+/********************************************************************************
 **  函数名:     PORT_SetSysTime
 **  函数描述:   设置系统时间
 **  参数:       [in] stime: 系统时间
@@ -48,30 +75,55 @@ SYSTIME_T systime;
 BOOLEAN PORT_SetSysTime(SYSTIME_T *dt)
 {
 
-	INT8U time[7],rtc_time[7];
-	
+	INT8U time[7] = {0},rtc_time[7], ret;
+	INT16U temp;
+	INT32U t1 = 0,t2 = 0;
+	static INT8U hop_cnt = 0;	// 数值连续跳变次数>=3，修改时间
+	// 如果设置全0为无效值，不做处理
+	if (memcmp(time, (INT8U*)dt, 6) == 0) {
+		#if DEBUG_TEMP > 0
+		debug_printf("PORT_SetSysTime 时间为全0，无效值，不做处理\r\n");
+		#endif
+		return FALSE;
+	}
+		
 	dal_rtc_settime((INT8U *)dt);
-    systime.date.year   = dt->date.year;
-    systime.date.month  = dt->date.month;
-    systime.date.day    = dt->date.day;
-
-    systime.time.hour   = dt->time.hour;
-    systime.time.minute = dt->time.minute;
-    systime.time.second = dt->time.second;
-
-	dal_rtc_gettime(time, 7);
-	rtc_time[0] = time[5];	//秒
-	rtc_time[1] = time[4];	//分
-	rtc_time[2] = time[3];  //时
-	rtc_time[3] = time[6];  //周
-	rtc_time[4] = time[2];  //日
-	rtc_time[5] = time[1];  //月
-	rtc_time[6] = time[0];  //年
-	HAL_sd2058_SetCalendar(rtc_time);
+	//dal_rtc_gettime(time, 7);
+	ret = HAL_sd2058_ReadCalendar(time);
+	if (ret == TRUE) {
+		rtc_time[0] = dt->time.second;	//秒
+		rtc_time[1] = dt->time.minute;	//分
+		rtc_time[2] = dt->time.hour;  	//时
+		rtc_time[4] = dt->date.day;		//日
+		rtc_time[5] = dt->date.month;  	//月
+		rtc_time[6] = dt->date.year;  	//年
+		t1 = PORT_GetSysTimestamp(rtc_time);
+		t2 = PORT_GetSysTimestamp(time);
+		temp = abs(t1- t2);
+	} else {
+		temp = 31;
+	}
+	if (temp > 30) {
+		if (++hop_cnt >= 3) {
+			hop_cnt = 0;
+			rtc_time[0] = dt->time.second;	//秒
+			rtc_time[1] = dt->time.minute;	//分
+			rtc_time[2] = dt->time.hour;  	//时
+			rtc_time[4] = dt->date.day;		//日
+			rtc_time[5] = dt->date.month;  	//月
+			rtc_time[6] = dt->date.year;  	//年
+			ret = HAL_sd2058_SetCalendar(rtc_time);
+			#if DEBUG_TEMP > 0
+			debug_printf("HAL_sd2058_SetCalendar ret:%d\r\n",ret);
+			#endif
+		}
+	} else {
+		hop_cnt = 0;
+	}
 	#if DEBUG_TEMP > 0
-	HAL_sd2058_ReadCalendar(time);
-	debug_printf("time:%d/%d/%d %d:%d:%d %d\r\n",time[6],time[5],time[4],time[2],\
-				time[1],time[0],time[3]);
+	//ret = HAL_sd2058_ReadCalendar(time);
+	debug_printf("settime:%d/%d/%d %d:%d:%d\r\ncurtime:%d/%d/%d %d:%d:%d %d hop_cnt:%d\r\n",dt->date.year, dt->date.month, dt->date.day,dt->time.hour, dt->time.minute, dt->time.second,
+		time[6],time[5],time[4],time[2],time[1],time[0],time[3], hop_cnt);
 	#endif
     return TRUE;
     // return SHELL_PF_SetLocalTime(class_obj[CLASS_ID_PLATFORM], (INT8U *)&systime);
@@ -80,13 +132,14 @@ BOOLEAN PORT_GetSysTime1(SYSTIME_T *dtime)
 {
 	INT8U time[7];
 	if(HAL_sd2058_ReadCalendar(time) == FALSE){
-		dtime->date.year  = systime.date.year;
-		dtime->date.month = systime.date.month;
-		dtime->date.day   = systime.date.day;
+		dal_rtc_gettime(time, 7);
+		dtime->date.year  = time[0];
+		dtime->date.month = time[1];
+		dtime->date.day   = time[2];
 
-		dtime->time.hour   = systime.time.hour;
-		dtime->time.minute = systime.time.minute;
-		dtime->time.second = systime.time.second;
+		dtime->time.hour   = time[3];
+		dtime->time.minute = time[4];
+		dtime->time.second = time[5];
 	}else{
 		dtime->date.year  = time[6];
 		dtime->date.month = time[5];
@@ -106,19 +159,20 @@ BOOLEAN PORT_GetSysTime1(SYSTIME_T *dtime)
 ** 参数:       [out] dtime:   时间
 ** 返回:       成功返回true，失败返回false
 ********************************************************************************/
-BOOLEAN PORT_GetSysTime(TIME_T *dtime)
+BOOLEAN PORT_GetSysTime(SYSTIME_T *dtime)
 {
-//	SYSTIME_T systime;
-//    if (SHELL_PF_GetLocalTime(class_obj[CLASS_ID_PLATFORM], (INT8U *)&systime)) {
-//        dtime->hour   = systime.time.hour;
-//        dtime->minute = systime.time.minute;
-//        dtime->second = systime.time.second;
-//
-//        return true;
-//    } else {
-//        return false;
-//    }
-    return FALSE;
+	INT8U time[7];
+	if(HAL_sd2058_ReadCalendar(time) == FALSE){
+		return FALSE;
+	}
+	dtime->date.year  = time[6];
+	dtime->date.month = time[5];
+	dtime->date.day   = time[4];
+
+	dtime->time.hour   = time[2];
+	dtime->time.minute = time[1];
+	dtime->time.second = time[0];
+    return TRUE;
 }
 
 /********************************************************************************
