@@ -22,11 +22,13 @@
 ********************************************************************************
 */
 //#define MAX_VERSION_LEN        30
-#define APPDAL_VERSION_STR     "c1715001t18-ae64gdm4-001"
+#define APPDAL_VERSION_STR     "c1715001t20-ae64gdm4-001"
 #define APP_VERSION_NUM        APPDAL_VERSION_STR
 #define APP_VERSION_TYPE       "ae64gdm4"
 
-#define CLIENT_VERSION_STR	   "Y4.35.2006Y"
+#define CLIENT_VERSION_STR	   "Y4.35.2006"
+#define CHANGCHUN              "Y"           /* 长春 */
+#define QINGDAO                "V"           /* 青岛 */
 /*
 ********************************************************************************
 *                   对外接口声明
