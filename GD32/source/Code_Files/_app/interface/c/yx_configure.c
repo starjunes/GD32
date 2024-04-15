@@ -159,10 +159,8 @@ void EquipmentStatusReq(INT8U mancode, INT8U command, INT8U *data, INT16U datale
     }
 
     bal_ReadDATA_Strm(&strm, time, 6);
-	if (++rtc_cnt > 30) {
-		PORT_SetSysTime((SYSTIME_T *)time);
-		rtc_cnt = 0;
-	}
+
+	PORT_SetSysTime((SYSTIME_T *)time);
 	
 	
     SetGpsLocation(bal_GetStrmPtr(&strm));
