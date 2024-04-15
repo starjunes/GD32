@@ -84,6 +84,12 @@ INT32U CreateTimer(void (*tmrproc)(void))
 
     DAL_ASSERT(tmrproc != NULL);
 
+	for (tmrid = 0; tmrid < MAX_SYS_TIMER; tmrid++) {				/* 检索定时器是否已被注册 */
+        if (s_systimer[tmrid].tporc == tmrproc) {
+			return tmrid;
+		}                
+    }
+
     for (tmrid = 0; tmrid < MAX_SYS_TIMER; tmrid++) {
         if (s_systimer[tmrid].inuse == FALSE) break;                 /* 寻找空闲的定时器控制块 */
     }
