@@ -81,6 +81,8 @@
 #define DEBUG_J1939          0
 #define DEBUG_UDS            0
 #define DEBUG_EX_RTC         0                                       /* 调试外部RTC */
+#define DEBUG_TEMP			 0		/*临时调试用*/
+
 #else
 #define DEBUG_RAMDATA        0                                       /* RAM参数开关 */
 #define DEBUG_PARA           0                                       /* 参数开关 */

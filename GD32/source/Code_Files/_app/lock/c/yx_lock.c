@@ -651,11 +651,8 @@ static void XC_Hashcal(void)
 {
     INT8U input[32] = {0x00};
     UDS_DID_DATA_E2ROM_T uds_data;
-    bal_pp_StoreParaByID(UDS_DID_PARA_, (INT8U *)&uds_data, sizeof(UDS_DID_DATA_E2ROM_T));
-    #if DEBUG_LOCK > 0
-	debug_printf("XC_Hashcal VIN:");
-	Debug_PrintHex(TRUE, uds_data.DID_F190, sizeof(uds_data.DID_F190));
-	#endif
+    bal_pp_ReadParaByID(UDS_DID_PARA_, (INT8U *)&uds_data, sizeof(UDS_DID_DATA_E2ROM_T));
+    
     memcpy(input, s_xichai_seed, 7);
     input[7] = 0xFF;
     input[8] = 0xFF;
@@ -663,7 +660,16 @@ static void XC_Hashcal(void)
     memcpy(&input[10], uds_data.DID_F190, sizeof(uds_data.DID_F190));
     memcpy(&input[27], s_xichai_seed, 4);
     input[31] = s_xichai_seed[5];
+	
     calc_sha_256(hash, input, 32);
+	#if DEBUG_LOCK > 0
+	debug_printf("XC_Hashcal VIN len:%d VIN:", sizeof(uds_data.DID_F190));
+	Debug_PrintHex(TRUE, uds_data.DID_F190, sizeof(uds_data.DID_F190));
+	debug_printf("XC_Hashcal input:");
+	Debug_PrintHex(TRUE, input, 32);
+	debug_printf("XC_Hashcal output:");
+	Debug_PrintHex(TRUE, hash, 32);
+	#endif
 }
 /**************************************************************************************************
 **  º¯ÊýÃû³Æ:  XC_HandShake
@@ -1910,6 +1916,9 @@ static void LockTmrProc(void*index)
 		Debug_PrintHex(TRUE, seedbuf, seedlen);
 		debug_printf("key:");
 		Debug_PrintHex(TRUE, key, 16);
+		memcpy(s_xichai_seed, seedbuf, 8);
+		XC_Hashcal();
+		PORT_GetSysTimestamp();
 	}
 	#endif
 	CanDelayTmr();
@@ -2444,7 +2453,6 @@ void Lock_Init(void)
     s_lock_tmr = OS_InstallTmr(TSK_ID_OPT, 0, LockTmrProc);
     SecurityKeySet(s_sclockpara.securityKey, s_sclockpara.securityKeylen);
     ACCON_HandShake();
-
     s_lockmsg_buf = (REUPSAFE_DATA_T*)YX_MemMalloc(sizeof(REUPSAFE_DATA_T));
     #if LOCK_COLLECTION > 0
     //memset(&g_d008data, 0, sizeof(D008_DATA_T));
