@@ -177,7 +177,6 @@ void ReStartDevice(void)
 ********************************************************************/
 void Dal_HardSysReset(void)
 {
-	while(1);
     __set_FAULTMASK(1);                                                         /* Èí¼þ¸´Î» */
     NVIC_SystemReset();
 }
