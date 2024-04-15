@@ -31,6 +31,13 @@ static INT8U  s_signalhanle_tmr;
 static INT8U  s_getsignalstau_tmr;
 static BOOLEAN    s_chginfomoff;     /* 信号改变通知功能是否关闭，TRUE关闭，FALSE开启，默认开启 */
 
+
+// 消毒机制
+#define DISINFECT_PERIOD	(60*3)			// 消毒机制超时时间
+static INT32U	s_disinfect_start = 0;			// 消毒机制开始时间
+static INT32U	s_disinfect_bak = 0;			// 消毒机制备份时间
+static BOOLEAN 	s_disinfect_startflag = FALSE;	// 消毒机制开始计时标志
+
 #if DEBUG_SLEEP_STATUS > 0
 static INT8U  s_accofftime=0;
 #endif
@@ -309,12 +316,49 @@ static void SignalReport(void)
 }
 
 /*******************************************************************************
+ ** 函数名:    DisinfectProceed
+ ** 函数描述:   消毒机制判断开启
+ ** 参数:       无
+ ** 返回:       无
+ ******************************************************************************/
+static void DisinfectProceed(void)
+{
+	SYSTIME_T time;
+	INT8U data[8], ret;
+	INT32U stamp = 0;
+	
+	ret = PORT_GetSysTime(&time);
+	data[0] = time.time.second;
+	data[1] = time.time.minute;
+	data[2] = time.time.hour;
+	data[4] = time.date.day;
+	data[5] = time.date.month;
+	data[6] = time.date.year;
+	stamp	= PORT_GetSysTimestamp(data);
+	if ((ret == FALSE) || (s_disinfect_startflag == FALSE)) {
+		if (s_disinfect_bak > DISINFECT_PERIOD) {
+			ResetMcuDelay(10);
+			#if DEBUG_LOCK > 0
+			debug_printf("DisinfectProceed 10s后重启 s_disinfect_bak:%d\r\n",s_disinfect_bak);
+			#endif
+		}
+	} else {
+		if (abs(stamp - s_disinfect_start + s_disinfect_bak) > DISINFECT_PERIOD) {
+		ResetMcuDelay(10);
+		#if DEBUG_LOCK > 0
+		debug_printf("DisinfectProceed 10s后重启 stamp:%d s_disinfect_start:%d\r\n",stamp, s_disinfect_start);
+		#endif
+	}
+	}
+	
+}
+
+/*******************************************************************************
  ** 函数名:    SignalHandleTmr
  ** 函数描述:   定时器处理函数
  ** 参数:       无
  ** 返回:       无
  ******************************************************************************/
-
 static void SignalHandleTmr(void* pdata)
 {
     #if 0
@@ -326,7 +370,8 @@ static void SignalHandleTmr(void* pdata)
     pulsefreq = PORT_PinGetAirbagFreq();
     debug_printf("脉冲频率:%d\r\n",pulsefreq);
     #endif
-	INT8U acc_level;
+	INT8U acc_level, data[8];
+	SYSTIME_T time;
     acc_level = !bal_input_ReadSensorFilterStatus(TYPE_ACC);
     INT32U accpwrad;
 	accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
@@ -354,6 +399,7 @@ static void SignalHandleTmr(void* pdata)
             ACCOFF_HandShake();
 			KMS_Hand_Send_Set(TRUE);
 			SetSpeedFlag(FALSE);
+			DisinfectProceed();			
         }
         acc0 = acc1;
     }
@@ -391,6 +437,19 @@ static void GetSignalstatusTmr(void* pdata)
 	YX_MEMSET(data, 0x00, sizeof(data));
 		
 	ret = HAL_sd2058_ReadCalendar(data);
+	if (ret == FALSE) {
+		s_disinfect_bak++;
+	} else {
+		if (s_disinfect_startflag == FALSE) {
+			s_disinfect_startflag = TRUE;
+			s_disinfect_start = PORT_GetSysTimestamp(data);
+			#if DEBUG_LOCK > 0
+			debug_printf("s_disinfect_start:%d s_disinfect_bak:%d\r\n", s_disinfect_start, s_disinfect_bak);
+			#endif
+		}
+		s_disinfect_start -= s_disinfect_bak;
+		s_disinfect_bak = 0;
+	}
 	if((count++ >= 2) && YX_COM_Islink()) { 
 		count = 0;
 		if(ret) {
@@ -522,21 +581,21 @@ void RealTimeStatusReport_AckHdl(INT8U mancode, INT8U command,INT8U *data, INT16
 **************************************************************************************************/
 void RTC_Synchro_Hdl(INT8U mancode, INT8U command, INT8U *userdata, INT16U userdatalen)
 {
-	  INT8U buf[7];
-	  buf[0] = userdata[5];           /* 秒 */
-    buf[1] = userdata[4];           /* 分 */
-    buf[2] = userdata[3];           /* 时 */
-    buf[3] = 1;                    /* 星期 */
-    buf[4] = userdata[2];           /* 日 */
-    buf[5] = userdata[1];           /* 月 */
-    buf[6] = userdata[0];           /* 年 */
- 		#if DEBUG_EX_RTC > 0
-		debug_printf("RTC_Synchro_Hdl\r\n");
-		printf_hex(buf,7);
-	  #endif
+	/*INT8U buf[7];
+	buf[0] = userdata[5];           // 秒 
+    buf[1] = userdata[4];           // 分
+    buf[2] = userdata[3];           // 时 
+    buf[3] = 1;                    // 星期 
+    buf[4] = userdata[2];           // 日 
+    buf[5] = userdata[1];           // 月 
+    buf[6] = userdata[0];           // 年 
+	#if DEBUG_EX_RTC >= 0
+	debug_printf("RTC_Synchro_Hdl\r\n");
+	printf_hex(buf,7);
+	#endif
     if (HAL_sd2058_SetCalendar(buf)) {
         YX_COM_DirSend( RTC_SYNC_REQ_ACK, NULL,0);
-    }
+    }*/
 }
 
 
