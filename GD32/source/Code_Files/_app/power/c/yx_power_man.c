@@ -1254,7 +1254,9 @@ static void GoSleepTmr(void* pdata)
 	} else {
 		s_checkbat = 0;                                       //主电供电，休眠唤醒后，进行一次电池健康管理
 	}
-
+	if (DisinfectProceed() == TRUE) {
+		return;
+	}
 	switch (s_modedata) {
 		case 0x00 :
 			#if DEBUG_RTC_SLEEP > 0
