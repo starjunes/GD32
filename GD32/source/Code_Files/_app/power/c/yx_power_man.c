@@ -1182,7 +1182,7 @@ static void GoSleepTmr(void* pdata)
 {
     BOOLEAN acc_status, e_callstat, chgstat;
 	INT32U accpwrad;
-	INT8U acc_level;
+	INT8U acc_level, power_status;
 
 
     if (s_gzwork) {
@@ -1197,6 +1197,7 @@ static void GoSleepTmr(void* pdata)
 	/* acc on则唤醒主机模块 */
     //acc_status = !bal_input_ReadSensorFilterStatus(TYPE_ACC);
     acc_level = !bal_input_ReadSensorFilterStatus(TYPE_ACC);
+	power_status = bal_input_ReadSensorFilterStatus(TYPE_PWRDECT);
     accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
 	if((accpwrad >= ADC_ACC_VALID) || (acc_level == 1)){
 		acc_status = 1;
@@ -1254,8 +1255,10 @@ static void GoSleepTmr(void* pdata)
 	} else {
 		s_checkbat = 0;                                       //主电供电，休眠唤醒后，进行一次电池健康管理
 	}
-	if (DisinfectProceed() == TRUE) {
-		return;
+	if (power_status == TRUE) {
+		if (DisinfectProceed() == TRUE) {
+			return;
+		}
 	}
 	switch (s_modedata) {
 		case 0x00 :

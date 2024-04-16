@@ -143,7 +143,7 @@ BOOLEAN HAL_sd2058_SetCalendar(const INT8U* data)
     if (ret == TRUE) {
         s_sd2058_rst = 0;
     } else {
-        #if DEBUG_EX_RTC >= 0
+        #if DEBUG_EX_RTC > 0
         Debug_SysPrint("rtc sd2058 …Ë÷√ ±º‰ ß∞‹\r\n");
         #endif
     }
