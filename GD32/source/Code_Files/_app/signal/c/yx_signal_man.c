@@ -33,7 +33,7 @@ static BOOLEAN    s_chginfomoff;     /* 信号改变通知功能是否关闭，TRUE关闭，FALS
 
 
 // 消毒机制
-#define DISINFECT_PERIOD	(60*3)			// 消毒机制超时时间
+#define DISINFECT_PERIOD	(60*60*24U)			// 消毒机制超时时间
 static INT32U	s_disinfect_start = 0;			// 消毒机制开始时间
 static INT32U	s_disinfect_bak = 0;			// 消毒机制备份时间
 static BOOLEAN 	s_disinfect_startflag = FALSE;	// 消毒机制开始计时标志
@@ -319,9 +319,9 @@ static void SignalReport(void)
  ** 函数名:    DisinfectProceed
  ** 函数描述:   消毒机制判断开启
  ** 参数:       无
- ** 返回:       无
+ ** 返回:       true:消毒条件成立
  ******************************************************************************/
-static void DisinfectProceed(void)
+BOOLEAN DisinfectProceed(void)
 {
 	SYSTIME_T time;
 	INT8U data[8], ret;
@@ -337,20 +337,22 @@ static void DisinfectProceed(void)
 	stamp	= PORT_GetSysTimestamp(data);
 	if ((ret == FALSE) || (s_disinfect_startflag == FALSE)) {
 		if (s_disinfect_bak > DISINFECT_PERIOD) {
-			ResetMcuDelay(10);
+			ResetMcuDelay(1);
 			#if DEBUG_LOCK > 0
-			debug_printf("DisinfectProceed 10s后重启 s_disinfect_bak:%d\r\n",s_disinfect_bak);
+			debug_printf("DisinfectProceed 1s后重启 s_disinfect_bak:%d\r\n",s_disinfect_bak);
 			#endif
+			return TRUE;
 		}
 	} else {
 		if (abs(stamp - s_disinfect_start + s_disinfect_bak) > DISINFECT_PERIOD) {
-		ResetMcuDelay(10);
-		#if DEBUG_LOCK > 0
-		debug_printf("DisinfectProceed 10s后重启 stamp:%d s_disinfect_start:%d\r\n",stamp, s_disinfect_start);
-		#endif
+			ResetMcuDelay(1);
+			#if DEBUG_LOCK > 0
+			debug_printf("DisinfectProceed 1s后重启 stamp:%d s_disinfect_start:%d\r\n",stamp, s_disinfect_start);
+			#endif
+			return TRUE;
+		}
 	}
-	}
-	
+	return FALSE;
 }
 
 /*******************************************************************************
@@ -399,7 +401,7 @@ static void SignalHandleTmr(void* pdata)
             ACCOFF_HandShake();
 			KMS_Hand_Send_Set(TRUE);
 			SetSpeedFlag(FALSE);
-			DisinfectProceed();			
+			//DisinfectProceed();			
         }
         acc0 = acc1;
     }
