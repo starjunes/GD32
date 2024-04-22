@@ -811,7 +811,8 @@ void WC_HandShake(void)
     senddata[11] = s_md5result[6];
     senddata[12] = s_md5result[7];
 	#if DEBUG_LOCK > 0
-	debug_printf("WC_HandShake step:%d\r\n", s_sclockstep);
+	debug_printf("WC_HandShake step:%d senddata:", s_sclockstep);
+	Debug_PrintHex(TRUE, senddata, 13);
 	#endif
     CAN_TxData(senddata, false, LOCK_CAN_CH);
 }
@@ -1192,8 +1193,8 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                 s_md5source[6] = CAN_msg->databuf[3];
                 s_md5source[7] = CAN_msg->databuf[4];
 				#if DEBUG_LOCK > 0
-			        debug_printf("\r\n", id, s_sclockpara.ecutype, s_sclockstep, s_sclockpara.unbindstat);
-				 	Debug_PrintHex(true, CAN_msg->databuf, CAN_msg->len);
+			        debug_printf("id:%08x ecutype:%d s_sclockstep:%d unbindstat:%d s_md5source:", id, s_sclockpara.ecutype, s_sclockstep, s_sclockpara.unbindstat);
+				 	Debug_PrintHex(true, s_md5source, 8);
 			    #endif
                 MDString(s_md5source,s_md5result,sizeof(s_md5source));
                 s_sclockstep = HAND_SEND1;
@@ -1442,19 +1443,10 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
         change = TRUE;
         s_sclockpara.firmcodelen = len1;
         memcpy(s_sclockpara.firmcode, &userdata[len + 1], len1);
-		/*for (i = 0; i < len1; i++){
-			s_sclockpara.firmcode[i] = userdata[len + 1 + len1 - i - 1];
-		}*/
     } else {
-    	/*for (i = 0; i < len1; i++){
-			buf[i] = userdata[len + 1 + len1 - i - 1];
-		}*/
-        if (STR_EQUAL != bal_ACmpString(FALSE, s_sclockpara.firmcode, buf, s_sclockpara.firmcodelen, len1)) {
+		if (memcmp(s_sclockpara.firmcode, &userdata[len+1], len1) != 0) {
             change = TRUE;
             memcpy(s_sclockpara.firmcode, &userdata[len + 1], len1);
-            //for (i = 0; i < len1; i++){
-			//	s_sclockpara.firmcode[i] = userdata[len + 1 + len1 - i - 1];
-			//}
         }
     }
     len += (len1 + 1);
@@ -1479,15 +1471,9 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
 			s_sclockpara.serialnumber[i] = userdata[len + 1 + len1 - i - 1];
 		}*/
     } else {
-	    /*for (i = 0; i < len1; i++){
-			buf[i] = userdata[len + 1 + len1 - i - 1];
-		}*/
-        if (STR_EQUAL != bal_ACmpString(FALSE, s_sclockpara.serialnumber, buf, s_sclockpara.srlnumberlen, len1)) {
+        if (memcmp(s_sclockpara.firmcode, &userdata[len+1], len1) != 0) {
             change = TRUE;
             memcpy(s_sclockpara.serialnumber, &userdata[len + 1], len1);
-            //for (i = 0; i < len1; i++){
-			//	s_sclockpara.serialnumber[i] = userdata[len + 1 + len1 - i - 1];
-			//}
         }
     }
     len += (len1 + 1);
