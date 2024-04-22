@@ -217,7 +217,7 @@ void BeatRequstAck_Hdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen)
 void VersionNumberReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen)
 {
     char *get_vernum;
-    INT8U ack[50];
+    INT8U ack[50] = {0};
 	ack[0] = data[0];
 	if (ack[0] == 0x01) {
 	    get_vernum = YX_GetVersion();
@@ -226,6 +226,9 @@ void VersionNumberReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datale
 	}
 	ack[1] = strlen(get_vernum);
 	memcpy(&ack[2],get_vernum,strlen(get_vernum));
+	#if DEBUG_LOCK > 0
+	debug_printf("VersionNumberReqHdl ack:%s\r\n",ack);
+	#endif
 	YX_COM_DirSend( VERSION_REQ_ACK, ack, strlen(get_vernum)+2);
 }
 /**************************************************************************************************

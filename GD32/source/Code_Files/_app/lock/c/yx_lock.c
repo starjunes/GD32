@@ -649,7 +649,7 @@ void XC_HandShake(void)
 **************************************************************************************************/
 static void XC_Hashcal(void)
 {
-    INT8U input[32] = {0x00};
+    INT8U input[32] = {0x00},i, len;
     UDS_DID_DATA_E2ROM_T uds_data;
     bal_pp_ReadParaByID(UDS_DID_PARA_, (INT8U *)&uds_data, sizeof(UDS_DID_DATA_E2ROM_T));
     
@@ -657,10 +657,13 @@ static void XC_Hashcal(void)
     input[7] = 0xFF;
     input[8] = 0xFF;
     input[9] = 0xFF;
-    memcpy(&input[10], uds_data.DID_F190, sizeof(uds_data.DID_F190));
-    memcpy(&input[27], s_xichai_seed, 4);
-    input[31] = s_xichai_seed[5];
-	
+	len = sizeof(uds_data.DID_F190);
+    memcpy(&input[10], uds_data.DID_F190, len);
+	input[27] = 0xF0 | (s_xclockpara.ctr_mode & 0x03);
+	input[28] = 0xFF;
+	input[29] = 0xFA;
+	input[30] = s_xclockpara.limitLR;
+	input[31] = 0xF0;
     calc_sha_256(hash, input, 32);
 	#if DEBUG_LOCK > 0
 	debug_printf("XC_Hashcal VIN len:%d VIN:", sizeof(uds_data.DID_F190));
@@ -712,7 +715,7 @@ void XC_Checkcode(void)
             perioddata[11] = 0xFF;
 			if (s_isseedrec == TRUE) {
 				perioddata[5]  = 0xF0 | (s_xclockpara.ctr_mode & 0x03);
-            	perioddata[12] = hash[hash_cnt];
+            	perioddata[12] = hash[SIZE_OF_SHA_256_HASH-hash_cnt-1];
 			}
 			hash_cnt++;
             if (hash_cnt >= SIZE_OF_SHA_256_HASH) {
@@ -1250,21 +1253,24 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
     }
     if ((s_sclockpara.ecutype == ECU_XICHAI_EMSECO) || (s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSVI)) {
         if (id == 0x18FF7800) {
-            memcpy(s_xichai_seed, CAN_msg->databuf, 8);
-            s_sclockstep = CHECK_CODE_SEND;
-			
-            XC_Hashcal();
-            if ((hash_cnt != 0) && (s_ishandover == FALSE) && (s_isseedrec == TRUE)) {
-                s_ishandover = TRUE;
-                s_handshake_ack = HANDSHAKE_CHECKERR;
-                f_handsk = TRUE; 
-				#if DEBUG_LOCK > 0
-				debug_printf("XC HANDSHAKE_CHECKERR\r\n");
-				#endif
-                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
-            }
-			s_isseedrec	 = TRUE;
-            XC_Checkcode();
+			if (memcmp(s_xichai_seed, CAN_msg->databuf, 8) != 0){
+	            memcpy(s_xichai_seed, CAN_msg->databuf, 8);
+	            s_sclockstep = CHECK_CODE_SEND;
+				
+	            XC_Hashcal();
+	            if ((hash_cnt != 0) && (s_ishandover == FALSE) && (s_isseedrec == TRUE)) {
+	                s_ishandover = TRUE;
+	                s_handshake_ack = HANDSHAKE_CHECKERR;
+	                f_handsk = TRUE; 
+					#if DEBUG_LOCK > 0
+					debug_printf("XC HANDSHAKE_CHECKERR\r\n");
+					#endif
+	                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+	            }
+				hash_cnt = 0;
+				s_isseedrec	 = TRUE;
+	            //XC_Checkcode();
+			}
         }
     }
 }
@@ -1881,14 +1887,14 @@ static void LockTmrProc(void*index)
     static INT16U acc_off_delay = 0;
     #endif
     INT8U senddata[13] = {0x18,0xEA,0x00,0x17,0x08,0xAF,0xFE,0x00,0xFF,0xFF,0xFF,0xFF,0xFF}; /* 0x18ea0017 */
-	INT32U accpwrad;
-    //acc_state = bal_input_ReadSensorFilterStatus(TYPE_ACC);
-	accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
+	//INT32U accpwrad;
+    acc_state = !bal_input_ReadSensorFilterStatus(TYPE_ACC);
+	/*accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
 	if(accpwrad >= ADC_ACC_VALID){
 		acc_state = TRUE;
 	}else{
 		acc_state = FALSE;
-	}
+	}*/
 	#if 0 //DEBUG_LOCK > 0
 	static INT8U cnt = 0;
 	INT8U seedbuf[8] = {0x7A, 0x1D, 0x77, 0xB3, 0x94, 0x1C, 0x6E, 0xEC};
@@ -1924,7 +1930,7 @@ static void LockTmrProc(void*index)
 	CanDelayTmr();
 	LockSafeDataTran();
     #if EN_KMS_LOCK > 0
-    if (!acc_state) {
+    if (acc_state) {
         acc_off_delay = 3000;    /* —” ±30√Î */
         KmsG5LockMsgSend();
     } else {
