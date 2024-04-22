@@ -33,7 +33,7 @@ static BOOLEAN    s_chginfomoff;     /* 信号改变通知功能是否关闭，TRUE关闭，FALS
 
 
 // 消毒机制
-#define DISINFECT_PERIOD	(60*10UL)		// 消毒机制超时时间
+#define DISINFECT_PERIOD	(60*60*24UL)		// 消毒机制超时时间
 static INT32U	s_disinfect_start = 0;			// 消毒机制开始时间
 static INT32U	s_disinfect_bak = 0;			// 消毒机制备份时间
 static BOOLEAN 	s_disinfect_startflag = FALSE;	// 消毒机制开始计时标志
