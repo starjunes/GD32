@@ -694,8 +694,8 @@ static void Select_MAINPWRorBAT(void)//修改主备电切换流程
     bcall_status = bal_input_ReadSensorFilterStatus(TYPE_BCALL);
     ecall_status = bal_input_ReadSensorFilterStatus(TYPE_ECALL);
     power_status = bal_input_ReadSensorFilterStatus(TYPE_PWRDECT);
-	accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
-	if((accpwrad >= ADC_ACC_VALID) || (acc_level == 1)){
+	//accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
+	if( (acc_level == 1)){				// (accpwrad >= ADC_ACC_VALID) ||
 		acc_status = 1;
 	}else{
 		acc_status = 0;
@@ -734,8 +734,8 @@ static void Select_MAINPWRorBAT(void)//修改主备电切换流程
     debug_printf("备电AD值:%d \r\n",s_bakpwerad);
     debug_printf("备电电压值(电压值扩大了100倍):%d \r\n", (INT32U)AdConvertDv(s_bakpwerad));
     debug_printf("备电转换成原来s32k的adc值:%d \r\n", (INT32U)(s_bakpwerad * 1.28 - 11)); 
-	debug_printf("acc_status:%d bcall_status%d ecall_status:%d	accpwrad(电压值扩大了1000倍):%d\r\n",\
-					acc_status,bcall_status,ecall_status,accpwrad);
+	debug_printf("acc_status:%d bcall_status%d ecall_status:%d\r\n",\
+					acc_status,bcall_status,ecall_status);
 	#endif
 
 
@@ -1181,7 +1181,7 @@ static void ReportAdcTmr(void* pdata)
 static void GoSleepTmr(void* pdata)
 {
     BOOLEAN acc_status, e_callstat, chgstat;
-	INT32U accpwrad;
+	//INT32U accpwrad;
 	INT8U acc_level, power_status;
 
 
@@ -1198,8 +1198,8 @@ static void GoSleepTmr(void* pdata)
     //acc_status = !bal_input_ReadSensorFilterStatus(TYPE_ACC);
     acc_level = !bal_input_ReadSensorFilterStatus(TYPE_ACC);
 	power_status = bal_input_ReadSensorFilterStatus(TYPE_PWRDECT);
-    accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
-	if((accpwrad >= ADC_ACC_VALID) || (acc_level == 1)){
+    //accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
+	if((acc_level == 1)){				//(accpwrad >= ADC_ACC_VALID) || 
 		acc_status = 1;
 	}else{
 		acc_status = 0;

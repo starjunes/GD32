@@ -33,7 +33,7 @@ static BOOLEAN    s_chginfomoff;     /* 信号改变通知功能是否关闭，TRUE关闭，FALS
 
 
 // 消毒机制
-#define DISINFECT_PERIOD	(60*60*24U)			// 消毒机制超时时间
+#define DISINFECT_PERIOD	(60*10UL)		// 消毒机制超时时间
 static INT32U	s_disinfect_start = 0;			// 消毒机制开始时间
 static INT32U	s_disinfect_bak = 0;			// 消毒机制备份时间
 static BOOLEAN 	s_disinfect_startflag = FALSE;	// 消毒机制开始计时标志
@@ -232,8 +232,8 @@ static void SignalReport(void)
     	volstatus = 0x00;
     }
     acclevel     = !bal_input_ReadSensorFilterStatus(TYPE_ACC);
-	accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
-	if((accpwrad >= ADC_ACC_VALID) || (acclevel == 1)){
+	//accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
+	if((acclevel == 1)){				// (accpwrad >= ADC_ACC_VALID) || 
 		acc_sta = 1;
 	}else{
 		acc_sta = 0;
@@ -375,9 +375,9 @@ static void SignalHandleTmr(void* pdata)
 	INT8U acc_level, data[8];
 	SYSTIME_T time;
     acc_level = !bal_input_ReadSensorFilterStatus(TYPE_ACC);
-    INT32U accpwrad;
-	accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
-	if((accpwrad >= ADC_ACC_VALID) || (acc_level == 1)){
+    //INT32U accpwrad;
+	//accpwrad	 = PORT_GetADCValue(ADC_ACCPWR);
+	if( (acc_level == 1)){	//(accpwrad >= ADC_ACC_VALID) ||
 		acc1 = TRUE;
 	}else{
 		acc1 = FALSE;
