@@ -849,7 +849,7 @@ void WC_CanDelayTmr(void)
 			}
 		break;
 		case CONFIG_CONFIRM_REC:
-			if ((s_wc_0100cnt >= 300) && (s_ishandover == FALSE)) {
+			if ((++delay_cnt >= 285) && (s_ishandover == FALSE)) {
 				s_sclockstep = CONFIG_OVER;
 				f_handsk = FALSE;		// 握手失败
 				s_handshake_ack = HANDSHAKE_CHECKERR;
@@ -860,6 +860,7 @@ void WC_CanDelayTmr(void)
                 LockSafeDataAdd(0x00, 1, &s_handshake_ack);
 			}
 		default:
+			delay_cnt = 0;
 		break;
 	}
 
@@ -1033,7 +1034,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
     #if LOCK_COLLECTION > 0
     INT8U can_buf[12] = {0};
 	#endif
-
+	static INT8U ecustatcnt = 0;
 
      id = bal_chartolong(CAN_msg->id);
 	 seed = bal_chartolong(CAN_msg->databuf);
@@ -1201,12 +1202,20 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
            }
 			s_wc_0100recv = TRUE;
 			s_wc_0100cnt  = 0;
+			ecustatcnt = 0;
         }
         if (id == 0x18FF0800) {
 			s_wc_0800recv = TRUE; 
 			s_wc_0800cnt  = 0;
             if (s_sclockpara.ecutype == ECU_WEICHAI) {
-                if ((s_ishandover == FALSE) && ((CAN_msg->databuf[2] & WC_KEY_BIT) == WC_KEY_BIT)) {
+				if (s_wc_0100recv == TRUE) {
+					if (ecustatcnt++ < 5) {		// 握手时前面三帧忽略
+						return;
+					} else {
+						ecustatcnt = 6;
+					}
+				}
+                if ((CONFIG_CONFIRM_REC == s_sclockstep) && ((CAN_msg->databuf[2] & WC_KEY_BIT) == WC_KEY_BIT)) {
                     s_idfiltenable = TRUE;
                     s_sclockstep = CONFIG_OVER;
 					s_ishandover = TRUE;
