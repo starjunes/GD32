@@ -214,6 +214,17 @@ __attribute__ ((section ("IRQ_HANDLE"))) void  hal_sys_WakeupByPio(void) __irq
         gpio_line_stat |= EXTI_9;
 	}
 
+	if (exti_interrupt_flag_get(EXTI_10) == SET) {
+		exti_interrupt_flag_clear(EXTI_10);
+		
+		HAL_sd2058_ClearAlarm();
+        OS_PostMsg(0, MSG_OPT_OTWAKE_ENENT, 0, 0);
+        #if 0//EN_DEBUG > 1
+        debug_printf("RTCÖÐ¶Ï(P10)\r\n");
+        #endif
+        gpio_line_stat |= EXTI_10;
+	}
+
 	if (exti_interrupt_flag_get(EXTI_11) == SET) {
 		exti_interrupt_flag_clear(EXTI_11);
         OS_PostMsg(0, MSG_OPT_OTWAKE_ENENT, 0, 0);

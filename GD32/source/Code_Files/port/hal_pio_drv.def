@@ -21,7 +21,7 @@
 //                  输入管脚定义(17)
 //----------------------------------------------------------
     HAL_PIO_DEF(PIO_CHGSTAT, PORT_D, 12, DIR_INPUT, 1, FALSE,  INT_MODE_MAX,                    NULL)  // 备用电池充满电检测信号输入
-    HAL_PIO_DEF(PIO_RTCWK,   PORT_D, 10, DIR_INPUT, 1, FALSE,  INT_FALLING_EDGE, hal_sys_WakeupByPio) // 外部RTC中断唤醒信号输入，映射到PTD17
+    HAL_PIO_DEF(PIO_RTCWK,   PORT_D, 10, DIR_INPUT, 1, TRUE,   INT_FALLING_EDGE, hal_sys_WakeupByPio) // 外部RTC中断唤醒信号输入，映射到PTD17
     HAL_PIO_DEF(PIO_GYRINT,  PORT_A, 9,  DIR_INPUT, 1, TRUE,   INT_RISING_EDGE,  hal_sys_WakeupByPio) // 陀螺仪中断信号输入，映射到PTC0
     HAL_PIO_DEF(PIO_MCUWK,   PORT_A, 11, DIR_INPUT, 1, TRUE,   INT_FALLING_EDGE, hal_sys_WakeupByPio) // GSM唤醒MCU信号输入，映射到PTD4
     HAL_PIO_DEF(PIO_ACCIN,   PORT_B, 8,  DIR_INPUT, 1, TRUE,   INT_FALLING_EDGE, hal_sys_WakeupByPio) // ACC_ON信号输入，映射到PB8

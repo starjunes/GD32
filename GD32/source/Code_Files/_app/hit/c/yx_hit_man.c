@@ -544,18 +544,24 @@ static void WaitDalgenInitProc(void *pdata)
 
 static void sd_2058rtc(void * pdata)
 {
-	INT8U time_data[7],temp;
-	const INT8U data[7] = {15,15,17,2,7,9,21};
+	INT8U time_data[7],temp,  alarmflag,ctr1, ctr2;;
+	INT8U data[7] = {15,15,17,2,7,9,21};
 	static INT8U i = 0;
-	if(i++ == 0){
+	if(i == 0){
+		i = 1;
 		HAL_sd2058_Open();
 		HAL_sd2058_SetCalendar(data);
 		HAL_sd2058_writebyte(0x14,0x15);
+		data[0] = 20;
+		HAL_sd2058_SetAlarm(0x01, data);
 	}
 	HAL_sd2058_ReadCalendar(time_data);
 	HAL_sd2058_readbyte(0x14, &temp);
-	#if DEBUG_TEMP > 1
-	debug_printf("temp= %x time:%d-%d-%d %d:%d:%d  %d\r\n",temp,time_data[6],time_data[5],\
+	HAL_sd2058_readbyte(0x0E, &alarmflag);
+	HAL_sd2058_readbyte(0x0F, &ctr1);
+	HAL_sd2058_readbyte(0x10, &ctr2);
+	#if DEBUG_GSEN_STATUS > 0
+	debug_printf("temp=%x alarmflag:%02x ctr1:%02x ctr2:%02x time:%d-%d-%d %d:%d:%d  %d\r\n",temp, alarmflag, ctr1, ctr2, time_data[6],time_data[5],\
 					time_data[4],time_data[2],time_data[1],time_data[0],time_data[3]);
 	#endif
 }

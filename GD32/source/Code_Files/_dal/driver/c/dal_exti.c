@@ -103,8 +103,12 @@ static void Exit_GPIO_Configuration(PORT_GRP_E grp, PORT_IDX_E pin)
            DAL_ASSERT(0);
            break;
       }
-      
-	  gpio_init(gpio, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, gpio_pin);
+      if ((grp == GRP_D) && (pin == PIN_10)) {
+		gpio_init(gpio, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, gpio_pin);
+	  } else {
+		gpio_init(gpio, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, gpio_pin);
+	  }
+	  
 } 
  
 /**************************************************************************************************
