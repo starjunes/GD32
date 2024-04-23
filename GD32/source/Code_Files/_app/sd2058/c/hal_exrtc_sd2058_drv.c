@@ -17,6 +17,7 @@
 *********************************************************************************/
 #define SD2058_REG_SEC          0x00	//秒寄存器
 #define SD2058_REG_MIN          0x01	//分钟寄存器
+#define SD2058_REG_ALARMSEC     0x07	//秒报警寄存器
 #define SD2058_REG_ALARMEN      0x0E	//报警允许寄存器
 #define SD2058_REG_CTR1         0x0F	//控制寄存器1
 #define SD2058_REG_CTR2         0x10	//控制寄存器2
@@ -29,7 +30,10 @@
 /********************************************************************************
 * 定义模块数据结构
 *********************************************************************************/
-static INT8U s_sd2058_rst = 0;  /* 1首次上电 */
+static INT8U s_sd2058_rst  = 0;		/* 1首次上电 */
+static INT8U s_sd2058_ctr1 = 0;		/* 控制器1设置值 */
+static INT8U s_sd2058_ctr2 = 0;		/* 控制器2设置值 */
+static INT8U s_sd2058_ctr3 = 0;		/* 控制器3设置值 */
 
 /********************************************************************************
 *                      本地接口实现
@@ -65,14 +69,18 @@ BOOLEAN HAL_sd2058_write(INT8U regaddr,INT8U* buf,INT8U buflen)
 {
 	BOOLEAN ret;
 	/* 解锁 */
-    sd_WriteByte(SD2058_REG_CTR2, 0x80);
-    sd_WriteByte(SD2058_REG_CTR1, 0x84);
+	s_sd2058_ctr1 |= 0x84;
+	s_sd2058_ctr2 |= 0x80;
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
 	
 	ret = sd_WriteData(regaddr, buf, buflen);
 
 	/* 上锁 */
-    sd_WriteByte(SD2058_REG_CTR1, 0x00);
-    sd_WriteByte(SD2058_REG_CTR2, 0x00);
+	s_sd2058_ctr1 &= 0x7B;
+	s_sd2058_ctr2 &= 0x7F;
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
 	return ret;
 }
 /*****************************************************************************
@@ -129,9 +137,11 @@ BOOLEAN HAL_sd2058_SetCalendar(const INT8U* data)
 
 
     /* 解锁 */
-    sd_WriteByte(SD2058_REG_CTR2, 0x80);
-   	sd_WriteByte(SD2058_REG_CTR1, 0x84);
-
+    s_sd2058_ctr1 |= 0x84;
+	s_sd2058_ctr2 |= 0x80;
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
+	
     buf[0] = sd_Hex2BCD(data[0]);           /* 秒 */
     buf[1] = sd_Hex2BCD(data[1]);           /* 分 */
     buf[2] = sd_Hex2BCD(data[2]) | 0x80;    /* 时 24小时制 */
@@ -151,8 +161,10 @@ BOOLEAN HAL_sd2058_SetCalendar(const INT8U* data)
 
 
     /* 上锁 */
-    sd_WriteByte(SD2058_REG_CTR1, 0x00);
-    sd_WriteByte(SD2058_REG_CTR2, 0x00);
+	s_sd2058_ctr1 &= 0x7B;
+	s_sd2058_ctr2 &= 0x7F;
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
 
 
     return ret;
@@ -206,6 +218,79 @@ BOOLEAN HAL_sd2058_ReadCalendar(INT8U* data)
 }
 
 /*****************************************************************************
+**  函数: HAL_sd2058_SetCalendar
+**  描述: 设置报警日期
+**  参数: [in]alarm_flag:报警使能位 bit0~bit6:秒 分 时 周 日 月 年,bit7=0
+		  [in]alarm_time:报警日期 7字节数据byte0~byte6:秒 分 时 周 日 月 年
+**  返回: TRUE 成功
+          FALSE 失败
+*****************************************************************************/
+BOOLEAN HAL_sd2058_SetAlarm(INT8U alarm_flag, INT8U *alarm_time)
+{
+	INT8U buf[8] = {0};
+	
+
+	/* 解锁 */
+    s_sd2058_ctr1 |= 0x84;
+	s_sd2058_ctr2 |= 0x80;
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
+
+	alarm_flag &= 0x7F;	// 保证最高位为0
+	sd_WriteByte(SD2058_REG_ALARMEN, alarm_flag);
+	
+	s_sd2058_ctr1 &= 0x85;
+	sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);	// 清空报警状态
+	s_sd2058_ctr2 = 0xD2;
+	sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);	// 打开报警中断
+	buf[0] = sd_Hex2BCD(alarm_time[0]);           /* 秒 */
+    buf[1] = sd_Hex2BCD(alarm_time[1]);           /* 分 */
+    buf[2] = sd_Hex2BCD(alarm_time[2]);    		  /* 时 24小时制 */
+    buf[3] = sd_Hex2BCD(alarm_time[3]);           /* 星期 */
+    buf[4] = sd_Hex2BCD(alarm_time[4]);           /* 日 */
+    buf[5] = sd_Hex2BCD(alarm_time[5]);           /* 月 */
+    buf[6] = sd_Hex2BCD(alarm_time[6]);           /* 年 */
+	sd_WriteData(SD2058_REG_ALARMSEC, buf, 7);
+
+	 /* 上锁 */
+	 s_sd2058_ctr1 &= 0x7B;
+	 s_sd2058_ctr2 &= 0x7F;
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
+	return TRUE;
+}
+
+/*****************************************************************************
+**  函数: HAL_sd2058_ClearAlarm
+**  描述: 清除报警标志
+**  参数: [in]无
+**  返回: TRUE 成功
+          FALSE 失败
+*****************************************************************************/
+BOOLEAN HAL_sd2058_ClearAlarm(void)
+{
+	/* 解锁 */
+    s_sd2058_ctr1 |= 0x84;
+	s_sd2058_ctr2 |= 0x80;
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
+
+	sd_WriteByte(SD2058_REG_ALARMEN, 0x00);			// 关闭报警允许
+	s_sd2058_ctr1 &= 0x85;
+	sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);	// 清空报警状态
+	s_sd2058_ctr2 &= 0xF0;
+	sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);	// 关闭报警使能
+
+	/* 上锁 */
+    s_sd2058_ctr1 &= 0x7F;
+	s_sd2058_ctr2 &= 0x7B;
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
+	return TRUE;
+}
+
+
+/*****************************************************************************
 **  函数: HAL_sd2058_Open
 **  描述: 打开
 **  参数: none
@@ -237,8 +322,10 @@ BOOLEAN HAL_sd2058_Open(void)
 
 
     /* 解锁 */
-    sd_WriteByte(SD2058_REG_CTR2, 0x80);
-    sd_WriteByte(SD2058_REG_CTR1, 0x84);
+    s_sd2058_ctr1 |= 0x84;
+	s_sd2058_ctr2 |= 0x80;
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
 
 
     if (sd_ReadByte(SD2058_REG_ALARMEN, &reg_data) && reg_data != 0x00) {
@@ -280,8 +367,10 @@ BOOLEAN HAL_sd2058_Open(void)
 
 
     /* 上锁 */
-    sd_WriteByte(SD2058_REG_CTR1, 0x00);
-    sd_WriteByte(SD2058_REG_CTR2, 0x00);
+	s_sd2058_ctr1 &= 0x7B;
+	s_sd2058_ctr2 &= 0x7F;
+    sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
+    sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
 
 
     #if DEBUG_EX_RTC > 0
