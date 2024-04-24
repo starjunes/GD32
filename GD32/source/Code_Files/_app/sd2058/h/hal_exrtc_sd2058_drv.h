@@ -14,13 +14,13 @@
 *                   数据类型及宏定义
 *********************************************************************************/
 /* sd2058中断使能宏定义 */
-#define RTC_SEC_INT		0x01	// 秒中断使能
-#define RTC_MIN_INT		0x02	// 分中断使能
-#define RTC_HOUR_INT	0x04	// 时中断使能
-#define RTC_WEK_INT		0x08	// 周中断使能
-#define RTC_DAY_INT		0x10	// 日中断使能
-#define RTC_MON_INT		0x20	// 月中断使能
-#define RTC_YEAR_INT	0x40	// 年中断使能
+#define RTC_INT_SEC		0x01	// 秒中断使能
+#define RTC_INT_MIN		0x02	// 分中断使能
+#define RTC_INT_HOUR	0x04	// 时中断使能
+#define RTC_INT_WEK		0x08	// 周中断使能
+#define RTC_INT_DAY		0x10	// 日中断使能
+#define RTC_INT_MON		0x20	// 月中断使能
+#define RTC_INT_YEAR	0x40	// 年中断使能
 
 
 /********************************************************************************

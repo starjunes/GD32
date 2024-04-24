@@ -282,8 +282,8 @@ BOOLEAN HAL_sd2058_ClearAlarm(void)
 	sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);	// 关闭报警使能
 
 	/* 上锁 */
-    s_sd2058_ctr1 &= 0x7F;
-	s_sd2058_ctr2 &= 0x7B;
+	s_sd2058_ctr1 &= 0x7B;
+	s_sd2058_ctr2 &= 0x7F;
     sd_WriteByte(SD2058_REG_CTR1, s_sd2058_ctr1);
     sd_WriteByte(SD2058_REG_CTR2, s_sd2058_ctr2);
 	return TRUE;
