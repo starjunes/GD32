@@ -21,6 +21,8 @@
 #include "yx_enc_fun.h"
 #include "port_sflash.h"
 #include "yx_power_man.h"
+#include "hal_exrtc_sd2058_drv.h"
+
 
 /*************************************************************************************
 *主电ADC阈值定义               
@@ -306,6 +308,38 @@ static void Delay_ms(INT16U time)
 }
 
 /*******************************************************************************
+**  函数名称:  WakeUpset
+**  功能描述:  唤醒时间设置
+**  输入参数:  无
+**  返回参数:  None
+*******************************************************************************/
+static BOOLEAN WakeUpset(void)
+{
+	INT8U ret, data[7] = {0};
+	INT32U stamp = 0;
+	INT8U alarm_flag = RTC_INT_YEAR|RTC_INT_MON|RTC_INT_DAY|RTC_INT_HOUR|RTC_INT_MIN|RTC_INT_SEC;
+	SYSTIME_T time;
+	
+	ret = PORT_GetSysTime(&time);
+
+	if ((ret == FALSE) || (s_waketime == 0)) {
+		return FALSE;
+	}
+	data[0] = time.time.second;
+	data[1] = time.time.minute;
+	data[2] = time.time.hour;
+	data[4] = time.date.day;
+	data[5] = time.date.month;
+	data[6] = time.date.year;
+	stamp	= PORT_GetSysTimestamp(data);
+	stamp  += s_waketime*60;
+	PORT_StampTotime(stamp, data);
+	HAL_sd2058_SetAlarm(alarm_flag, data);
+
+	return TRUE;
+}
+
+/*******************************************************************************
 **  函数名称:  LightSleep
 **  功能描述:  浅睡
 **  输入参数:  无
@@ -318,7 +352,10 @@ void LightSleep(void)
 	static INT32U wakecount = 0;
     debug_printf("\r\n<*****进入浅休眠*****>\r\n");
 #endif
+	INT8U ret;
+	INT16U wktime;
     //Port_SFlashMode(0xB9);
+    ret = WakeUpset();
     ClearWatchdog();
     Enc_PinEnOrDis(FALSE);
     #if EN_CHARGE_DET > 0
@@ -359,8 +396,12 @@ void LightSleep(void)
     PORT_SetPinIntMode(PIN_MCUWK, TRUE);
     PORT_GpioLowPower(TRUE);
     PORT_ClearGpioIntSta();
-    
-    PORT_Sleep(PORT_GetIoInitSta, s_waketime);            /* 休眠指令 */                        
+    if (ret == FALSE) {
+		wktime = s_waketime;
+	} else {
+		wktime = 0;
+	}
+    PORT_Sleep(PORT_GetIoInitSta, wktime);            /* 休眠指令 */                        
 
     PORT_SetPinIntMode(PIN_MCUWK, FALSE);
     PORT_GpioLowPower(FALSE);
