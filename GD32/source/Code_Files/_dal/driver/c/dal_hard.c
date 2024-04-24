@@ -199,7 +199,7 @@ static void Delay_ms(INT16U time)
 ** 函数名:     Dal_McuLowPower
 ** 函数描述:   低功耗处理函数
 ** 参数:       [in] hook : 钩子函数
-               [in] wktime:休眠唤醒时间
+               [in] wktime:休眠唤醒时间 0:无定时休眠
 ** 返回:       无
 ********************************************************************/
 void Dal_McuLowPower(INT16U (*hook)(void), INT16U wktime)

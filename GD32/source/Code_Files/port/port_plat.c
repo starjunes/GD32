@@ -65,6 +65,25 @@ INT32U PORT_GetSysTimestamp(INT8U* rtc_time)
 	#endif
 	return stamp;
 }
+/********************************************************************************
+**  函数名:     PORT_StampTotime
+**  函数描述:   时间戳转时间
+**  参数:       [in] stamp:时间戳
+				[out]temp:转换的时间
+**  返回:       
+********************************************************************************/
+BOOLEAN PORT_StampTotime(INT32U stamp, INT8U* temp)
+{
+	struct tm* nowtime;
+	nowtime = localtime(&stamp);
+	temp[6] = nowtime->tm_year-100;
+	temp[5] = nowtime->tm_mon+1;
+	temp[4] = nowtime->tm_mday;
+	temp[2] = nowtime->tm_hour;
+	temp[1] = nowtime->tm_min;
+	temp[0] = nowtime->tm_sec;
+	return TRUE;
+}
 
 /********************************************************************************
 **  函数名:     PORT_SetSysTime
