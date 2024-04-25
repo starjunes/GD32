@@ -1036,15 +1036,14 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 	#endif
 	static INT8U ecustatcnt = 0;
 
-     id = bal_chartolong(CAN_msg->id);
-	 seed = bal_chartolong(CAN_msg->databuf);
-     
+	id   = bal_chartolong(CAN_msg->id);
+	seed = bal_chartolong(CAN_msg->databuf);
 	if (id == CAN_SPEED_ID){
 		SetSpeedFlag(TRUE);
 	}
-    if (s_sclockpara.ecutype == ECU_YUCHAI) {
-		
-        if (id == 0x18fd0100) {
+	switch (s_sclockpara.ecutype) {
+	case ECU_YUCHAI:
+		if (id == 0x18fd0100) {
 			s_yc_state = (CAN_msg->databuf[5] & 0x30) >> 4;
 			#if DEBUG_LOCK > 0
 		        debug_printf("收到CANid:%x ecutype:%d s_sclockstep:%d buf\r\n", id, s_sclockpara.ecutype, s_sclockstep);
@@ -1170,9 +1169,8 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 
 
         }
-    }
-	/**************************潍柴**********************/
-    if (s_sclockpara.ecutype == ECU_WEICHAI) {
+    	break;
+	case ECU_WEICHAI:					//潍柴
 		#if DEBUG_LOCK > 0
 		if ((id == 0x18fd0100) || (id == 0x18FF0800)) {
 	        debug_printf("收到CANid:%x ecutype:%d s_sclockstep:%d s_sclockpara.unbindstat:%d buf\r\n", id, s_sclockpara.ecutype, s_sclockstep, s_sclockpara.unbindstat);
@@ -1230,38 +1228,41 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                 memcpy(s_lockstatid + 4,CAN_msg->databuf,8);
             }
         }
-    }
-	/*************************康明斯**********************/
-	if (KMS_Q6_KEY_ID == id) {
-		#if LOCK_COLLECTION > 0
-		memcpy(can_buf, CAN_msg->id, 4);
-		memcpy(&can_buf[4], CAN_msg->databuf, CAN_msg->len);
-		YX_AddDataCollection(can_buf);
-		#endif
-		#if DEBUG_LOCK > 0
-			debug_printf("%s id:%08x buf:",__FUNCTION__,id);
-			Debug_PrintHex(true, CAN_msg->databuf,CAN_msg->len);
-		#endif
-		s_kms_delay_cnt = 200;	// 收到BCM回复后不发送周期报文
-        if (CAN_msg->databuf[0] == 0xA1) {
-            s_kmslockstep = KMS_SEND_KEY;
-            KMS_HandShake(&CAN_msg->databuf[1], 7);
-			
-        }
-		if ((CAN_msg->databuf[0] == 0xB1) && ((CAN_msg->databuf[1] & 0xC1) == 0xC1)){
-			#if DEBUG_LOCK > 0
-			debug_printf("databuf[0]:%02x databuf[1] & 0xC1=%02x\r\n",CAN_msg->databuf[0],CAN_msg->databuf[1] & 0xC1);
+   		break;
+	case ECU_KMS_Q6:
+		if (KMS_Q6_KEY_ID == id) {		//康明斯
+			#if LOCK_COLLECTION > 0
+			memcpy(can_buf, CAN_msg->id, 4);
+			memcpy(&can_buf[4], CAN_msg->databuf, CAN_msg->len);
+			YX_AddDataCollection(can_buf);
 			#endif
-			s_kmslockstep = KMS_REQ_SEED;
-            KMS_HandShake(NULL, 0);
-			KMS_Hand_Send_Set(false);
-		}
-        if (s_sclockpara.ecutype == ECU_KMS_Q6) {
-            memcpy(s_lockstatid, CAN_msg->id, 4);
-            memcpy(s_lockstatid + 4, CAN_msg->databuf, 8);
-        }
-    }
-    if ((s_sclockpara.ecutype == ECU_XICHAI_EMSECO) || (s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSVI)) {
+			#if DEBUG_LOCK > 0
+				debug_printf("%s id:%08x buf:",__FUNCTION__,id);
+				Debug_PrintHex(true, CAN_msg->databuf,CAN_msg->len);
+			#endif
+			s_kms_delay_cnt = 200;	// 收到BCM回复后不发送周期报文
+	        if (CAN_msg->databuf[0] == 0xA1) {
+	            s_kmslockstep = KMS_SEND_KEY;
+	            KMS_HandShake(&CAN_msg->databuf[1], 7);
+				
+	        }
+			if ((CAN_msg->databuf[0] == 0xB1) && ((CAN_msg->databuf[1] & 0xC1) == 0xC1)){
+				#if DEBUG_LOCK > 0
+				debug_printf("databuf[0]:%02x databuf[1] & 0xC1=%02x\r\n",CAN_msg->databuf[0],CAN_msg->databuf[1] & 0xC1);
+				#endif
+				s_kmslockstep = KMS_REQ_SEED;
+	            KMS_HandShake(NULL, 0);
+				KMS_Hand_Send_Set(false);
+			}
+	        if (s_sclockpara.ecutype == ECU_KMS_Q6) {
+	            memcpy(s_lockstatid, CAN_msg->id, 4);
+	            memcpy(s_lockstatid + 4, CAN_msg->databuf, 8);
+	        }
+	    }
+		break;
+	case ECU_XICHAI_EMSECO:			//锡柴
+	case ECU_XICHAI_EMSMDI:
+	case ECU_XICHAI_EMSVI:
         if (id == 0x18FF7800) {
 			if (memcmp(s_xichai_seed, CAN_msg->databuf, 8) != 0){
 	            memcpy(s_xichai_seed, CAN_msg->databuf, 8);
@@ -1282,6 +1283,21 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 	            //XC_Checkcode();
 			}
         }
+	    break;
+	case ECU_YUNNEI:				//云内
+        if (id == 0x18ff7d00) {
+            memcpy(senddata, CAN_msg->id, 4);
+            senddata[4] = CAN_msg->len;
+            memcpy(&senddata[5], CAN_msg->databuf, CAN_msg->len);
+            LockSafeDataAdd(0x01, CAN_msg->len+5, senddata);
+            #if DEBUG_LOCK > 0
+            debug_printf("ECU_YUNNEI canmsg:");
+            Debug_PrintHex(TRUE, senddata, 13);
+            #endif
+        }
+		break;
+    default:
+        break;
     }
 }
 /**************************************************************************************************
@@ -1844,7 +1860,7 @@ static void LockSafeDataTran(void)
 
 
 /**************************************************************************************************
-**  函数名称:  LockSafeDataTran
+**  函数名称:  LockSafeDataAck
 **  功能描述:  锁车安全数据回复解析
 **  输入参数:  无
 **  输出参数:  无
