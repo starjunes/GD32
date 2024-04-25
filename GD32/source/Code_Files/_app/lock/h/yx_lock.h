@@ -1,11 +1,11 @@
 /**************************************************************************************************
 **                                                                                               **
-**  æ–‡ä»¶åç§°:  YX_LOCK.h                                                                         **
-**  ç‰ˆæƒæ‰€æœ‰:  CopyRight âŠ™ Xiamen Yaxon NetWork CO.LTD. 2011                                    **
-**  åˆ›å»ºä¿¡æ¯:  é˜™å­˜å…ˆ -- 2017å¹´7æœˆ31æ—¥                                                       **
-**  æ–‡ä»¶æè¿°:  CANåº”ç”¨å±‚                                                                         **
+**  ÎÄ¼þÃû³Æ:  YX_LOCK.h                                                                         **
+**  °æÈ¨ËùÓÐ:  CopyRight ¡Ñ Xiamen Yaxon NetWork CO.LTD. 2011                                    **
+**  ´´½¨ÐÅÏ¢:  ãÚ´æÏÈ -- 2017Äê7ÔÂ31ÈÕ                                                       **
+**  ÎÄ¼þÃèÊö:  CANÓ¦ÓÃ²ã                                                                         **
 **  ===========================================================================================  **
-**  ä¿®æ”¹ä¿¡æ¯:  å•å‡»æ­¤å¤„æ·»åŠ ....                                                                  **
+**  ÐÞ¸ÄÐÅÏ¢:  µ¥»÷´Ë´¦Ìí¼Ó....                                                                  **
 **************************************************************************************************/
 #ifndef __YX_LOCK_H
 #define __YX_LOCK_H
@@ -13,117 +13,117 @@
 #include "yx_can_man.h"
 
 
-#define  YC_HANDSK_PERIOD  800              /* çŽ‰æŸ´æ¡æ‰‹æ ¡éªŒé˜¶æ®µè¯·æ±‚æŠ¥æ–‡çš„é€»è¾‘0x18EA0021å‘é€å‘¨æœŸ(ms) */
-#define	 LOCK_COLLECTION   0				// é”è½¦æŠ¥æ–‡é‡‡é›†åŠŸèƒ½
+#define  YC_HANDSK_PERIOD  800              /* Óñ²ñÎÕÊÖÐ£Ñé½×¶ÎÇëÇó±¨ÎÄµÄÂß¼­0x18EA0021·¢ËÍÖÜÆÚ(ms) */
+#define	 LOCK_COLLECTION   0				// Ëø³µ±¨ÎÄ²É¼¯¹¦ÄÜ
 
 
 /*************************************************************************************************/
-/*                           ECUç±»åž‹æžšä¸¾                                                 */
+/*                           ECUÀàÐÍÃ¶¾Ù                                                 */
 /*************************************************************************************************/
 typedef enum {
-    ECU_WEICHAI = 0,                /* æ½æŸ´ */
-	ECU_KMS_Q6,						/*åº·æ˜Žæ–¯å›½å…­*/
-	ECU_YUCHAI,						/*çŽ‰æŸ´å›½å…­*/
-    ECU_DACHAI,                     /* å¤§æŸ´ */
-    ECU_XICHAI,                  	/* é”¡æŸ´ */
-    ECU_YUNNEI,                     /* äº‘å†… */
-    ECU_XICHAI_EMSVI,				/* é”¡æŸ´EMSVI_éœ€åŠ å¯† */
-    ECU_XICHAI_EMSMDI,				/* é”¡æŸ´EMSMDI */
-    ECU_XICHAI_EMSECO,				/* é”¡æŸ´EMSEcontrol */
+    ECU_WEICHAI = 0,                /* Î«²ñ */
+	ECU_KMS_Q6,						/*¿µÃ÷Ë¹¹úÁù*/
+	ECU_YUCHAI,						/*Óñ²ñ¹úÁù*/
+    ECU_DACHAI,                     /* ´ó²ñ */
+    ECU_XICHAI,                  	/* Îý²ñ */
+    ECU_YUNNEI,                     /* ÔÆÄÚ */
+    ECU_XICHAI_EMSVI,				/* Îý²ñEMSVI_Ðè¼ÓÃÜ */
+    ECU_XICHAI_EMSMDI,				/* Îý²ñEMSMDI */
+    ECU_XICHAI_EMSECO,				/* Îý²ñEMSEcontrol */
     MAX_ECU_TYPE
 } ECU_TYPE_E;
 
 
 
 /*************************************************************************************************/
-/*                           æ¡æ‰‹æµç¨‹é˜¶æ®µ                                                 */
+/*                           ÎÕÊÖÁ÷³Ì½×¶Î                                                 */
 /*************************************************************************************************/
 typedef enum {
-    CONFIG_REQ   = 0x00,        // å‘é€æŽ§åˆ¶å‘½ä»¤
-    RAND_CODE_REC      ,        // èŽ·å–éšæœºç 
-    CHECK_CODE_SEND    ,        // å‘é€æ ¡éªŒç 
-    HAND_SEND1,					// å‘é€æ¡æ‰‹åŠ å¯†æŠ¥æ–‡ç¬¬ä¸€åŒ…
-    HAND_SEND2,					// å‘é€æ¡æ‰‹åŠ å¯†æŠ¥æ–‡ç¬¬äºŒåŒ…
-    HAND_SEND3,					// å‘é€æ¡æ‰‹åŠ å¯†æŠ¥æ–‡ç¬¬ä¸‰åŒ…
-    CONFIG_CONFIRM_REC ,        // èŽ·å–æŽ§åˆ¶éªŒè¯ä¿¡æ¯
-    CONFIG_OVER        ,        // æŽ§åˆ¶ç»“æŸ
+    CONFIG_REQ   = 0x00,        // ·¢ËÍ¿ØÖÆÃüÁî
+    RAND_CODE_REC      ,        // »ñÈ¡Ëæ»úÂë
+    CHECK_CODE_SEND    ,        // ·¢ËÍÐ£ÑéÂë
+    HAND_SEND1,					// ·¢ËÍÎÕÊÖ¼ÓÃÜ±¨ÎÄµÚÒ»°ü
+    HAND_SEND2,					// ·¢ËÍÎÕÊÖ¼ÓÃÜ±¨ÎÄµÚ¶þ°ü
+    HAND_SEND3,					// ·¢ËÍÎÕÊÖ¼ÓÃÜ±¨ÎÄµÚÈý°ü
+    CONFIG_CONFIRM_REC ,        // »ñÈ¡¿ØÖÆÑéÖ¤ÐÅÏ¢
+    CONFIG_OVER        ,        // ¿ØÖÆ½áÊø
 } SC_LOCK_STEP_E;
 
 /*************************************************************************************************/
-/*                           åº·æ˜Žæ–¯æ¡æ‰‹æµç¨‹é˜¶æ®µ                                                    */
+/*                           ¿µÃ÷Ë¹ÎÕÊÖÁ÷³Ì½×¶Î                                                    */
 /*************************************************************************************************/
 typedef enum {
-    KMS_REQ_SEED         = 0x00,        // å‘é€è¯·æ±‚SEEDå‘½ä»¤
-    KMS_RESP_SEED        = 0x01,        // èŽ·å–éšæœºç 
-    KMS_SEND_KEY         = 0x02,        // å‘é€æ ¡éªŒç 
-    KMS_ECU_REC          = 0x03,        // èŽ·å–æŽ§åˆ¶éªŒè¯ä¿¡æ¯
-    KMS_OVER             = 0x04,        // æŽ§åˆ¶ç»“æŸ
+    KMS_REQ_SEED         = 0x00,        // ·¢ËÍÇëÇóSEEDÃüÁî
+    KMS_RESP_SEED        = 0x01,        // »ñÈ¡Ëæ»úÂë
+    KMS_SEND_KEY         = 0x02,        // ·¢ËÍÐ£ÑéÂë
+    KMS_ECU_REC          = 0x03,        // »ñÈ¡¿ØÖÆÑéÖ¤ÐÅÏ¢
+    KMS_OVER             = 0x04,        // ¿ØÖÆ½áÊø
 } KMS_LOCK_STEP_E;
 
 
-/* ç»ˆç«¯ä¸ŠæŠ¥å¹³å°æ¡æ‰‹ç»“æžœ */
+/* ÖÕ¶ËÉÏ±¨Æ½Ì¨ÎÕÊÖ½á¹û */
 typedef enum {
-    HANDSHAKE_OK,                   /*  0-ECUæ¡æ‰‹æˆåŠŸ */
-    HANDSHAKE_CHECKERR,				/*  1-æ¡æ‰‹æ ¡éªŒå¤±è´¥ */
-    HANDSHAKE_ERR,                  /*  2-ECUæ¡æ‰‹å¤±è´¥ 10så†…æœªæ”¶åˆ°ECUæ¡æ‰‹æ ¡éªŒæŠ¥æ–‡ */
-    HANDSHAKE_OVER,                 /*  3-ECUè¶…æ—¶ */
-    HANDSHAKE_UNKNOWN,              /*  4-ECUçŠ¶æ€æœªçŸ¥ */
-    HANDSHAKE_NOACK,                /*  5-ECUæœªåé¦ˆæ¡æ‰‹ç»“æžœ */
-    HANDSHAKE_NOSEED,               /*  6-ECUæœªå“åº”éšæœºæ•°è¯·æ±‚ */
-    HANDSHAKE_BUSEXCEPTION,			/*  7-æ€»çº¿å¼‚å¸¸ */
+    HANDSHAKE_OK,                   /*  0-ECUÎÕÊÖ³É¹¦ */
+    HANDSHAKE_CHECKERR,				/*  1-ÎÕÊÖÐ£ÑéÊ§°Ü */
+    HANDSHAKE_ERR,                  /*  2-ECUÎÕÊÖÊ§°Ü 10sÄÚÎ´ÊÕµ½ECUÎÕÊÖÐ£Ñé±¨ÎÄ */
+    HANDSHAKE_OVER,                 /*  3-ECU³¬Ê± */
+    HANDSHAKE_UNKNOWN,              /*  4-ECU×´Ì¬Î´Öª */
+    HANDSHAKE_NOACK,                /*  5-ECUÎ´·´À¡ÎÕÊÖ½á¹û */
+    HANDSHAKE_NOSEED,               /*  6-ECUÎ´ÏìÓ¦Ëæ»úÊýÇëÇó */
+    HANDSHAKE_BUSEXCEPTION,			/*  7-×ÜÏßÒì³£ */
     MAX_STAT
 } HANDSHAKE_ACK_E;
 
 
 
-/* ç»ˆç«¯é”è½¦æŽ§åˆ¶å‘½ä»¤ç±»åž‹å®šä¹‰ */
+/* ÖÕ¶ËËø³µ¿ØÖÆÃüÁîÀàÐÍ¶¨Òå */
 typedef enum {
-    LC_CMD_UNBIND,                  /* è§£ç»‘ */
-    LC_CMD_BIND,                    /* ç»‘å®š */
-   	LC_CMD_UNLOCK,                  /* è§£é” */
-    LC_CMD_LOCK,                    /* é”è½¦ */
-    //LC_CMD_HKEY,                    /* æ¡æ‰‹HKEYæ ¡éªŒ */
-    //LC_CMD_LSPEED1,                 /* é™é€Ÿ1 */
-    //LC_CMD_LSPEED2,                 /* é™é€Ÿ2 */
-    //LC_CMD_LTORQUE1,                /* é™æ‰­1 */
-    //LC_CMD_LTORQUE2,                /* é™æ‰­2 */
+    LC_CMD_UNBIND,                  /* ½â°ó */
+    LC_CMD_BIND,                    /* °ó¶¨ */
+   	LC_CMD_UNLOCK,                  /* ½âËø */
+    LC_CMD_LOCK,                    /* Ëø³µ */
+    //LC_CMD_HKEY,                    /* ÎÕÊÖHKEYÐ£Ñé */
+    //LC_CMD_LSPEED1,                 /* ÏÞËÙ1 */
+    //LC_CMD_LSPEED2,                 /* ÏÞËÙ2 */
+    //LC_CMD_LTORQUE1,                /* ÏÞÅ¤1 */
+    //LC_CMD_LTORQUE2,                /* ÏÞÅ¤2 */
     MAX_LC_CMD
 } LC_CMD_E;
 
-/**    åº·æ˜Žæ–¯é”è½¦å®šä¹‰*/
-#define KMS_CANID_BIND                 0x18FE08EE						/* ç»‘å®š/è§£ç»‘æŒ‡ä»¤ */
-#define KMS_CANID_LOCK                 0x18FFCB4A                    	/* é”è½¦/è§£é”æŒ‡ä»¤ */
-#define KMS_CANID_ACKSTATUS            0x18FFCA00                    	/* ECUå“åº”çŠ¶æ€æŠ¥æ–‡ */
-/**    æ½æŸ´é”è½¦å®šä¹‰*/
+/**    ¿µÃ÷Ë¹Ëø³µ¶¨Òå*/
+#define KMS_CANID_BIND                 0x18FE08EE						/* °ó¶¨/½â°óÖ¸Áî */
+#define KMS_CANID_LOCK                 0x18FFCB4A                    	/* Ëø³µ/½âËøÖ¸Áî */
+#define KMS_CANID_ACKSTATUS            0x18FFCA00                    	/* ECUÏìÓ¦×´Ì¬±¨ÎÄ */
+/**    Î«²ñËø³µ¶¨Òå*/
 #define WC_CANID_BIND                  0x18FE08EE
 #define WC_CANID_LOCK                  0x18FE0AEE
 #define WC_CANID_ACKSTATUS             0x18FF0800
-/**    çŽ‰æŸ´é”è½¦å®šä¹‰*/
+/**    Óñ²ñËø³µ¶¨Òå*/
 #define YC_GROUPID                     0xFD01
-#define YC_CANID_REQ                   0x18EA002						/* è¯·æ±‚æŒ‡ä»¤ */
-#define YC_CANID_BIND                  0x18FE01FB                      /* ç»‘å®š/è§£ç»‘æŒ‡ä»¤ */
-#define YC_CANID_LOCK                  0x18FE03FB                      /* é”è½¦/è§£é”æŒ‡ä»¤ */
-#define YC_CANID_ACKSTATUS             0x18FD0100                     	/* ECUå“åº”çŠ¶æ€æŠ¥æ–‡ */
+#define YC_CANID_REQ                   0x18EA002						/* ÇëÇóÖ¸Áî */
+#define YC_CANID_BIND                  0x18FE01FB                      /* °ó¶¨/½â°óÖ¸Áî */
+#define YC_CANID_LOCK                  0x18FE03FB                      /* Ëø³µ/½âËøÖ¸Áî */
+#define YC_CANID_ACKSTATUS             0x18FD0100                     	/* ECUÏìÓ¦×´Ì¬±¨ÎÄ */
 
 #if LOCK_COLLECTION > 0
-/* å¹³å°D008ç›‘æŽ§æ•°æ® */
+/* Æ½Ì¨D008¼à¿ØÊý¾Ý */
 typedef struct{
-	INT16U	restarttime;				//	é‡æ–°ç‚¹ç«åŽæŠ¥æ–‡é‡‡é›†æ—¶é—´
-	INT8U	restarten;					//  é‡æ–°ç‚¹ç«åŽæŠ¥æ–‡é‡‡é›†å‘é€æ ‡å¿—
-	INT8U	restarttotal;				//	é‡æ–°ç‚¹ç«åŽé‡‡é›†åˆ°æŠ¥æ–‡æ€»æ¡æ•°
-	INT8U	restartdata[80][12];		//	é‡æ–°ç‚¹ç«åŽ8så†…é”è½¦ç›¸å…³æ•°æ® ID+æŠ¥æ–‡
-	INT16U	lockcmdtime;				//	æ”¶åˆ°é”è½¦æŒ‡ä»¤åŽæŠ¥æ–‡é‡‡é›†æ—¶é—´
-	INT8U	lockcmden;					//	æ”¶åˆ°é”è½¦æŒ‡ä»¤åŽæŠ¥æ–‡å‘é€æ ‡å¿—
-	INT8U	lockcmdtotal;				//	æ”¶åˆ°é”è½¦æŒ‡ä»¤åŽé‡‡é›†åˆ°æŠ¥æ–‡æ€»æ¡æ•°
-	INT8U	lockcmddata[20][12];		//	æ”¶åˆ°é”è½¦æŒ‡ä»¤åŽ5så†…é”è½¦ç›¸å…³æ•°æ® ID+æŠ¥æ–‡
+	INT16U	restarttime;				//	ÖØÐÂµã»ðºó±¨ÎÄ²É¼¯Ê±¼ä
+	INT8U	restarten;					//  ÖØÐÂµã»ðºó±¨ÎÄ²É¼¯·¢ËÍ±êÖ¾
+	INT8U	restarttotal;				//	ÖØÐÂµã»ðºó²É¼¯µ½±¨ÎÄ×ÜÌõÊý
+	INT8U	restartdata[80][12];		//	ÖØÐÂµã»ðºó8sÄÚËø³µÏà¹ØÊý¾Ý ID+±¨ÎÄ
+	INT16U	lockcmdtime;				//	ÊÕµ½Ëø³µÖ¸Áîºó±¨ÎÄ²É¼¯Ê±¼ä
+	INT8U	lockcmden;					//	ÊÕµ½Ëø³µÖ¸Áîºó±¨ÎÄ·¢ËÍ±êÖ¾
+	INT8U	lockcmdtotal;				//	ÊÕµ½Ëø³µÖ¸Áîºó²É¼¯µ½±¨ÎÄ×ÜÌõÊý
+	INT8U	lockcmddata[20][12];		//	ÊÕµ½Ëø³µÖ¸Áîºó5sÄÚËø³µÏà¹ØÊý¾Ý ID+±¨ÎÄ
 }D008_DATA_T;
 #endif
-#define HANDDATANUM     15              // æ•°æ®æ·±åº¦
-#define HANDSATALENTH   20              // æ•°æ®é•¿åº¦
-/* å®‰å…¨æ•°æ®é‡å¤ä¸ŠæŠ¥ 0~7ç»„å­˜æ”¾æ¡æ‰‹ç»“æžœ*/
+#define HANDDATANUM     15              // Êý¾ÝÉî¶È
+#define HANDSATALENTH   20              // Êý¾Ý³¤¶È
+/* °²È«Êý¾ÝÖØ¸´ÉÏ±¨ 0~7×é´æ·ÅÎÕÊÖ½á¹û*/
 typedef struct{
-	BOOLEAN active[HANDDATANUM];              // æ•°æ®å‘é€ä½¿èƒ½
-    INT8U   buf[HANDDATANUM][HANDSATALENTH];  // æµæ°´å·(1)+æ•°æ®ç±»åž‹(1)+æ•°æ®é•¿åº¦(1)+æ•°æ®å†…å®¹(N)
+	BOOLEAN active[HANDDATANUM];              // Êý¾Ý·¢ËÍÊ¹ÄÜ
+    INT8U   buf[HANDDATANUM][HANDSATALENTH];  // Á÷Ë®ºÅ(1)+Êý¾ÝÀàÐÍ(1)+Êý¾Ý³¤¶È(1)+Êý¾ÝÄÚÈÝ(N)
 }REUPSAFE_DATA_T;
 
 void    Lock_Init(void);
@@ -141,98 +141,98 @@ void 	CanBaudSet(INT16U baud,INT8U channel);
 
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  Lock_KmsG5Cmd
-**  åŠŸèƒ½æè¿°:  æŸ³æ±½åº·æ˜Žæ–¯å›½5é”è½¦æŒ‡ä»¤
-**  è¾“å…¥å‚æ•°:  æ— 
-**  è¾“å‡ºå‚æ•°:  æ— 
-**  è¿”å›žå‚æ•°:  æ— 
+**  º¯ÊýÃû³Æ:  Lock_KmsG5Cmd
+**  ¹¦ÄÜÃèÊö:  ÁøÆû¿µÃ÷Ë¹¹ú5Ëø³µÖ¸Áî
+**  ÊäÈë²ÎÊý:  ÎÞ
+**  Êä³ö²ÎÊý:  ÎÞ
+**  ·µ»Ø²ÎÊý:  ÎÞ
 **************************************************************************************************/
 void Lock_KmsG5Cmd(INT8U* data, INT16U len);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  LockSafeDataTran
-**  åŠŸèƒ½æè¿°:  é”è½¦å®‰å…¨æ•°æ®å›žå¤è§£æž
-**  è¾“å…¥å‚æ•°:  æ— 
-**  è¾“å‡ºå‚æ•°:  æ— 
-**  è¿”å›žå‚æ•°:  æ— 
+**  º¯ÊýÃû³Æ:  LockSafeDataTran
+**  ¹¦ÄÜÃèÊö:  Ëø³µ°²È«Êý¾Ý»Ø¸´½âÎö
+**  ÊäÈë²ÎÊý:  ÎÞ
+**  Êä³ö²ÎÊý:  ÎÞ
+**  ·µ»Ø²ÎÊý:  ÎÞ
 **************************************************************************************************/
 void LockSafeDataAck(INT8U *userdata, INT8U userdatalen);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  KMS_Hand_Send_Set
-**  åŠŸèƒ½æè¿°:  åº·æ˜Žæ–¯æ¡æ‰‹å‘é€ä½¿èƒ½
-**  è¾“å…¥å‚æ•°:  en:ä½¿èƒ½/å¤±èƒ½
-**  è¿”å›žå‚æ•°:  None
+**  º¯ÊýÃû³Æ:  KMS_Hand_Send_Set
+**  ¹¦ÄÜÃèÊö:  ¿µÃ÷Ë¹ÎÕÊÖ·¢ËÍÊ¹ÄÜ
+**  ÊäÈë²ÎÊý:  en:Ê¹ÄÜ/Ê§ÄÜ
+**  ·µ»Ø²ÎÊý:  None
 **************************************************************************************************/
 void KMS_Hand_Send_Set(BOOLEAN en);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  SetSpeedFlag
-**  åŠŸèƒ½æè¿°:  è®¾ç½®è½¬é€ŸæŠ¥æ–‡æ ‡å¿—
-**  è¾“å…¥å‚æ•°:  flag:æ ‡å¿—
-**  è¿”å›žå‚æ•°:  æ— 
+**  º¯ÊýÃû³Æ:  SetSpeedFlag
+**  ¹¦ÄÜÃèÊö:  ÉèÖÃ×ªËÙ±¨ÎÄ±êÖ¾
+**  ÊäÈë²ÎÊý:  flag:±êÖ¾
+**  ·µ»Ø²ÎÊý:  ÎÞ
 **************************************************************************************************/
 void SetSpeedFlag(BOOLEAN flag);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  GetSpeedFlag
-**  åŠŸèƒ½æè¿°:  èŽ·å–è½¬é€ŸæŠ¥æ–‡æ ‡å¿—
-**  è¾“å…¥å‚æ•°:  flag:æ ‡å¿—
-**  è¿”å›žå‚æ•°:  æ— 
+**  º¯ÊýÃû³Æ:  GetSpeedFlag
+**  ¹¦ÄÜÃèÊö:  »ñÈ¡×ªËÙ±¨ÎÄ±êÖ¾
+**  ÊäÈë²ÎÊý:  flag:±êÖ¾
+**  ·µ»Ø²ÎÊý:  ÎÞ
 **************************************************************************************************/
 BOOLEAN GetSpeedFlag(void);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  YX_LOCKCMD_SetPara
-**  åŠŸèƒ½æè¿°:  è®¾ç½®é”è½¦å‚æ•°
-**  è¾“å…¥å‚æ•°:  canbuf:CANæ•°æ®
-**  è¾“å‡ºå‚æ•°:  æ— 
-**  è¿”å›žå‚æ•°:  true:å¡«å……æˆåŠŸ false:å¡«å……å¤±è´¥
+**  º¯ÊýÃû³Æ:  YX_LOCKCMD_SetPara
+**  ¹¦ÄÜÃèÊö:  ÉèÖÃËø³µ²ÎÊý
+**  ÊäÈë²ÎÊý:  canbuf:CANÊý¾Ý
+**  Êä³ö²ÎÊý:  ÎÞ
+**  ·µ»Ø²ÎÊý:  true:Ìî³ä³É¹¦ false:Ìî³äÊ§°Ü
 **************************************************************************************************/
 void YX_LOCKCMD_SetPara(INT8U *buf);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  YX_StartDataCollection
-**  åŠŸèƒ½æè¿°:  å¼€å§‹æ•°æ®é‡‡é›†
-**  è¾“å…¥å‚æ•°:  type:é‡‡é›†æ•°æ®ç±»åž‹  0x00:å‰8sæ•°æ®  0x01:æŒ‡ä»¤æ•°æ®
-**  è¾“å‡ºå‚æ•°:  æ— 
-**  è¿”å›žå‚æ•°:  æ— 
+**  º¯ÊýÃû³Æ:  YX_StartDataCollection
+**  ¹¦ÄÜÃèÊö:  ¿ªÊ¼Êý¾Ý²É¼¯
+**  ÊäÈë²ÎÊý:  type:²É¼¯Êý¾ÝÀàÐÍ  0x00:Ç°8sÊý¾Ý  0x01:Ö¸ÁîÊý¾Ý
+**  Êä³ö²ÎÊý:  ÎÞ
+**  ·µ»Ø²ÎÊý:  ÎÞ
 **************************************************************************************************/
 void YX_StartDataCollection(INT8U type);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  YX_AddDataCollection
-**  åŠŸèƒ½æè¿°:  å¡«å……é‡‡é›†ä¿¡æ¯
-**  è¾“å…¥å‚æ•°:  canbuf:CANæ•°æ®
-**  è¾“å‡ºå‚æ•°:  æ— 
-**  è¿”å›žå‚æ•°:  true:å¡«å……æˆåŠŸ false:å¡«å……å¤±è´¥
+**  º¯ÊýÃû³Æ:  YX_AddDataCollection
+**  ¹¦ÄÜÃèÊö:  Ìî³ä²É¼¯ÐÅÏ¢
+**  ÊäÈë²ÎÊý:  canbuf:CANÊý¾Ý
+**  Êä³ö²ÎÊý:  ÎÞ
+**  ·µ»Ø²ÎÊý:  true:Ìî³ä³É¹¦ false:Ìî³äÊ§°Ü
 **************************************************************************************************/
 BOOLEAN YX_AddDataCollection(INT8U *canbuf);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  YX_IsLOCKCMD
-**  åŠŸèƒ½æè¿°:  æ˜¯å¦ä¸ºé”è½¦æŒ‡ä»¤
-**  è¾“å…¥å‚æ•°:  id
-**  è¾“å‡ºå‚æ•°:  æ— 
-**  è¿”å›žå‚æ•°:  true:æ˜¯ false:å¦
+**  º¯ÊýÃû³Æ:  YX_IsLOCKCMD
+**  ¹¦ÄÜÃèÊö:  ÊÇ·ñÎªËø³µÖ¸Áî
+**  ÊäÈë²ÎÊý:  id
+**  Êä³ö²ÎÊý:  ÎÞ
+**  ·µ»Ø²ÎÊý:  true:ÊÇ false:·ñ
 **************************************************************************************************/
 BOOLEAN YX_IsLOCKCMD(INT32U id);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  XC_SecretDataTran
-**  åŠŸèƒ½æè¿°:  é”¡æŸ´æ•°æ®åŠ å¯†è½¬å‘
-**  è¾“å…¥å‚æ•°:  data:å‚æ•°å†…å®¹
-			   datalen:æ•°æ®é•¿åº¦
-**  è¿”å›žå‚æ•°:  false:å¤±è´¥ true:æˆåŠŸ
+**  º¯ÊýÃû³Æ:  XC_SecretDataTran
+**  ¹¦ÄÜÃèÊö:  Îý²ñÊý¾Ý¼ÓÃÜ×ª·¢
+**  ÊäÈë²ÎÊý:  data:²ÎÊýÄÚÈÝ
+			   datalen:Êý¾Ý³¤¶È
+**  ·µ»Ø²ÎÊý:  false:Ê§°Ü true:³É¹¦
 **************************************************************************************************/
 BOOLEAN XC_SecretDataTran(INT8U* data, INT8U datalen);
 
 /**************************************************************************************************
-**  å‡½æ•°åç§°:  XC_ParaSet
-**  åŠŸèƒ½æè¿°:  é”¡æŸ´å‚æ•°åŒæ­¥
-**  è¾“å…¥å‚æ•°:  data:å‚æ•°å†…å®¹
-			   datalen:æ•°æ®é•¿åº¦
-**  è¿”å›žå‚æ•°:  false:å¤±è´¥ true:æˆåŠŸ
+**  º¯ÊýÃû³Æ:  XC_ParaSet
+**  ¹¦ÄÜÃèÊö:  Îý²ñ²ÎÊýÍ¬²½
+**  ÊäÈë²ÎÊý:  data:²ÎÊýÄÚÈÝ
+			   datalen:Êý¾Ý³¤¶È
+**  ·µ»Ø²ÎÊý:  false:Ê§°Ü true:³É¹¦
 **************************************************************************************************/
 BOOLEAN XC_ParaSet(INT8U* data, INT8U datalen);
 
