@@ -114,7 +114,7 @@
 #define SDB_DEBUG            0x01
 #define SDB_BLUTH            0x02
 #define SDB_UNDEF            0x03
-#define SWITCH_DEBUG_BT      SDB_DEBUG//SDB_UNDEF                               /* 在这里选择调试，或是蓝牙，或是留空 */
+#define SWITCH_DEBUG_BT      SDB_UNDEF                               /* 在这里选择调试，或是蓝牙，或是留空 */
 
 #define SIR_ICCD             0x01
 #define SIR_RFID             0x02                                    /* 屏有解稀的处理 */
