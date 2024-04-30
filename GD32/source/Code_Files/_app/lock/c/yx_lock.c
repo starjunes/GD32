@@ -161,7 +161,7 @@ static INT8U hash_cnt = 0;                  // 发送哈希值计数
 **  输出参数:  无
 **  返回参数:  true:填充成功 false：数据缓存已满，填充失败
 **************************************************************************************************/
-static BOOLEAN LockSafeDataAdd(INT8U type, INT8U len, INT8U* buf)
+static BOOLEAN LockSafeDataAdd(INT8U type, INT8U* buf, INT8U len)
 {
     INT8U i = 0;
     if ((type == 0x00) && (buf[0] <  MAX_STAT)) {
@@ -728,7 +728,7 @@ void XC_Checkcode(void)
 					#if DEBUG_LOCK > 0
 					debug_printf("XC HANDSHAKE_OK\r\n");
 					#endif
-	                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+	                LockSafeDataAdd(0x00, &s_handshake_ack, 1);
 				}
             }
 			if ((hash_cnt >= 3) && (s_isseedrec == FALSE) && (s_ishandover == FALSE)) {
@@ -740,7 +740,7 @@ void XC_Checkcode(void)
 				#if DEBUG_LOCK > 0
 				debug_printf("XC HANDSHAKE_NOSEED\r\n");
 				#endif
-                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+                LockSafeDataAdd(0x00, &s_handshake_ack, 1);
 			}
             break;
         default:
@@ -857,7 +857,7 @@ void WC_CanDelayTmr(void)
 				#if DEBUG_LOCK > 0
 				debug_printf("WC HANDSHAKE_CHECKERR\r\n");
 				#endif
-                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+                LockSafeDataAdd(0x00, &s_handshake_ack, 1);
 			}
 		default:
 			delay_cnt = 0;
@@ -873,7 +873,7 @@ void WC_CanDelayTmr(void)
 			#if DEBUG_LOCK > 0
 			debug_printf("WC HANDSHAKE_BUSEXCEPTION\r\n");
 			#endif
-            LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+            LockSafeDataAdd(0x00, &s_handshake_ack, 1);
 		}
 	}
 	if ((s_wc_0100recv == FALSE) && ((s_wc_0100cnt < 1002))) {
@@ -884,7 +884,7 @@ void WC_CanDelayTmr(void)
 			#if DEBUG_LOCK > 0
 			debug_printf("WC HANDSHAKE_ERR s_wc_0100cnt:%d\r\n", s_wc_0100cnt);
 			#endif
-            LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+            LockSafeDataAdd(0x00, &s_handshake_ack, 1);
 		}
 	}
 }
@@ -956,7 +956,7 @@ void YC_CanDelayTmr(void)
 				s_ishandover = TRUE;
 				f_handsk	= FALSE;
 				s_handshake_ack = HANDSHAKE_BUSEXCEPTION;
-                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+                LockSafeDataAdd(0x00, &s_handshake_ack, 1);
 			}
 			break;
 		case CONFIG_CONFIRM_REC:
@@ -970,7 +970,7 @@ void YC_CanDelayTmr(void)
 				s_sclockstep = CONFIG_OVER;
 				s_ishandover = TRUE;
 				f_handsk	= FALSE;
-                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+                LockSafeDataAdd(0x00, &s_handshake_ack, 1);
 			}
 			break;
 		default:
@@ -1073,7 +1073,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     f_handsk = true;
 					s_handshake_ack = HANDSHAKE_OK;
 					s_ishandover = TRUE;
-                    LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+                    LockSafeDataAdd(0x00, &s_handshake_ack, 1);
                     //StopCANMsg_Period(0x18fe02fb, LOCK_CAN_CH);
                     s_handskenable = FALSE;
                     /* 握手成功，发送全0清除标志到0x18fe02fb */
@@ -1091,7 +1091,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     s_ishandover = TRUE;
                     s_handskenable = FALSE;
                     s_handshake_ack = HANDSHAKE_OK;
-                    LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+                    LockSafeDataAdd(0x00, &s_handshake_ack, 1);
                     /* 握手成功，发送全0清除标志到0x18fe02fb */
                     CAN_TxData(senddata, false, LOCK_CAN_CH);
                     #if DEBUG_LOCK > 0
@@ -1222,7 +1222,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 					#if DEBUG_LOCK > 0
 					debug_printf("WC HANDSHAKE_OK\r\n");
 					#endif
-                    LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+                    LockSafeDataAdd(0x00, &s_handshake_ack, 1);
                 }
                 memcpy(s_lockstatid,CAN_msg->id,4);
                 memcpy(s_lockstatid + 4,CAN_msg->databuf,8);
@@ -1276,7 +1276,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 					#if DEBUG_LOCK > 0
 					debug_printf("XC HANDSHAKE_CHECKERR\r\n");
 					#endif
-	                LockSafeDataAdd(0x00, 1, &s_handshake_ack);
+	                LockSafeDataAdd(0x00, &s_handshake_ack, 1);
 	            }
 				hash_cnt = 0;
 				s_isseedrec	 = TRUE;
@@ -1289,7 +1289,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
             memcpy(senddata, CAN_msg->id, 4);
             senddata[4] = CAN_msg->len;
             memcpy(&senddata[5], CAN_msg->databuf, CAN_msg->len);
-            LockSafeDataAdd(0x01, CAN_msg->len+5, senddata);
+            LockSafeDataAdd(0x01, senddata, CAN_msg->len+5);
             #if DEBUG_LOCK > 0
             debug_printf("ECU_YUNNEI canmsg:");
             Debug_PrintHex(TRUE, senddata, 13);
@@ -1306,7 +1306,6 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 **  输入参数:  None
 **  返回参数:  None
 **************************************************************************************************/
-
 void SendLockPara(void)
 {
     INT8U senddata[200];

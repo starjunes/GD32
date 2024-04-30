@@ -61,7 +61,7 @@ extern INT8U DEBUG_UART_NO;
 #define     DEBUG_DATA_STORE            0       //
 #define     DEBUG_CAN                   0
 #define     DEBUG_CANSFLFSEND           0
-#define     DEBUG_LOCK                  1       //锁车程序调试
+#define     DEBUG_LOCK                  0       //锁车程序调试
 #define     DEBUG_RTC_SLEEP             0       //设备休眠RTC唤醒调试
 #define     DEBUG_UDS                   0
 #define     DEBUG_J1939                 0

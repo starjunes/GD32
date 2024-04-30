@@ -69,9 +69,10 @@ void YX_Main(void)
 	//OS_InitMsgSched();										// 消息队列初始化
     Tsk_Init();
 	mmi_resetcnt_init();
+	#if EN_DEBUG > 0
     debug_printf_dir("\r\n <**** MCU版本号:%s ****>\r\n",YX_GetVersion());
     debug_printf_dir("\r\n <**** 编译日期:%s, %s ****>\r\n",YX_GetVersionDate(), YX_GetVersionTime());
-    #if EN_DEBUG > 0
+    
     //debug_printf_dir("\r\n< (1)编译日期:%s,%s >\r\n",BUILD_DATE,BUILD_TIME);
     //debug_printf_dir("\r\n< (1)编译日期:%s,%s >\r\n",YX_GetVersionDate(),YX_GetVersionTime());
     //debug_printf_dir("\r\n <复位原因:0x%x> \r\n",PORT_GetResetReason());
