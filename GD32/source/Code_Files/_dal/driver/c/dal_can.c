@@ -767,7 +767,7 @@ static BOOLEAN SendIdAccessCheck(INT8U com, INT32U id)
     INT8U idx;
     if (com >= MAX_CANCHAN) return FALSE;
 
-    if (!s_send_id_access[com].access) {
+    if ((!s_send_id_access[com].access) || (id == 0x1ffffff0)) {
         return TRUE;
     } 
 
