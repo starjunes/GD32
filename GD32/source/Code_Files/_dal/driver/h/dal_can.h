@@ -37,9 +37,9 @@
 #define CAN_BS2_1000K         CAN_BT_BS2_3TQ
 #define CAN_PRES_1000K        (PCLK1_FREQ / (1000000 * 12))  //83.3%  /* Prescaler */
       
-#define CAN_BS1_500K          CAN_BT_BS1_13TQ
+#define CAN_BS1_500K          CAN_BT_BS1_12TQ
 #define CAN_BS2_500K          CAN_BT_BS2_2TQ
-#define CAN_PRES_500K         (PCLK1_FREQ / (500000 * 16))   //87.5%  /* Prescaler */
+#define CAN_PRES_500K         (PCLK1_FREQ / (500000 * 15))   //87.5%  /* Prescaler */
 
 #define CAN_BS1_250K          CAN_BT_BS1_13TQ   
 #define CAN_BS2_250K          CAN_BT_BS2_2TQ

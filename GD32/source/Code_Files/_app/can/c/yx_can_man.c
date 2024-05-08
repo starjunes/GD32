@@ -125,7 +125,7 @@ typedef struct {
 	INT16U  period;			// 发送周期
     INT8U   send_cnt;		// 已发送次数
 } PERIOD_SEND_T;
-static PERIOD_SEND_T s_period_can;  // 固定次数周期报文
+static PERIOD_SEND_T s_period_can,s_period_uds;  // 固定次数周期报文
 
 static PERIOD_MSG_T s_period_msg[] = {    
     {0, 100,   1, PERIOD_MSG1, {0xF5, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},  
@@ -1574,7 +1574,8 @@ void Test_CAN_Send(void)
 *****************************************************************************/
 static void YX_PeriodDataTran(void )
 {
-    static INT8U spe_cnt = 0;
+    static INT16U spe_cnt = 0;
+		static INT16U cnt = 0;
 
 	if (s_period_can.send_en){
 		spe_cnt++;
@@ -1588,6 +1589,19 @@ static void YX_PeriodDataTran(void )
 			}
 		}
 	}
+	
+    if (s_period_uds.send_en){
+        cnt++;
+        if (s_period_uds.period == cnt) {		// 达到发送周期
+            cnt = 0;
+            if (s_period_uds.send_cnt++ < 2){
+                PORT_CanSend(&s_period_uds.send);
+            } else {
+                s_period_uds.send_en = FALSE;
+                s_period_uds.send_cnt = 0;
+            }
+        }
+    }
 }
 #if ACC_OFF_STOP_SEND  > 0
 /*******************************************************************************
@@ -2531,6 +2545,26 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
                 ack[3] = 0x02;
             }
             break;
+     case CAN_SEND_TWO:
+         if (s_period_uds.send_en == FALSE) {
+             s_period_uds.send_cnt       = 0;
+             s_period_uds.send.can_DLC   = sendlen;
+             s_period_uds.send.can_id	= id;
+             s_period_uds.send.can_IDE	= senddata.can_IDE;
+             s_period_uds.send.channel	= senddata.channel;
+             memcpy(s_period_uds.send.Data, senddata.Data, sendlen);
+             s_period_uds.period 		= senddata.period;
+             s_period_uds.send.period 	= 0xffff;
+             if (s_period_uds.period){
+                 s_period_uds.send_en	= TRUE;
+             }else {
+                 ack[3] = 0x02;
+                 s_period_uds.send_en	= FALSE;
+             }
+         } else {
+             ack[3] = 0x02;
+         }
+     break;
 		default:
 			ack[3] = 0x02;
 			break;
