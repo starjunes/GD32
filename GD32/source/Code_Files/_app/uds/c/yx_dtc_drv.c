@@ -85,6 +85,10 @@
 #define MAIN_POW_LOW_19_5V   1736         // 19.5V(实测)
 #define MAIN_POW_RECV_20_5V  1817        // 20.5V(实测) 
 
+#define MAIN_POW_LOW_19V         1673    // 19V(实测)
+#define MAIN_POW_RECV_20V        1763    // 20V(实测) 
+#define MAIN_POW_HIGHT_31V       2759    // 31V(实测)
+#define MAIN_POW_RECV_30V        2669    // 30V(实测) 
 #define MAIN_POW_CLOSE_CAN_9V    745     // 9V(实测)
 #define MAIN_POW_OPEN_CAN_10V    853     // 10V(实测) 
 
@@ -549,11 +553,22 @@ static BOOLEAN MainPwrHdl(void)
 static BOOLEAN MainPwrIsAccess(void)
 {
     INT32S value;
+    static BOOLEAN MainPwrCheck = FALSE;
     
     value = PORT_GetADCValue(ADC_MAINPWR);
-    // 小于19.5V或大于30.5v，不记录故障
-    if ((value <= MAIN_POW_LOW_19_5V) || (value >= MAIN_POW_HIGH_30_5V)) {
-        return FALSE;
+    // 有过主电异常，电压在20v~30v才恢复
+    if(MainPwrCheck) { 
+        if((value <  MAIN_POW_RECV_30V) && (value > MAIN_POW_RECV_20V)) {  
+            MainPwrCheck = FALSE;
+        } else {
+            return FALSE;
+        }
+    } else {
+    // 电压低于19v 或者高于31v 主电异常
+        if((value <  MAIN_POW_LOW_19V) || (value > MAIN_POW_HIGHT_31V)) {  
+            MainPwrCheck = TRUE;
+            return FALSE;
+        } 
     }
         
     return TRUE; 
