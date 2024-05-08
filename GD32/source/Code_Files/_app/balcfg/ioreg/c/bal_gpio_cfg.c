@@ -276,14 +276,12 @@ void bal_Pullup_GYRPWR(void)
 /* 备用电池充电使能控制 */
 void bal_Pulldown_CHGEN(void)
 {
-    //PORT_ClearGpioPin(PIN_CHGEN);
-    /* 2022/07/15 逻辑反向 */
+    /* 2022/07/15 逻辑反向 拉高停止，拉低充电*/
     PORT_SetGpioPin(PIN_CHGEN);
 }
 void bal_Pullup_CHGEN(void)
 {
-     //PORT_SetGpioPin(PIN_CHGEN);
-     /* 2022/07/15 逻辑反向 */
+     /* 2022/07/15 逻辑反向 拉高停止，拉低充电*/
      PORT_ClearGpioPin(PIN_CHGEN);
 }
 /* CAN0 Standby模式使能控制 */

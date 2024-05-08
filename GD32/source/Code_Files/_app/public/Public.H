@@ -40,18 +40,18 @@ typedef struct {
     INT8U DID_1002[32];    // T-box APN1的名称
     INT8U DID_1003[64];    // 服务器 IP,port/域名（正式业务网关）
     INT8U DID_1004[15];    //  T-box的IMSI号
-		INT8U DID_102A[64]; 	 // 在线工程师配置信息
-		INT8U DID_102B[1];		 // 排放远程监控法规配置
-		INT8U DID_102C[1];		 // 新能源远程监控法规配置
+	INT8U DID_102A[64]; 	 // 在线工程师配置信息
+	INT8U DID_102B[1];		 // 排放远程监控法规配置
+	INT8U DID_102C[1];		 // 新能源远程监控法规配置
     INT8U DID_1028[32];    // T-box APN2的名称
     INT8U DID_1035[2];     // 新能源车型参数配置 
     INT8U DID_2100[16];     // mpu版本号
     INT8U DID_3102[17];    // IMEI
     INT8U DID_3103[20];    // ICCID
     INT8U DID_F182[24];		 // 数据信息标识 
-	  INT8U DID_F187[24]; 	 //整车厂零件号 
-		INT8U DID_F190[17];    // 车辆标识号 VIN
-		INT8U DID_F192[24];    // TBOX硬件版本号
+	INT8U DID_F187[24]; 	 //整车厂零件号 
+	INT8U DID_F190[17];    // 车辆标识号 VIN
+	INT8U DID_F192[24];    // TBOX硬件版本号
     INT8U DID_F193[8];     // 硬件版本号 
     INT8U DID_F194[24];    // TBOX软件号 
     INT8U DID_F195[8];     // 软件版本号

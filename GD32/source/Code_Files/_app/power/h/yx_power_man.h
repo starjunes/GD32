@@ -11,6 +11,14 @@
 
 #define ADC_ACC_VALID				 2000	//ACC有效值
 
+/* 电池充电状态机 */
+typedef enum{
+	CHARGE_IDLE = 0x00,		// 空闲状态
+	CHARGE_ING,				// 充电中
+	CHARGE_STOP,			// 主电过、低压充电保护
+	CHARGE_MAX
+}BAK_CHARGESTATE_E;
+
 
 /******************************************************************************
  ** 函数名:     YX_WkUpIO_Test_Hdl

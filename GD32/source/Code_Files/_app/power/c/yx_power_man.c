@@ -22,22 +22,30 @@
 #include "port_sflash.h"
 #include "yx_power_man.h"
 #include "hal_exrtc_sd2058_drv.h"
-
+#include "public.h"
 
 /*************************************************************************************
 *主电ADC阈值定义               
 *************************************************************************************/
 #if 1
 /* 判断12V还是24V的阈值,17V */
-#define Z_ADC_THR_PWR_TYPE           1450    /* 17V作为12V和24V判断阈值 */
+#define Z_ADC_THR_PWR_TYPE           1482    /* 17V作为12V和24V判断阈值 */
 
-#define Z_ADC_24V_LOW_POW            1450    /* 17.0V,24主电供电时的主电欠压 */
-#define Z_ADC_24V_RECOVERY           1540    /* 18.0V,24主电供电时的主电恢复 */
-#define ZH_ADC_24V_RECV_FROM_BAT     1227    /* 14.5V,24备电供电时的主电恢复值 */
+#define Z_ADC_24V_LOW_POW            1482    /* 17.0V,24主电供电时的主电欠压 */
+#define Z_ADC_24V_RECOVERY           1580    /* 18.0V,24主电供电时的主电恢复 */
+#define Z_ADC_24V_LOW_BAKSTOP		 1386	 /* 16.0V,24主电供电时的低压备电停止充电 */
+#define Z_ADC_24V_LOW_BAKRECOVERY	 1482	 /* 17.0V,24主电供电时的低压备电恢复充电 */
+#define Z_ADC_24V_HIGH_BAKSTOP		 2840	 /* 32.0V,24主电供电时的低压备电停止充电 */
+#define Z_ADC_24V_HIGH_BAKRECOVERY	 2750	 /* 31.0V,24主电供电时的低压备电恢复充电 */
+#define ZH_ADC_24V_RECV_FROM_BAT     1262    /* 14.5V,24备电供电时的主电恢复值 */
 //#define ZH_ADC_24V_RECV_FROM_BAT     1689    /* 16.0V,24备电供电时的主电恢复值 */
 
-#define Z_ADC_12V_LOW_POW            692     /* 8.5V  12主电供电时的主电欠压 */
-#define Z_ADC_12V_RECOVERY           740     /* 9.0V  12主电供电时的主电恢复 */
+#define Z_ADC_12V_LOW_POW            704     /* 8.5V  12主电供电时的主电欠压 */
+#define Z_ADC_12V_RECOVERY           750     /* 9.0V  12主电供电时的主电恢复 */
+#define Z_ADC_12V_LOW_BAKSTOP		 750	 /* 9.0V  12主电供电时的低压备电停止充电 */
+#define Z_ADC_12V_LOW_BAKRECOVERY	 840 	 /* 10.0V 12主电供电时的低压备电恢复充电 */
+#define Z_ADC_12V_HIGH_BAKSTOP		 1386	 /* 16.0V 12主电供电时的低压备电停止充电 */
+#define Z_ADC_12V_HIGH_BAKRECOVERY	 1295	 /* 15.0V 12主电供电时的低压备电恢复充电 */
 #define ZH_ADC_12V_RECV_FROM_BAT     425     /* 5.5V  12备电供电时的主电恢复值 */
 //#define ZH_ADC_12V_RECV_FROM_BAT     630     /* 6.5V  12备电供电时的主电恢复值 */
 
@@ -62,7 +70,7 @@
 #define PWRDECT_MASK        0x40    //主电源状态
 #define VINLOW_MASK         0x80    //欠压状态
 #define ISCHARGE            0x01    //充电状态
-#define ISBATHEALTH         0x02    //电池健康状态
+#define ISBATHEALTH         0x02    //电池健康状态 置位为不健康
 #define RTCTIME             30      //RTC休眠时间基数
 #define BAT_R_CNT           4       // 内阻检测次数，不能超过4次
 
@@ -91,8 +99,8 @@ typedef struct {
 
 static ADC_CONVT_T s_adc[MAX_ADC_CHAN];
 
-static INT32U s_mainpwrad;
-static INT32U s_bakpwerad;
+static INT32U s_mainpwrad;			// 主电电压
+static INT32U s_bakpwerad;			// 备电电压
 static INT32U s_BatOcv;
 static INT32U s_pwrad[2]={0};
 static INT32U tempdata=0;
@@ -101,7 +109,7 @@ static BOOLEAN s_batstatus = true;
 static INT8U s_powerhandle_tmr;
 static INT8U s_adchandle_tmr, s_bathandle_tmr;
 static INT8U s_wakeupgsmhandle_tmr;
-static BOOLEAN mainpwrvalue = false;
+static BOOLEAN mainpwrvalue = false;		// true: 24V系统 flase:12V系统
 static INT8U s_curmaskstatus = 0;
 static INT8U s_gosleephandle_tmr;
 static INT8U s_rtcwake_tmr;
@@ -121,7 +129,7 @@ static BOOLEAN s_gzwork = false;
 static INT8U s_gztesttmr;
 static BOOLEAN s_gztest_flag = false;
 static INT16U s_waketime = 0;             // 休眠唤醒时间
-
+static BOOLEAN s_normalmode = FALSE;		// 仓储模式 false:处于仓储模式 true:处于正常模式
 /*******************************************************************************
  ** 函数名:     WakeupgsmTmr()
  ** 函数描述:    采用定时器唤醒simcom
@@ -381,6 +389,7 @@ void LightSleep(void)
     #else
     bal_Pullup_GYRPWR();       // 拉高断电六轴传感器 
     #endif
+	chargestate &=~ ISCHARGE;
     bal_Pulldown_CHGEN();
     bal_Pulldown_CAN0STB();
     bal_Pulldown_CAN1STB();
@@ -416,14 +425,17 @@ void LightSleep(void)
     bal_Pullup_EXT1V8();
     bal_Pullup_5VEXT();
     bal_Pulldown_GYRPWR();     // 拉低上电六轴传感器 
+    chargestate |= ISCHARGE;
     bal_Pullup_CHGEN();
     bal_Pullup_CAN0STB();
     bal_Pullup_CAN1STB();
     bal_Pullup_CAN2STB();
 
-#if EN_NEW_BAT_CTL > 0
-    bal_Pullup_BATSHUT();    // 上电后打开电池供电 
-#endif
+	#if EN_NEW_BAT_CTL > 0
+	if (s_normalmode == TRUE) {
+    	bal_Pullup_BATSHUT();    // 上电后打开电池供电 
+	}
+	#endif
 
     #if EN_CHARGE_DET > 0
     // 关闭充电唤醒 
@@ -496,8 +508,10 @@ void DeepSleep(void)
     PORT_SetPinIntMode(PIN_CHGDECT, FALSE);
     #endif
     #if EN_NEW_BAT_CTL > 0
-    bal_Pullup_BATSHUT();    /* 上电后打开电池供电 */
-    #endif   
+	if (s_normalmode == TRUE) {
+    	bal_Pullup_BATSHUT();    /* 上电后打开电池供电 */
+	}
+	#endif   
     Enc_PinEnOrDis(TRUE);
     ClearWatchdog();
     //Port_SFlashMode(0xAB);
@@ -722,7 +736,9 @@ static void Select_MAINPWRorBAT(void)//修改主备电切换流程
 	
     if(PORT_GetGpioPinState(PIN_BAT) == RESET){
 		if(batlowcnt <5)batlowcnt++;
-		bal_Pullup_BATSHUT();
+		if (s_normalmode == TRUE) {
+			bal_Pullup_BATSHUT();
+		}
 	}else{
 		batlowcnt = 0;
 	}
@@ -770,13 +786,13 @@ static void Select_MAINPWRorBAT(void)//修改主备电切换流程
     debug_printf("<---------------主电备电管理--------------->\r\n");
     debug_printf("主电AD值:%d \r\n", s_mainpwrad);
     //debug_printf("主电电压值(电压值扩大了10倍):%d \r\n", (INT32U)((s_mainpwrad*3.3*1093.5*10/4096.0/93.5 + 9)*10/10.5));
-    debug_printf("主电电压值(电压值扩大了100倍):%d \r\n", (INT32U)(((s_mainpwrad*11.2)/10 + 76)));    
+    debug_printf("主电电压值(电压值扩大了100倍):%d \r\n", (INT32U)(((s_mainpwrad*11)/10 + 76)));    
     debug_printf("主电转换成原来s32k的adc值:%d \r\n", (INT32U)(((s_mainpwrad*11.2 + 760)*10.5 - 9000)/94.2239)); 
     debug_printf("备电AD值:%d \r\n",s_bakpwerad);
     debug_printf("备电电压值(电压值扩大了100倍):%d \r\n", (INT32U)AdConvertDv(s_bakpwerad));
     debug_printf("备电转换成原来s32k的adc值:%d \r\n", (INT32U)(s_bakpwerad * 1.28 - 11)); 
-	debug_printf("acc_status:%d bcall_status%d ecall_status:%d\r\n",\
-					acc_status,bcall_status,ecall_status);
+	debug_printf("acc_status:%d bcall_status%d ecall_status:%d s_normalmode:%d\r\n",\
+					acc_status,bcall_status,ecall_status, s_normalmode);
 	#endif
 
 
@@ -839,7 +855,6 @@ static void Select_MAINPWRorBAT(void)//修改主备电切换流程
                         PORT_ClearGpioPin(PIN_BATCTL);    /* 检测内阻时，备电不供电 */
 
                         /* 关闭电池充电 */
-						//PORT_ClearGpioPin(PIN_CHGEN);
 						bal_Pulldown_CHGEN();
                         /* 电池开路电压 */
 						s_BatOcv = PORT_GetADCValue(ADC_BAKPWR); 
@@ -854,12 +869,14 @@ static void Select_MAINPWRorBAT(void)//修改主备电切换流程
 
             if((chargestate & ISCHARGE) == 0) { // 电池不在充电状态
                 if(s_bakpwerad < B_ADC_41V) {   //电池电压小于4.1V，10s后进行充电
+                	if (mainpwrvalue == TRUE) {
+						
+					}
                     chargefullcheck++;
                     if(chargefullcheck > 2) {
                         chargestate |= ISCHARGE;
                         PORT_ClearGpioPin(PIN_BATCTL);  /* 《acc on》, 开始充电，关闭备电供电 */                        
-                        //PORT_SetGpioPin(PIN_CHGEN);
-                        bal_Pullup_CHGEN();
+                        //bal_Pullup_CHGEN();
                         #if DEBUG_ADC_MAINPWR > 0
                         debug_printf("进行充电\r\n"); 
                         #endif
@@ -879,7 +896,7 @@ static void Select_MAINPWRorBAT(void)//修改主备电切换流程
                             chargefullcheck = 0;
                             chargestate &=~ ISCHARGE;
                             s_checkbat = 0;
-                            PORT_ClearGpioPin(PIN_CHGEN);              //停止充电
+                            //bal_Pulldown_CHGEN();             //停止充电
                             #if DEBUG_ADC_MAINPWR > 0
                             debug_printf("电池充满电\r\n");
                             debug_printf("满电检测：%d\r\n", PORT_GetGpioPinState(PIN_CHGSTAT));
@@ -897,11 +914,9 @@ static void Select_MAINPWRorBAT(void)//修改主备电切换流程
             //}
         } else {                                          //没有电池
             chargestate |= ISBATHEALTH;                   //认为电池不健康
-            chargestate &=~ ISCHARGE;
+            chargestate |= ISCHARGE;
             s_checkbat = 0;
-            //PORT_ClearGpioPin(PIN_CHGEN);                 //充电脚拉低
-            //PORT_SetGpioPin(PIN_CHGEN);                     //无电池时也充电，防止电压过低而判断为无电池，而无法对电池充电
-            bal_Pullup_CHGEN();
+            //bal_Pullup_CHGEN();                     //无电池时也充电，防止电压过低而判断为无电池，而无法对电池充电
             #if DEBUG_ADC_MAINPWR > 0
             debug_printf("没接电池\r\n");
             #endif
@@ -920,8 +935,7 @@ static void Select_MAINPWRorBAT(void)//修改主备电切换流程
     /* ACC off，且有备电情况 */
     if((acc_status == false) && ((s_bakpwerad > B_ADC_20V))) {
         if((chargestate & ISCHARGE) == 1) {
-            //PORT_ClearGpioPin(PIN_CHGEN);          //充电断开
-            bal_Pulldown_CHGEN();
+            //bal_Pulldown_CHGEN();          //充电断开
     	    chargestate &=~ ISCHARGE;              //充电标志位置零
     	    s_checkbat = 0;
     	    #if DEBUG_ADC_MAINPWR > 0
@@ -1141,6 +1155,75 @@ static void PowerHandleTmr(void* pdata)
 	Select_MAINPWRorBAT();
 }
 
+/*******************************************************************************
+**	函数名称:  BatteryChargeCtr
+**	功能描述:  备电充放电控制
+**	输入参数:  无
+**	返回参数:  None
+*******************************************************************************/
+void BatteryChargeCtr(void)
+{
+	static INT8U charge_step = CHARGE_ING, pre_charsta = 0x00;
+	BOOLEAN chachange = FALSE;
+	INT8U charsta;
+	charsta = chargestate & ISCHARGE;
+	if ((charsta == ISCHARGE) && (charsta != pre_charsta)) {
+		charge_step = CHARGE_ING;	// 第一次变成充电状态
+	}
+	if (charsta == ISCHARGE) {
+		switch (charge_step) {
+			case CHARGE_ING:
+				if (mainpwrvalue == TRUE) {		// 24V系统
+					if ((s_mainpwrad < Z_ADC_24V_LOW_BAKSTOP) || (s_mainpwrad > Z_ADC_24V_HIGH_BAKSTOP)) {
+						chachange = TRUE;
+					}
+				} else {						// 12V系统
+					if ((s_mainpwrad < Z_ADC_12V_LOW_BAKSTOP) || (s_mainpwrad > Z_ADC_12V_HIGH_BAKSTOP)) {
+						chachange = TRUE;
+					}
+				}
+				if (chachange == TRUE) {
+					chachange = FALSE;
+					bal_Pulldown_CHGEN();
+					charge_step = CHARGE_STOP;
+				} else {
+					bal_Pullup_CHGEN();
+				}
+				break;
+			case CHARGE_STOP:
+				if (mainpwrvalue == TRUE) {		// 24V系统
+					if ((s_mainpwrad >= Z_ADC_24V_LOW_BAKRECOVERY) && (s_mainpwrad <= Z_ADC_24V_HIGH_BAKRECOVERY)) {
+						chachange = TRUE;
+					}
+				} else {						// 12V系统
+					if ((s_mainpwrad >= Z_ADC_12V_LOW_BAKRECOVERY) && (s_mainpwrad <= Z_ADC_12V_HIGH_BAKRECOVERY)) {
+						chachange = TRUE;
+					}
+				}
+				if (chachange == TRUE) {
+					chachange = FALSE;
+					bal_Pullup_CHGEN();
+					charge_step = CHARGE_ING;
+				} else {
+					bal_Pulldown_CHGEN();
+				}
+				break;
+			default:
+				bal_Pulldown_CHGEN();
+				charge_step = CHARGE_STOP;
+				break;
+		}
+	} else {
+		bal_Pulldown_CHGEN();
+		charge_step = CHARGE_IDLE;
+	}
+	pre_charsta = charsta;
+	#if DEBUG_ADC_MAINPWR > 0
+	debug_printf("BatteryChargeCtr mainpwrvalue:%d step:%d\r\n",mainpwrvalue, charge_step);
+	#endif
+}
+
+
 /*******************************************************************
  ** 函数名:     ReportAdcTmr
  ** 函数描述:   ADC应用层模块定时函数
@@ -1211,6 +1294,8 @@ static void ReportAdcTmr(void* pdata)
             }
         }
     }
+	BatteryChargeCtr();		// 电池充放电管理
+	
 }
 
 /*******************************************************************
@@ -1396,6 +1481,8 @@ INT8U YX_Power_IsUnderVol(void)
  ******************************************************************************/
 void YX_Power_Init(void)
 {
+	UDS_DID_DATA_E2ROM_T uds_data;
+	
 	memset(&s_adc[0], 0, sizeof( ADC_CONVT_T));
 	memset(&s_adc[1], 0, sizeof( ADC_CONVT_T));
 	s_adc[0].onoff = false;
@@ -1423,6 +1510,15 @@ void YX_Power_Init(void)
     s_gztesttmr = OS_InstallTmr(TSK_ID_OPT, 0, GzTestTmr);
 
     YX_Power_ReStartSimcomPwr();
+
+    bal_pp_ReadParaByID(UDS_DID_PARA_, (INT8U *)&uds_data, sizeof(UDS_DID_DATA_E2ROM_T));
+	if (((uds_data.DID_F190[0] == 'L') || (uds_data.DID_F190[0] == 'l')) && ((uds_data.DID_F190[1] == 'F') || (uds_data.DID_F190[1] == 'f'))) {
+		s_normalmode = TRUE;
+		bal_Pullup_BATSHUT();
+	} else {
+		s_normalmode = FALSE;
+		bal_Pulldown_BATSHUT();
+	}
 
     // test
     //PORT_SetAlarmRepeat(1, true, 10);
@@ -1573,7 +1669,7 @@ void YX_Charge_Test_Hdl(void)
     while(!PORT_GetGpioPinState(PIN_PWRDECT));    //等待主电供电稳定后关闭备电
     PORT_ClearGpioPin(PIN_BATCTL);    /* 《工装测试：备电充电测试》关闭输出 */
     //PORT_SetGpioPin(PIN_CHGEN);                   //使能充电
-    bal_Pullup_CHGEN();
+    //bal_Pullup_CHGEN();
     chargestate |= ISCHARGE;
     OS_StartTmr(s_gztesttmr, SECOND, 1);
 }
@@ -1619,7 +1715,7 @@ void YX_IntRes_Test_Hdl(void)
     debug_printf_dir("<关闭备电充电>\r\n");
     #endif
     //PORT_ClearGpioPin(PIN_CHGEN);                 //停止充电
-    bal_Pulldown_CHGEN();
+    //bal_Pulldown_CHGEN();
     OS_StartTmr(s_gztesttmr, SECOND, 1);
 }
 
