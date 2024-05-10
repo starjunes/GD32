@@ -39,6 +39,11 @@
 #define Z_ADC_24V_HIGH_BAKRECOVERY	 2750	 /* 31.0V,24主电供电时的低压备电恢复充电 */
 #define ZH_ADC_24V_RECV_FROM_BAT     1262    /* 14.5V,24备电供电时的主电恢复值 */
 //#define ZH_ADC_24V_RECV_FROM_BAT     1689    /* 16.0V,24备电供电时的主电恢复值 */
+#define MAIN_POW_CLOSE_CAN_6V5       516     //6v5(实测)    12V关闭CAN
+#define MAIN_POW_CLOSE_CAN_9V        745     // 9V(实测)    24V关闭CAN
+#define MAIN_POW_OPEN_CAN_10V        853     // 10V(实测)   12V/24V恢复CAN
+#define MAIN_POW_CLOSE_CAN_36V       3220    // 36V(实测)   12V/24V关闭CAN
+#define MAIN_POW_OPEN_CAN_35V        3125    // 35V  (实测) 12V/24V恢复CAN
 
 #define Z_ADC_12V_LOW_POW            704     /* 8.5V  12主电供电时的主电欠压 */
 #define Z_ADC_12V_RECOVERY           750     /* 9.0V  12主电供电时的主电恢复 */
@@ -106,10 +111,11 @@ static INT32U s_pwrad[2]={0};
 static INT32U tempdata=0;
 static BOOLEAN s_firstcheck = true;
 static BOOLEAN s_batstatus = true;
-static INT8U s_powerhandle_tmr;
+static INT8U s_powerhandle_tmr,s_powermonitor_tmr;
 static INT8U s_adchandle_tmr, s_bathandle_tmr;
 static INT8U s_wakeupgsmhandle_tmr;
 static BOOLEAN mainpwrvalue = false;		// true: 24V系统 flase:12V系统
+static BOOLEAN s_mainpwr_adap = FALSE;
 static INT8U s_curmaskstatus = 0;
 static INT8U s_gosleephandle_tmr;
 static INT8U s_rtcwake_tmr;
@@ -130,6 +136,9 @@ static INT8U s_gztesttmr;
 static BOOLEAN s_gztest_flag = false;
 static INT16U s_waketime = 0;             // 休眠唤醒时间
 static BOOLEAN s_normalmode = FALSE;		// 仓储模式 false:处于仓储模式 true:处于正常模式
+static INT8U   s_restart_delay = 0;
+static BOOLEAN s_canonoff = TRUE,s_close_mpu = false; 
+static INT16U s_low_close;
 /*******************************************************************************
  ** 函数名:     WakeupgsmTmr()
  ** 函数描述:    采用定时器唤醒simcom
@@ -244,6 +253,18 @@ void YX_Power_ReStartSimcomPwr(void)
     PORT_SetPinIntMode(PIN_MCUWK, false);
     s_simcompowerstep = STEP1;
     OS_StartTmr(s_simcompowertmr, SECOND, 2);
+}
+/*******************************************************************************
+ ** 函数名:     YX_Power_CloseSimcomPwr()
+ ** 函数描述:   关闭模块
+ ** 参数:       无
+ ** 返回:       无
+ ******************************************************************************/
+void YX_Power_CloseSimcomPwr(void)
+{
+    bal_Pulldown_GSM4VIC();
+    bal_Pulldown_GSMPWR();
+    PORT_SetPinIntMode(PIN_MCUWK, false);
 }
 
 /*******************************************************************************
@@ -663,15 +684,18 @@ static void System_Vol_Judge(void)
 {
     if(s_mainpwrad > Z_ADC_THR_PWR_TYPE){
         mainpwrvalue = true; //大于18V判断为24V系统
+        s_low_close = MAIN_POW_CLOSE_CAN_9V; 
         #if DEBUG_ADC_MAINPWR > 0
         debug_printf("24V系统 \r\n");
         #endif
     } else {
         mainpwrvalue = false;//默认12V系统
+        s_low_close = MAIN_POW_CLOSE_CAN_6V5; 
         #if DEBUG_ADC_MAINPWR > 0
         debug_printf("12V系统 \r\n");
         #endif
     }
+		s_mainpwr_adap = TRUE;
 }
 
 /*******************************************************************************
@@ -1154,7 +1178,59 @@ static void PowerHandleTmr(void* pdata)
 {
 	Select_MAINPWRorBAT();
 }
+/*******************************************************************************
+** 函数名:    PowerMonitorTmr
+** 函数描述:  定时器处理函数 监控主电
+** 参数:      无
+** 返回:      无
+******************************************************************************/
+static void PowerMonitorTmr(void* pdata)
+{
+     INT32S value;
 
+		 if(!s_mainpwr_adap)     return;
+	   value = PORT_GetADCValue(ADC_MAINPWR);
+     #if EN_DEBUG > 1
+		 debug_printf("value：%x\r\n", value);
+		 #endif
+		 if(s_canonoff) {
+				 if((value < s_low_close) || (value >  MAIN_POW_CLOSE_CAN_36V)) {						 
+    				 s_canonoff = FALSE;
+    				 bal_Pulldown_CAN0STB();
+    				 bal_Pulldown_CAN1STB();
+    				 bal_Pulldown_CAN2STB();
+				 }
+		 } else {
+				 if((value > MAIN_POW_OPEN_CAN_10V) && (value < MAIN_POW_OPEN_CAN_35V)) {					 
+						 s_canonoff = TRUE;
+						 bal_Pullup_CAN0STB();
+						 bal_Pullup_CAN1STB();
+	  				 bal_Pullup_CAN2STB();			 
+				 	}
+		 }
+
+		 if(s_close_mpu) {
+		      if(value <  MAIN_POW_OPEN_CAN_35V) {  /* 小于35开启MPU */
+						  if(s_restart_delay++ > 10) {
+					        s_close_mpu = FALSE;
+									s_restart_delay = 0;
+							    YX_Power_ReStartSimcomPwr();
+									#if EN_DEBUG > 0
+						      debug_printf("主电小于35Vmpu重启\r\n");
+						      #endif
+						  }
+		      }
+		 } else {
+		     if(value >  MAIN_POW_CLOSE_CAN_36V) {  /* 大于36关闭MPU */
+				     s_close_mpu = TRUE;  
+						 s_restart_delay = 0;
+						 YX_Power_CloseSimcomPwr();
+						 #if EN_DEBUG > 0
+						 debug_printf("主电大于36V mpu关机\r\n");
+						 #endif
+		     }
+	   }
+}
 /*******************************************************************************
 **	函数名称:  BatteryChargeCtr
 **	功能描述:  备电充放电控制
@@ -1493,6 +1569,9 @@ void YX_Power_Init(void)
 
     s_powerhandle_tmr = OS_InstallTmr(TSK_ID_OPT, 0, PowerHandleTmr);
     OS_StartTmr(s_powerhandle_tmr, SECOND, 5);
+		
+    s_powermonitor_tmr = OS_InstallTmr(TSK_ID_OPT, 0, PowerMonitorTmr);
+    OS_StartTmr(s_powermonitor_tmr, MILTICK, 10);
 
 	s_gosleephandle_tmr = OS_InstallTmr(TSK_ID_OPT, 0, GoSleepTmr);
 	
@@ -1768,5 +1847,19 @@ void YX_GZ_Test_Hdl(void)
     senddata[1] = 0x01;
     senddata[2] = 0x01;
     YX_COM_DirSend(GZ_TEST_REQ_ACK, senddata, 3);
+}
+/*******************************************************************************
+** 函数名:    Get_SystemVol
+** 函数描述:  获取系统12V还是24系统
+** 参数:      无
+** 返回:      0: 12V系统 1:24V系统 0xFF:还未选择系统
+******************************************************************************/
+INT8U Get_SystemVol(void)
+{
+    INT8U ret = 0xFF;
+    
+    if(!s_mainpwr_adap)     return ret;
+    
+    return mainpwrvalue;
 }
 

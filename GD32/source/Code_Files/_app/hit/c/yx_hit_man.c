@@ -550,7 +550,7 @@ static void sd_2058rtc(void * pdata)
 	if(i == 0){
 		i = 1;
 		HAL_sd2058_Open();
-		HAL_sd2058_SetCalendar(data);
+ 		HAL_sd2058_SetCalendar(data);
 		HAL_sd2058_writebyte(0x14,0x15);
 		data[0] = 20;
 		HAL_sd2058_SetAlarm(0x01, data);

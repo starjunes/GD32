@@ -90,7 +90,10 @@
 #define MAIN_POW_HIGHT_31V       2759    // 31V(实测)
 #define MAIN_POW_RECV_30V        2669    // 30V(实测) 
 #define MAIN_POW_CLOSE_CAN_9V    745     // 9V(实测)
-#define MAIN_POW_OPEN_CAN_10V    853     // 10V(实测) 
+#define MAIN_POW_OPEN_CAN_10V    850     // 10V(实测) 
+
+#define MAIN_POW_CLOSE_DTC_16V    1401    // 16V(实测)
+#define MAIN_POW_OPEN_DTC_15V     1308    // 15V(实测) 
 
 #define MAIN_POW_CLOSE_CAN_36V   3220    // 36V(实测)
 #define MAIN_POW_OPEN_CAN_35V    3125    // 35V  (实测) 
@@ -131,9 +134,7 @@ typedef struct {
     INT16U  update_delay;
 } UPDATA_DTC_REC_T;
 
-static DM1_DTC_T s_dm1_dtc_tab[MAX_DISP_CODE];
-static INT8U   s_canonoff_delay = 0;
-static BOOLEAN s_canonoff = TRUE;          
+static DM1_DTC_T s_dm1_dtc_tab[MAX_DISP_CODE];         
 /*
 ********************************************************************************
 * 定义配置参数
@@ -500,32 +501,6 @@ static BOOLEAN MainPwrHdl(void)
     
     value = PORT_GetADCValue(ADC_MAINPWR);
 
-		if(s_canonoff) {
-		    if((value < MAIN_POW_CLOSE_CAN_9V) || (value > MAIN_POW_CLOSE_CAN_36V)) {
-				    if(s_canonoff_delay++ >= 100) {                                       /* 主电电压持续1s高压或者低压关闭can */
-						    s_canonoff_delay = 0;
-								s_canonoff = FALSE;
-								bal_Pulldown_CAN0STB();
-                bal_Pulldown_CAN1STB();
-                bal_Pulldown_CAN2STB();
-				    }
-		    } else {
-		        s_canonoff_delay = 0;
-		    }
-		} else {
-		    if((value > MAIN_POW_OPEN_CAN_10V) && (value < MAIN_POW_OPEN_CAN_35V)) {
-				    if(s_canonoff_delay++ >= 100) {                                       /* 主电电压恢复1s */
-						    s_canonoff_delay = 0;
-								s_canonoff = TRUE;
-								bal_Pullup_CAN0STB();
-                bal_Pullup_CAN1STB();
-                bal_Pullup_CAN2STB();
-				    }
-		    } else {
-		        s_canonoff_delay = 0;
-		    }
-		}
-		
     // 低于19.5V异常后，要恢复到20.5v以上才正常
     if (value > MAIN_POW_LOW_19_5V) {
         if (LowCheck) {
@@ -554,23 +529,54 @@ static BOOLEAN MainPwrIsAccess(void)
 {
     INT32S value;
     static BOOLEAN MainPwrCheck = FALSE;
-    
+
+    if(Get_SystemVol() == 0xFF)    return TRUE;
+		
     value = PORT_GetADCValue(ADC_MAINPWR);
-    // 有过主电异常，电压在20v~30v才恢复
-    if(MainPwrCheck) { 
-        if((value <  MAIN_POW_RECV_30V) && (value > MAIN_POW_RECV_20V)) {  
-            MainPwrCheck = FALSE;
+
+		if(Get_SystemVol()) {
+        // 有过主电异常，电压在20v~30v才恢复
+        if(MainPwrCheck) { 
+            if((value <  MAIN_POW_RECV_30V) && (value > MAIN_POW_RECV_20V)) {  
+							  #if EN_DEBUG > 1
+								debug_printf("24V系统恢复DTC\r\n");
+								#endif
+                MainPwrCheck = FALSE;
+            } else {
+                return FALSE;
+            }
         } else {
-            return FALSE;
+        // 电压低于19v 或者高于31v 主电异常
+            if((value <  MAIN_POW_LOW_19V) || (value > MAIN_POW_HIGHT_31V)) {  
+								#if EN_DEBUG > 1
+								debug_printf("24V系统关闭DTC\r\n");
+								#endif
+                MainPwrCheck = TRUE;
+                return FALSE;
+            } 
         }
-    } else {
-    // 电压低于19v 或者高于31v 主电异常
-        if((value <  MAIN_POW_LOW_19V) || (value > MAIN_POW_HIGHT_31V)) {  
-            MainPwrCheck = TRUE;
-            return FALSE;
-        } 
-    }
-        
+		} else {
+		    // 有过主电异常，电压在20v~30v才恢复
+        if(MainPwrCheck) { 
+            if((value < MAIN_POW_OPEN_DTC_15V) && (value > MAIN_POW_OPEN_CAN_10V)) {  
+                MainPwrCheck = FALSE;
+								#if EN_DEBUG > 1
+								debug_printf("12V系统恢复DTC\r\n");
+								#endif
+            } else {
+                return FALSE;
+            }
+        } else {
+        // 电压低于19v 或者高于31v 主电异常
+            if((value < MAIN_POW_CLOSE_CAN_9V ) || (value > MAIN_POW_CLOSE_DTC_16V)) {  
+                MainPwrCheck = TRUE;
+								#if EN_DEBUG > 1
+								debug_printf("12V系统关闭DTC\r\n");
+								#endif
+                return FALSE;
+            } 
+        }
+		}
     return TRUE; 
 }
 
