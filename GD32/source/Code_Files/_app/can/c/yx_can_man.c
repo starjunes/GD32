@@ -1131,11 +1131,11 @@ void CANDataHdl(CAN_DATA_HANDLE_T *CAN_msg)
 	    printf_hex(CAN_msg->databuf, CAN_msg->len);
 	    #endif
     }
-	if (id == 0x18EA4A00){	//防拆报文
+	/*if (id == 0x18EA4A00){	//防拆报文
 		INT8U data[13] = {0x18, 0xFD, 0xA9, 0x4A, 0x08, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 		CAN_TxData(data, FALSE,CAN_msg->channel);
 		return ;
-	}
+	}*/
     #if DEBUG_CAN > 0
     debug_printf("can:%d, 接收到id = %x ",CAN_msg->channel, id);
     printf_hex(CAN_msg->databuf, CAN_msg->len);
