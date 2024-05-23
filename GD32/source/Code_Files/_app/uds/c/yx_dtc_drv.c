@@ -217,7 +217,7 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
     //{B157E00, 0x957E00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // T-box 专网拨号不成功
     {B157800, 0x957800, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六模块获取发动机VIN失败
     {B157A00, 0x957A00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六模块获取发动机VIN不一致
-		{B157C00, 0x957C00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 1, 			 10}, 	 // 国六模块获取发动机VIN不一致
+		{B157E00, 0x957E00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 1, 			 10}, 	 //  T-box 专网拨号不成功
 		{B158200, 0x958200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},   // 国六企业平台连接失败
     {B158300, 0x958300, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六企业平台连接失败
 		{B157511, 0x957511, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 10,			 500},	 // 4G天线短路
@@ -274,7 +274,7 @@ static void DTC_Dm1Init(void)
     s_dm1_dtc_tab[U103C00].bitFiled._SPN_LOW = 0x01FE;    // GCT节点超时//
     s_dm1_dtc_tab[U103B00].bitFiled._SPN_LOW = 0x04FE;    // IBS节点超时//
     s_dm1_dtc_tab[B158000].bitFiled._SPN_LOW = 0x0DFE;    // VIST节点USB通讯失效 //
-    s_dm1_dtc_tab[B157C00].bitFiled._SPN_LOW = 0x09FE;    // wifi 热点(公网)拨号不成功 //
+    s_dm1_dtc_tab[B157E00].bitFiled._SPN_LOW = 0x0BFE;    //  T-box 专网拨号不成功 //
     s_dm1_dtc_tab[B158200].bitFiled._SPN_LOW = 0x0FFE;    // 国六地方平台连接失败  //
     s_dm1_dtc_tab[B157511].bitFiled._SPN_LOW = 0xFCFD;    // 4G天线开路//
     s_dm1_dtc_tab[B157513].bitFiled._SPN_LOW = 0xFCFD;    // 4G天线开路//

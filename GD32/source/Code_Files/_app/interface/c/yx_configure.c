@@ -29,7 +29,7 @@
 #include "app_update.h"
 #include "yx_uds_did.h"
 #include "yx_dtc_drv.h"
-
+#include "yx_power_man.h"
 static STREAM_T       strm;
 static GPS_STATE_E    GPRSstatus = GPS_NO_STATU;
 static INT8U          GsmNetIntension;                                      /* ÍøÂçÐÅºÅÇ¿¶È */
@@ -331,6 +331,13 @@ void Client_FuntionUpAck_Hdl(INT8U mancode, INT8U command, INT8U *data, INT16U d
     if (cno != CLIENT_CODE) return;
 
     cmdtye = bal_ReadBYTE_Strm(&strm);
+		switch (cmdtye) {
+         case 0x31: 	 
+                Recve_Npunotify(data[3]);
+            break;
+        default:
+            break;
+    }
     if ((cmdtye == 0x0f) && (bal_ReadBYTE_Strm(&strm) == 0x01) && (bal_ReadBYTE_Strm(&strm) == 0x02)) {
         ProvinceID = bal_ReadHWORD_Strm(&strm);
         CityID = bal_ReadHWORD_Strm(&strm);

@@ -23,7 +23,7 @@
 #include "yx_power_man.h"
 #include "hal_exrtc_sd2058_drv.h"
 #include "public.h"
-
+#include "appmain.h"
 /*************************************************************************************
 *主电ADC阈值定义               
 *************************************************************************************/
@@ -44,6 +44,12 @@
 #define MAIN_POW_OPEN_CAN_10V        853     // 10V(实测)   12V/24V恢复CAN
 #define MAIN_POW_CLOSE_CAN_36V       3220    // 36V(实测)   12V/24V关闭CAN
 #define MAIN_POW_OPEN_CAN_35V        3125    // 35V  (实测) 12V/24V恢复CAN
+
+#define MAIN_POW_INTOSLEEP_MPU_8V     642     // 8V(实测)
+#define MAIN_POW_INTOSLEEP_MPU_33V    2948     // 33V(实测) 
+#define MAIN_POW_QUITSLEEP_MPU_32V    2856     // 32V(实测) 
+#define MAIN_POW_QUITSLEEP_MPU_16V    1389    // 16V(实测)
+#define MAIN_POW_INTOSLEEP_MPU_15V    1308    // 15V(实测) 
 
 #define Z_ADC_12V_LOW_POW            704     /* 8.5V  12主电供电时的主电欠压 */
 #define Z_ADC_12V_RECOVERY           750     /* 9.0V  12主电供电时的主电恢复 */
@@ -137,8 +143,8 @@ static BOOLEAN s_gztest_flag = false;
 static INT16U s_waketime = 0;             // 休眠唤醒时间
 static BOOLEAN s_normalmode = FALSE;		// 仓储模式 false:处于仓储模式 true:处于正常模式
 static INT8U   s_restart_delay = 0;
-static BOOLEAN s_canonoff = TRUE,s_close_mpu = false; 
-static INT16U s_low_close;
+static BOOLEAN s_canonoff = TRUE,s_close_mpu = false,s_sleep_mpu = false,s_wait_mpunotify = false,s_wait_check= false; 
+static INT16U s_low_close,s_intosleepmpu,s_quit_sleepmpu;
 /*******************************************************************************
  ** 函数名:     WakeupgsmTmr()
  ** 函数描述:    采用定时器唤醒simcom
@@ -673,7 +679,6 @@ static void ReadBatAdcTmr(void *pdata)
         return;
     }
 }
-
 /*******************************************************************************
  ** 函数名:    System_Vol_Judge
  ** 函数描述:  24v或12v系统判定
@@ -685,12 +690,16 @@ static void System_Vol_Judge(void)
     if(s_mainpwrad > Z_ADC_THR_PWR_TYPE){
         mainpwrvalue = true; //大于18V判断为24V系统
         s_low_close = MAIN_POW_CLOSE_CAN_9V; 
+				s_intosleepmpu = MAIN_POW_INTOSLEEP_MPU_15V;
+				s_quit_sleepmpu = MAIN_POW_QUITSLEEP_MPU_16V;
         #if DEBUG_ADC_MAINPWR > 0
         debug_printf("24V系统 \r\n");
         #endif
     } else {
         mainpwrvalue = false;//默认12V系统
         s_low_close = MAIN_POW_CLOSE_CAN_6V5; 
+				s_intosleepmpu = MAIN_POW_INTOSLEEP_MPU_8V;
+				s_quit_sleepmpu =  MAIN_POW_CLOSE_CAN_9V;
         #if DEBUG_ADC_MAINPWR > 0
         debug_printf("12V系统 \r\n");
         #endif
@@ -1187,6 +1196,7 @@ static void PowerHandleTmr(void* pdata)
 static void PowerMonitorTmr(void* pdata)
 {
      INT32S value;
+		 STREAM_T* wstrm;
 
 		 if(!s_mainpwr_adap)     return;
 	   value = PORT_GetADCValue(ADC_MAINPWR);
@@ -1209,27 +1219,57 @@ static void PowerMonitorTmr(void* pdata)
 				 	}
 		 }
 
-		 if(s_close_mpu) {
-		      if(value <  MAIN_POW_OPEN_CAN_35V) {  /* 小于35开启MPU */
-						  if(s_restart_delay++ > 10) {
-					        s_close_mpu = FALSE;
-									s_restart_delay = 0;
+     if(s_sleep_mpu) {
+		      if((value > s_quit_sleepmpu) && (value < MAIN_POW_QUITSLEEP_MPU_32V)) {  /* 大于9/16V小于32 唤醒MPU休眠 */
+					    if(s_close_mpu) {
 							    YX_Power_ReStartSimcomPwr();
-									#if EN_DEBUG > 0
-						      debug_printf("主电小于35Vmpu重启\r\n");
-						      #endif
-						  }
+									YX_COM_Cleanlink();
+									Pause_Link(TRUE); 
+								  #if EN_DEBUG > 0
+									debug_printf("主电 9 - 16-32 mpu重启\r\n");
+								  #endif
+									s_close_mpu = FALSE;
+									s_sleep_mpu = FALSE;
+
+						  } else {
+						      WakeUpGsm();
+    					    Pause_Link(TRUE); 
+									s_close_mpu = FALSE;
+									s_sleep_mpu = FALSE;
+    					    #if EN_DEBUG > 0
+    		          debug_printf("主电 9 - 16-32 mpu唤醒\r\n");
+    		          #endif
+    		      }
 		      }
-		 } else {
-		     if(value >  MAIN_POW_CLOSE_CAN_36V) {  /* 大于36关闭MPU */
+					if((value >  MAIN_POW_CLOSE_CAN_36V) && (s_close_mpu == FALSE) ) {  /* 大于36关闭MPU */
 				     s_close_mpu = TRUE;  
-						 s_restart_delay = 0;
 						 YX_Power_CloseSimcomPwr();
+						 Pause_Link(FALSE); 
 						 #if EN_DEBUG > 0
 						 debug_printf("主电大于36V mpu关机\r\n");
 						 #endif
-		     }
-	   }
+		      }
+		 } else {
+		     if(s_wait_mpunotify) {
+     	       s_sleep_mpu = TRUE;      				 
+    				 Pause_Link(FALSE); 
+						 s_wait_check = FALSE;
+						 s_wait_mpunotify = FALSE;
+		     } else {
+		         if(s_wait_check == FALSE) {
+        		     if((value < s_intosleepmpu) || (value > MAIN_POW_INTOSLEEP_MPU_33V)) {  /* 小于8/15V 通知MPU休眠 */
+      						 	  #if EN_DEBUG > 0
+          				    debug_printf("主电小于8/15V 通知MPU休眠\r\n");
+          				    #endif
+          				 	  wstrm = bal_STREAM_GetBufferStream();
+                      bal_WriteHWORD_Strm(wstrm, CLIENT_CODE);//CLIENT_CODE
+                      bal_WriteBYTE_Strm(wstrm, 0x31);
+                      YX_COM_DirSend(CLIENT_FUNCTION_UP_REQ, bal_GetStrmStartPtr(wstrm), bal_GetStrmLen(wstrm)); 
+      								s_wait_check = TRUE;
+        		     }
+		         	}
+		     	}
+     }
 }
 /*******************************************************************************
 **	函数名称:  BatteryChargeCtr
@@ -1862,4 +1902,23 @@ INT8U Get_SystemVol(void)
     
     return mainpwrvalue;
 }
+/*******************************************************************************
+** 函数名:    Get_SystemVol
+** 函数描述:  获取系统12V还是24系统
+** 参数:      无
+** 返回:      0: 12V系统 1:24V系统 0xFF:还未选择系统
+******************************************************************************/
+void Recve_Npunotify(BOOLEAN sta)
+{
+
+	 #if EN_DEBUG > 0
+	 debug_printf("Recve_Npunotify %d \r\n",sta);
+	 #endif
+   if(!sta) {
+	    s_wait_mpunotify = TRUE;			
+   } else {
+      s_wait_check = FALSE;
+   }
+}
+
 

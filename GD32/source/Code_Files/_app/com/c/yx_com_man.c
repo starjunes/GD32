@@ -180,7 +180,26 @@ static void com_send_tmrproc(void* pdata)
 		}
 	}
 }
-
+/*******************************************************************************
+** 函数名:     Pause_Link
+** 函数描述:   暂停链路定时器
+** 参数:       [in]  onoff: TRUE 开启 FALSE 关闭      
+** 返回:       无
+******************************************************************************/
+void Pause_Link(BOOLEAN onoff) 
+{
+    if(onoff) {
+			  if(!OS_TmrIsRun(s_sendlink_tmrid)) {
+            s_com_overtime = 0;
+				    s_com_cnt_nolink = 0;
+						OS_StartTmr(s_sendlink_tmrid, SECOND, 1);
+			  }
+    } else {
+        if(OS_TmrIsRun(s_sendlink_tmrid)) {
+						OS_StopTmr(s_sendlink_tmrid);
+			  }       
+    }
+}
 /*******************************************************************************
  ** 函数名:     HdlMsg_LINK_REQ_ACK
  ** 函数描述:   上电连接请求
