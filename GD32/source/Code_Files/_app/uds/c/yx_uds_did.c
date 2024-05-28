@@ -790,7 +790,28 @@ static BOOLEAN DID_IsSelfDid(INT16U did)
     did = did;
     return FALSE;
 }
-
+/*****************************************************************************
+**  函数名:  SendDID_103A
+**  函数描述: 发送MCU版本
+**  参数:     void
+**  返回:    0:执行失败 1:执行成功
+*****************************************************************************/
+static void SendDID_103A(void)
+{
+    INT16U did, didLen;
+    STREAM_T* wstrm;
+		char* img_inf;
+		
+		 wstrm = bal_STREAM_GetBufferStream();
+     img_inf = YX_GetClientVersion();
+     memcpy(s_uds_did_local.DID_103A, img_inf, strlen(img_inf));
+     bal_WriteHWORD_Strm(wstrm, CLIENT_CODE);//CLIENT_CODE
+     bal_WriteBYTE_Strm(wstrm, 0x20);
+     bal_WriteHWORD_Strm(wstrm, 0x103A);
+     bal_WriteBYTE_Strm(wstrm, 64);
+     bal_WriteDATA_Strm(wstrm, s_uds_did_local.DID_103A,64);
+     YX_COM_DirSend(CLIENT_FUNCTION_UP_REQ, bal_GetStrmStartPtr(wstrm), bal_GetStrmLen(wstrm));
+}
 /*
 ********************************************************************************
 * 定义对外接口
@@ -1003,6 +1024,9 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
 				     YX_Set_CarSignal(s_uds_did_obj[i].data);	
 						 UDS_DID102A_Handle();
 				 }
+				 if(did == 0x0110) {
+				     s_did_status[10] = 1;
+				 	}
 				 if(did == 0x102A) {
 				     UDS_DID102A_Handle();
 				 }
@@ -1025,6 +1049,9 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
         bal_WriteBYTE_Strm(wstrm, (INT8U)didLen);
         bal_WriteDATA_Strm(wstrm, p_did, didLen);
         YX_COM_DirSend(CLIENT_FUNCTION_UP_REQ, bal_GetStrmStartPtr(wstrm), bal_GetStrmLen(wstrm));
+				if(did == 0x0110) {
+					   SendDID_103A();
+				}
 
     } else {
         s_did_status[i] = 1;
@@ -1262,7 +1289,7 @@ void YX_UDS_DID_Init(void)
     
     img_inf = YX_GetClientVersion();
     memcpy(s_uds_did_local.DID_103A, img_inf, strlen(img_inf));
-    s_did_status[9] = 1;
+    s_did_status[10] = 1;
     s_delay_save_to_flash = 0;
     if (!bal_pp_ReadParaByID(UDS_DID_PARA_, (INT8U *)&s_uds_did_e2rom_data, sizeof(UDS_DID_DATA_E2ROM_T))) {
         #if DEBUG_DID > 0
