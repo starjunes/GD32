@@ -1972,7 +1972,7 @@ static void LockTmrProc(void*index)
         senddata[5] = 0xe9;                        /* 0xe9 请求油耗 */
         CAN_TxData(senddata, false, 1);
     }
-    #else
+    //#else
     if(acc_state == TRUE){    //ACC ON
         if(s_poweron_times_cnt++ < 6000 ){// 6000    /* 上电1分钟内检测有没有收到油耗报文ID:0x18FEE900 */
             s_oilsumreq = GetOilMsg_State();
