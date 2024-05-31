@@ -605,7 +605,9 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
             for (j = 0; j < len; j++) {
                 switch (j) {
                     case 0x00:
-                        if(data[j] > 18) {
+                        if((data[j] == 0x02) || (data[j] == 0x04) || (data[j] == 0x05) || (data[j] == 0x08) || (data[j] == 0x0D)) {
+                            return TRUE;
+                        } else {
                             return FALSE;
                         }
                     break;
@@ -671,7 +673,9 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
         break;
         case 0x102B:
             for (j = 0; j < len; j++) {
-                if (data[j] > 0x0A) {
+                if ((data[j] == 0x01) || (data[j] == 0x02) || (data[j] == 0x06) || (data[j] == 0x07) || (data[j] == 0x09)) {
+                    return TRUE;
+                } else {
                     return FALSE;
                 }
             } 					 	 
