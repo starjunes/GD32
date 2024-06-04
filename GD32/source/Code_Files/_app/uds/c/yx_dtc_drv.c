@@ -249,39 +249,39 @@ static void DTC_Dm1Init(void)
         s_dm1_dtc_tab[idx].bitFiled._SPN_HIG = 0x7;
     }
     
-    s_dm1_dtc_tab[B156D12].bitFiled._SPN_LOW = 0xE6FD;
-    s_dm1_dtc_tab[B156F12].bitFiled._SPN_LOW = 0xE8FD;
-    s_dm1_dtc_tab[B157112].bitFiled._SPN_LOW = 0xEAFD;
-    s_dm1_dtc_tab[U000100].bitFiled._SPN_LOW = 0xEBFD;
-    s_dm1_dtc_tab[U000200].bitFiled._SPN_LOW = 0xECFD;
-    s_dm1_dtc_tab[U010000].bitFiled._SPN_LOW = 0xEDFD;
-    s_dm1_dtc_tab[U015500].bitFiled._SPN_LOW = 0xEEFD;
-    s_dm1_dtc_tab[B157800].bitFiled._SPN_LOW = 0x05FE;
-    s_dm1_dtc_tab[B157900].bitFiled._SPN_LOW = 0x06FE;
-    s_dm1_dtc_tab[B157A00].bitFiled._SPN_LOW = 0x07FE;
-    s_dm1_dtc_tab[B158300].bitFiled._SPN_LOW = 0x10FE;
-    s_dm1_dtc_tab[B157216].bitFiled._SPN_LOW = 0xEAFD;
-    s_dm1_dtc_tab[B157F00].bitFiled._SPN_LOW = 0x0CFE;
-    //s_dm1_dtc_tab[B157E00].bitFiled._SPN_LOW = 0x0BFE;
-    s_dm1_dtc_tab[B157B00].bitFiled._SPN_LOW = 0x08FE; 
+    s_dm1_dtc_tab[B156D12].bitFiled._SPN_LOW = 0xFDE6;
+    s_dm1_dtc_tab[B156F12].bitFiled._SPN_LOW = 0xFDE8;
+    s_dm1_dtc_tab[B157112].bitFiled._SPN_LOW = 0xFDEA;
+    s_dm1_dtc_tab[U000100].bitFiled._SPN_LOW = 0xFDEB;
+    s_dm1_dtc_tab[U000200].bitFiled._SPN_LOW = 0xFDEC;
+    s_dm1_dtc_tab[U010000].bitFiled._SPN_LOW = 0xFDED;
+    s_dm1_dtc_tab[U015500].bitFiled._SPN_LOW = 0xFDEE;
+    s_dm1_dtc_tab[B157800].bitFiled._SPN_LOW = 0xFE05;
+    s_dm1_dtc_tab[B157900].bitFiled._SPN_LOW = 0xFE06;
+    s_dm1_dtc_tab[B157A00].bitFiled._SPN_LOW = 0xFE07;
+    s_dm1_dtc_tab[B158300].bitFiled._SPN_LOW = 0xFE10;
+    s_dm1_dtc_tab[B157216].bitFiled._SPN_LOW = 0xFDEA;
+    s_dm1_dtc_tab[B157F00].bitFiled._SPN_LOW = 0xFE0C;
+    //s_dm1_dtc_tab[B157E00].bitFiled._SPN_LOW = 0xFE0B;
+    s_dm1_dtc_tab[B157B00].bitFiled._SPN_LOW = 0xFE08; 
     
-		s_dm1_dtc_tab[U014000].bitFiled._SPN_LOW = 0xEFFD;    // BCM节点超时//
-    s_dm1_dtc_tab[U010100].bitFiled._SPN_LOW = 0xF1FD;    // TCU节点超时//
-    s_dm1_dtc_tab[U012A00].bitFiled._SPN_LOW = 0xFBFD;    // Retarder节点超时//
-    s_dm1_dtc_tab[U012200].bitFiled._SPN_LOW = 0x00FE;    // ABS/EBS节点超时//
-    s_dm1_dtc_tab[U012700].bitFiled._SPN_LOW = 0xF5FD;    // TPMS节点超时//
-    s_dm1_dtc_tab[U013200].bitFiled._SPN_LOW = 0xFAFD;    // ECAS节点超时//
-    s_dm1_dtc_tab[U103C00].bitFiled._SPN_LOW = 0x01FE;    // GCT节点超时//
-    s_dm1_dtc_tab[U103B00].bitFiled._SPN_LOW = 0x04FE;    // IBS节点超时//
-    s_dm1_dtc_tab[B158000].bitFiled._SPN_LOW = 0x0DFE;    // VIST节点USB通讯失效 //
-    s_dm1_dtc_tab[B157E00].bitFiled._SPN_LOW = 0x0BFE;    //  T-box 专网拨号不成功 //
-    s_dm1_dtc_tab[B158200].bitFiled._SPN_LOW = 0x0FFE;    // 国六地方平台连接失败  //
-    s_dm1_dtc_tab[B157511].bitFiled._SPN_LOW = 0xFCFD;    // 4G天线开路//
-    s_dm1_dtc_tab[B157513].bitFiled._SPN_LOW = 0xFCFD;    // 4G天线开路//
-    s_dm1_dtc_tab[B156E11].bitFiled._SPN_LOW = 0xE7FD;    // GPS短路//
-    s_dm1_dtc_tab[B156E13].bitFiled._SPN_LOW = 0xE7FD;    // GPS开路//
+		s_dm1_dtc_tab[U014000].bitFiled._SPN_LOW = 0xFDEF;    // BCM节点超时//
+    s_dm1_dtc_tab[U010100].bitFiled._SPN_LOW = 0xFDF1;    // TCU节点超时//
+    s_dm1_dtc_tab[U012A00].bitFiled._SPN_LOW = 0xFDFB;    // Retarder节点超时//
+    s_dm1_dtc_tab[U012200].bitFiled._SPN_LOW = 0xFE00;    // ABS/EBS节点超时//
+    s_dm1_dtc_tab[U012700].bitFiled._SPN_LOW = 0xFDF5;    // TPMS节点超时//
+    s_dm1_dtc_tab[U013200].bitFiled._SPN_LOW = 0xFDFA;    // ECAS节点超时//
+    s_dm1_dtc_tab[U103C00].bitFiled._SPN_LOW = 0xFE01;    // GCT节点超时//
+    s_dm1_dtc_tab[U103B00].bitFiled._SPN_LOW = 0xFE04;    // IBS节点超时//
+    s_dm1_dtc_tab[B158000].bitFiled._SPN_LOW = 0xFE0D;    // VIST节点USB通讯失效 //
+    s_dm1_dtc_tab[B157E00].bitFiled._SPN_LOW = 0xFE0B;    //  T-box 专网拨号不成功 //
+    s_dm1_dtc_tab[B158200].bitFiled._SPN_LOW = 0xFE0F;    // 国六地方平台连接失败  //
+    s_dm1_dtc_tab[B157511].bitFiled._SPN_LOW = 0xFDFC;    // 4G天线开路//
+    s_dm1_dtc_tab[B157513].bitFiled._SPN_LOW = 0xFDFC;    // 4G天线开路//
+    s_dm1_dtc_tab[B156E11].bitFiled._SPN_LOW = 0xFDE7;    // GPS短路//
+    s_dm1_dtc_tab[B156E13].bitFiled._SPN_LOW = 0xFDE7;    // GPS开路//
 
-    s_dm1_dtc_tab[U003700].bitFiled._SPN_LOW = 0xEAFD;    // GCAN2 BusOff//
+    s_dm1_dtc_tab[U003700].bitFiled._SPN_LOW = 0xFDEA;    // GCAN2 BusOff//
     s_dm1_dtc_tab[U014600].bitFiled._SPN_LOW = 0xFDFD;    // GATWAY节点超时 //
 }
 
