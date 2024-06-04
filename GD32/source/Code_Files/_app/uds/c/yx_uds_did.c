@@ -1123,7 +1123,8 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
             if ((did == 0xF190) || (did == 0xF193) || (did == 0xF195) || (did == 0xF19D) || (did == 0x1004) ||
 							  (did == 0x1002) || (did == 0x1003) || (did == 0x1028) || (did == 0x1009) || (did == 0x1010) || 
 							  (did == 0x1015) || (did == 0x3102) || (did == 0x3103) || (did == 0xF194) || (did == 0x2100) ||
-							  (did == 0xF192) || (did == 0xF199)) {
+							  (did == 0xF192) || (did == 0xF199) || (did == 0x102A) || (did == 0x102B) || (did == 0x102C)
+							  || (did == 0x0100)|| (did == 0x0110)) {
 							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
                 DID_DataUpdate();
             }
