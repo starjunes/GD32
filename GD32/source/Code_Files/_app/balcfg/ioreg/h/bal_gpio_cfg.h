@@ -99,6 +99,7 @@ void bal_Pullup_GYRPWR(void);
 void bal_Pulldown_CHGEN(void);
 void bal_Pullup_CHGEN(void);
 /* CAN0 Standby模式使能控制 */
+void bal_CAN0STB_Init(void);
 void bal_Pulldown_CAN0STB(void);
 void bal_Pullup_CAN0STB(void);
 /* CAN1 Standby模式使能控制 */

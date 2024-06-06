@@ -28,6 +28,7 @@
 #include  "dal_adc.h"
 #include  "dal_Infrared.H"
 #include  "yx_viropttsk.h"
+#include  "yx_can_man.h"
 static QMSG_T   s_msgbuf[SIZE_APPMSG_BUF];
 
 
@@ -139,6 +140,7 @@ void AppStart(void)
     result = QRegister(APP_Q_ID, g_appQ, AppMsgHdlEntry);
     APP_ASSERT(result);
     //PMCore_Init();
+    YX_CAN_PreInit();
     InitFlash();
     ClearWatchdog(); 
     InitAllPubPara();

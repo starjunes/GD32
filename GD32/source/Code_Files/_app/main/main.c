@@ -81,7 +81,7 @@ int main(void)
     Debug_SysPrint("<--app start SystemClock:%d PCLK1:%d-->\r\n", rcu_clock_freq_get(CK_SYS), rcu_clock_freq_get(CK_APB1));
     #endif
 
-    #if 1
+    #if 0
     ClearWatchdog();
     Delay_ms(150); /* 用于在关闭调试时加入串口初始化与打印输出占用的时间延时,上飞鸿锁车问题修改点 */
     ClearWatchdog();

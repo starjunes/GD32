@@ -2837,7 +2837,56 @@ void Control_IdleWarmup(void)
 		candata.Data[6] = 0xE3;
     PORT_CanSend(&candata);
 }
+/*******************************************************************************
+ ** 函数名:    YX_CAN_Init
+ ** 函数描述:  CAN通讯驱动模块提前初始化
+ ** 参数:       无
+ ** 返回:       无
+ ******************************************************************************/
+void YX_CAN_PreInit(void)
+{
+    INT8U i;
+    CAN_DATA_SEND_T candata;
+		
+    PORT_InitCan();	
+    s_can_para[0].baud = CAN_BAUD_250K;
+    s_can_para[0].frameformat= FMAT_EXT;
+    s_can_para[0].mode = CAN_MODE_REPORT;
+	
+    s_can_para[1].baud = CAN_BAUD_500K;
+    s_can_para[1].frameformat= FMAT_EXT;
+    s_can_para[1].mode = CAN_MODE_REPORT;
+	
+	
+    for (i = CAN_CHN_1; i < MAX_CAN_CHN-1; i++) {
+        if(PORT_OpenCan((CAN_CHN_E)i, s_can_para[i].baud, s_can_para[i].frameformat)){
+            s_can_para[i].onoff = true;
+        } else {
+            s_can_para[i].onoff = false;
+				}
+	
+        #if DEBUG_CAN > 0
+        PORT_SetCanFilter((CAN_CHN_E)i, 0, 0x7e8, 0xffffffff);
+        #endif
+				PORT_CanEnable((CAN_CHN_E)i, true);
+		}
+		bal_CAN0STB_Init();
 
+    for (i = 0; i < (PERIOD_NUM -1); i++) { 			
+        candata.can_DLC = 8;
+				candata.can_id = s_period_msg[i].canId;
+				candata.can_IDE = s_period_msg[i].ide;
+				candata.channel = s_period_msg[i].chn;
+				MMI_MEMCPY(candata.Data, 8, s_period_msg[i].canData,8);
+				candata.period = 0xffff;
+				PORT_CanSend(&candata);
+				#if EN_DEBUG > 0
+				debug_printf("PORT_CanSend");
+				#endif
+				candata.period = s_period_msg[i].period;
+				PORT_CanSend(&candata);
+    }
+}
 /*******************************************************************************
  ** 函数名:    YX_CAN_Init
  ** 函数描述:   CAN通讯驱动模块初始化
@@ -2847,17 +2896,17 @@ void Control_IdleWarmup(void)
 void YX_CAN_Init(void)
 {
     INT8U i;
-	SCLOCKPARA_T t_sclockpapra;
-	CAN_DATA_SEND_T candata;
-    PORT_InitCan();
+	//SCLOCKPARA_T t_sclockpapra;
+	//CAN_DATA_SEND_T candata;
+   // PORT_InitCan();
     for (i = 0; i < MAX_RESEND_NUM; i++) {
         YX_MEMSET((INT8U*)&s_resend_can[i], 0x00, sizeof(RESENT_CAN_T));
     }
 	
-	bal_pp_ReadParaByID(SCLOCKPARA_,(INT8U *)&t_sclockpapra, sizeof(SCLOCKPARA_T));
+	//bal_pp_ReadParaByID(SCLOCKPARA_,(INT8U *)&t_sclockpapra, sizeof(SCLOCKPARA_T));
 	
     s_oilsum_check = 0;
-	s_can_para[0].baud = t_sclockpapra.canbaud[0];
+	/*s_can_para[0].baud = t_sclockpapra.canbaud[0];
 	s_can_para[0].frameformat= FMAT_EXT;
 	s_can_para[0].mode = CAN_MODE_REPORT;
 
@@ -2880,7 +2929,7 @@ void YX_CAN_Init(void)
     	PORT_SetCanFilter((CAN_CHN_E)i, 0, 0x7e8, 0xffffffff);
         #endif
         PORT_CanEnable((CAN_CHN_E)i, true);
-    }
+    }*/
 		memset(&s_sendpara, 0x00, sizeof(s_sendpara));
     Lock_Init();
 	PORT_RegCanCallbakFunc(CANDataHdl);
@@ -2891,7 +2940,7 @@ void YX_CAN_Init(void)
 	#endif
     s_packet_tmr = OS_InstallTmr(TSK_ID_OPT, 0, PacketTimeOut);
     OS_StartTmr(s_packet_tmr, MILTICK, 1);
-    for (i = 0; i < (PERIOD_NUM -1); i++) {       
+    /*for (i = 0; i < (PERIOD_NUM -1); i++) {       
         candata.can_DLC = 8;
         candata.can_id = s_period_msg[i].canId;
         candata.can_IDE = s_period_msg[i].ide;
@@ -2899,7 +2948,7 @@ void YX_CAN_Init(void)
 				candata.period = s_period_msg[i].period;
 				MMI_MEMCPY(candata.Data, 8, s_period_msg[i].canData,8);
 				PORT_CanSend(&candata);
-		}
+		}*/
     #if EN_UDS > 0
 		YX_UDS_Init();
 		#endif

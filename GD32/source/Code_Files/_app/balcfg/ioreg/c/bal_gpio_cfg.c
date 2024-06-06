@@ -284,6 +284,10 @@ void bal_Pullup_CHGEN(void)
      /* 2022/07/15 逻辑反向 拉高停止，拉低充电*/
      PORT_ClearGpioPin(PIN_CHGEN);
 }
+void bal_CAN0STB_Init(void)
+{
+		PORT_GpioConfigure(PIN_CAN0STB, GPIO_DIR_OUT, 1);
+}
 /* CAN0 Standby模式使能控制 */
 void bal_Pulldown_CAN0STB(void)
 {
