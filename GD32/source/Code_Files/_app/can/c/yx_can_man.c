@@ -124,8 +124,9 @@ typedef struct {
 	BOOLEAN send_en;		// 发送使能
 	INT16U  period;			// 发送周期
     INT8U   send_cnt;		// 已发送次数
+    INT32U recvid;
 } PERIOD_SEND_T;
-static PERIOD_SEND_T s_period_can,s_period_uds;  // 固定次数周期报文
+static PERIOD_SEND_T s_period_can,s_period_uds,s_spcial_uds;  // 固定次数周期报文
 
 static PERIOD_MSG_T s_period_msg[] = {    
     {0, 100,   1, PERIOD_MSG1, {0xF5, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},  
@@ -1141,6 +1142,7 @@ void CANDataHdl(CAN_DATA_HANDLE_T *CAN_msg)
     printf_hex(CAN_msg->databuf, CAN_msg->len);
     #endif
     HandShakeMsgAnalyze(CAN_msg,sizeof(CAN_msg));
+		SpcialCanDate_Process(id, CAN_msg->channel, CAN_msg->databuf);
     #if EN_UDS > 0
 		if(UDS_SingleFrameHdl((INT8U*)CAN_msg, sizeof(CAN_DATA_HANDLE_T))) {
 		   return;
@@ -1576,6 +1578,7 @@ static void YX_PeriodDataTran(void )
 {
     static INT16U spe_cnt = 0;
 		static INT16U cnt = 0;
+		static INT16U special = 0;
 
 	if (s_period_can.send_en){
 		spe_cnt++;
@@ -1599,6 +1602,18 @@ static void YX_PeriodDataTran(void )
             } else {
                 s_period_uds.send_en = FALSE;
                 s_period_uds.send_cnt = 0;
+            }
+        }
+    }
+    if (s_spcial_uds.send_en){
+        special++;
+        if (s_spcial_uds.period == special) {		// 达到发送周期
+            special = 0;
+            if (s_spcial_uds.send_cnt++ < 3){
+                PORT_CanSend(&s_spcial_uds.send);
+            } else {
+                s_spcial_uds.send_en = FALSE;
+                s_spcial_uds.send_cnt = 0;
             }
         }
     }
@@ -1674,6 +1689,44 @@ static void CanSendDtcMsg(void)
     				PORT_CanSend(&candata);
         }
    }
+}
+/*******************************************************************************
+**  函数名称:  SpcialCanDate_Process
+**  功能描述:  CAN时间报文发送
+**  输入参数:  CAN通道
+**  返回参数:  无
+*******************************************************************************/
+void SpcialCanDate_Process(INT32U id, INT8U chn, INT8U *data)
+{
+    BOOLEAN ret = FALSE;
+		
+    if (s_spcial_uds.send_en) {
+		    if((id == s_spcial_uds.recvid) && (chn == s_spcial_uds.send.channel)) {
+				    if((data[0] & 0xf0) == 0x10) {             /* 多帧回复 */
+						    if(data[2] == (s_spcial_uds.send.Data[1] + 0x40)) {
+								    ret = TRUE;
+										#if DEBUG_CAN > 0
+                    debug_printf("收到多帧肯定 %x\r\n ", id);
+                    #endif
+						    }
+				    } else if ((data[0] & 0xf0) == 0x00) {    /* 单帧回复 */
+				        if((data[1] == (s_spcial_uds.send.Data[1] + 0x40)) || ((data[1] == 0x7f) && (data[2] == s_spcial_uds.send.Data[1]))) {
+								    ret = TRUE;
+										#if DEBUG_CAN > 0
+                    debug_printf("收到单帧肯定或者否定响应 %x\r\n ", id);
+                    #endif
+						    }
+				    }
+
+						if(ret) {
+						    s_spcial_uds.send_en = FALSE;
+                s_spcial_uds.send_cnt = 0;
+								#if DEBUG_CAN > 0
+                debug_printf(" s_spcial_uds.send_en 清除发送 \r\n ");
+                #endif
+						}
+		    }
+    }
 }
 /*******************************************************************************
 **  函数名称:  PacketTimeOut
@@ -2382,7 +2435,7 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
 	INT8U num;
 	INT8U type,sendlen;
 	INT16U period;
-	INT32U id;
+	INT32U id,dw_tmp;
 	STREAM_T strm;
 	CAN_DATA_SEND_T senddata;
 
@@ -2560,6 +2613,39 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
              }else {
                  ack[3] = 0x02;
                  s_period_uds.send_en	= FALSE;
+             }
+         } else {
+             ack[3] = 0x02;
+         }
+     break;
+		 case CAM_SEND_SPCIAL:
+         if (s_spcial_uds.send_en == FALSE) {
+	
+             s_spcial_uds.send_cnt       = 0;
+             s_spcial_uds.send.can_DLC   = sendlen;
+             s_spcial_uds.send.can_id	= id;
+             s_spcial_uds.send.can_IDE	= senddata.can_IDE;
+             s_spcial_uds.send.channel	= senddata.channel;
+             memcpy(s_spcial_uds.send.Data, senddata.Data, sendlen);
+             s_spcial_uds.period 		= senddata.period;
+             s_spcial_uds.send.period 	= 0xffff;
+						 #if DEBUG_CAN > 0
+						 printf_hex(senddata.Data, sendlen);
+						 debug_printf("CAM_SEND_SPCIAL id %x chn %d %d\r\n",s_spcial_uds.send.can_id,s_spcial_uds.send.channel,s_spcial_uds.period);
+						 #endif
+             if (s_spcial_uds.send.can_id < 0x7FF) {
+                 s_spcial_uds.recvid = s_spcial_uds.send.can_id + 8;
+             } else {
+                 dw_tmp  = (s_spcial_uds.send.can_id & 0xFFFF0000);
+                 dw_tmp |= ((s_spcial_uds.send.can_id & 0x0000FF00) >> 8);
+                 dw_tmp |= ((s_spcial_uds.send.can_id & 0x000000FF) << 8);
+                 s_spcial_uds.recvid = dw_tmp;
+             }
+             if (s_spcial_uds.period){
+                 s_spcial_uds.send_en	= TRUE;
+             }else {
+                 ack[3] = 0x02;
+                 s_spcial_uds.send_en	= FALSE;
              }
          } else {
              ack[3] = 0x02;

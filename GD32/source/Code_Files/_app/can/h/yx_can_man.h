@@ -70,6 +70,7 @@ typedef enum {
     CAN_SEND_STOP   = 0x02,
     CAN_SEND_THREE  = 0x03,     // 周期发送三帧
     CAN_SEND_TWO    = 0x04,     // 周期发送二帧
+    CAM_SEND_SPCIAL = 0x05,
 } CAN_SEND_TYPE_E;
 
 /******************************************************************************/
@@ -219,7 +220,13 @@ void Control_IdleWarmup(void);
  ** 返回:       无
  ******************************************************************************/
 void YX_CAN_PreInit(void);
-
+/*******************************************************************************
+**  函数名称:  SpcialCanDate_Process
+**  功能描述:  CAN时间报文发送
+**  输入参数:  CAN通道
+**  返回参数:  无
+*******************************************************************************/
+void SpcialCanDate_Process(INT32U id, INT8U chn, INT8U *data);
 #ifdef __cplusplus
 }
 #endif
