@@ -3038,10 +3038,10 @@ void YX_CAN_Init(void)
     #if EN_UDS > 0
 		YX_UDS_Init();
 		#endif
-    #if EN_DEBUG > 1
+    #if EN_DEBUG > 0
     // test
     CAN_DATA_SEND_T candata1;
-	memset(&candata, 0xFF, sizeof(candata));
+	memset(&candata1, 0xFF, sizeof(candata1));
 	candata1.can_DLC = 8;
 	candata1.can_id = 0x401;
 	candata1.can_IDE = 0;

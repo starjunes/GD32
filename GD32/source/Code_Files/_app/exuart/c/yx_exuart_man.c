@@ -499,9 +499,9 @@ void EXUsartPowerCtrlHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datale
             break;
         case EXUART_IDX2:
             if (0x01 == data[1]) {
-                PORT_ClearGpioPin(PIN_GPSPWR);
-            } else if (0x02 == data[1]) {
                 PORT_SetGpioPin(PIN_GPSPWR);
+            } else if (0x02 == data[1]) {
+                PORT_ClearGpioPin(PIN_GPSPWR);
             } else {
                 ack[2] = 0x02;
                 YX_COM_DirSend( PHYCOM_POWER_CONTROL_REQ_ACK, ack, 3);
