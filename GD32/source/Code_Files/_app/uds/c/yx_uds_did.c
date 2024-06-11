@@ -43,7 +43,8 @@
 #endif
 
 #define DELAY_SAVE_TIMEOUT    5
-
+#define DID_F187_QD           "7925100-0ND1"
+#define DID_F187_CH           "7925100-866A-C00"
 /*
 ********************************************************************************
 * 定义模块结构
@@ -389,7 +390,30 @@ static void DID_DataUpdateDelay(void)
 {
     s_delay_save_to_flash = DELAY_SAVE_TIMEOUT;
 }
+/*****************************************************************************
+**  函数名:   YX_Get_VehSpeed
+**  函数描述: 获取车速
+**  参数:     无
+**  返回:     无
+*****************************************************************************/
+void YX_Sync_F187(void)
+{
+    char *tmpptr;
 
+    memset(s_uds_did_obj[28].data, 0, 24);
+    if(YX_Get_Did0110()) {
+	      tmpptr = (char*)DID_F187_QD;
+    } else {
+        tmpptr = (char*)DID_F187_CH;
+    }
+		memcpy(s_uds_did_obj[28].data, tmpptr, strlen(tmpptr));
+		DID_DataUpdateDelay();
+		#if EN_DEBUG > 1
+		debug_printf("YX_Sync_F187");
+		printf_hex(s_uds_did_e2rom_data.DID_F187,24);
+		debug_printf("\r\n");
+		#endif
+}
 /*******************************************************************************
  ** 函数名:    DTC_HandleTmr
  ** 函数描述:   定时器处理函数
@@ -589,7 +613,7 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
                     return FALSE;
                 }
             }
-            if(data[len - 1] > 0x0E) {
+            if(data[len - 1] > 0x10) {
                 return FALSE;	
             }
         break;
@@ -630,6 +654,10 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
                         }
                     break;
                     case 0x03:
+                        if(data[j] > 8) {
+                            return FALSE;
+                        }
+                    break;
                     case 0x0C:
                         if(data[j] > 7) {
                             return FALSE;
@@ -1030,6 +1058,7 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
 				 }
 				 if(did == 0x0110) {
 				     s_did_status[10] = 1;
+						 YX_Sync_F187();
 				 	}
 				 if(did == 0x102A) {
 				     UDS_DID102A_Handle();
@@ -1124,8 +1153,12 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
 							  (did == 0x1002) || (did == 0x1003) || (did == 0x1028) || (did == 0x1009) || (did == 0x1010) || 
 							  (did == 0x1015) || (did == 0x3102) || (did == 0x3103) || (did == 0xF194) || (did == 0x2100) ||
 							  (did == 0xF192) || (did == 0xF199) || (did == 0x102A) || (did == 0x102B) || (did == 0x102C)
-							  || (did == 0x0100)|| (did == 0x0110)) {
+							  || (did == 0x0100)|| (did == 0x0110)|| (did == 0xF187)) {
 							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
+								if(did == 0x0110) {
+					          SendDID_103A();
+										YX_Sync_F187();
+				        }
                 DID_DataUpdate();
             }
         }
