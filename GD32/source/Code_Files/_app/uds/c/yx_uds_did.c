@@ -1058,7 +1058,7 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
 				 }
 				 if(did == 0x0110) {
 				     s_did_status[10] = 1;
-						 YX_Sync_F187();
+						 //YX_Sync_F187();
 				 	}
 				 if(did == 0x102A) {
 				     UDS_DID102A_Handle();
@@ -1157,7 +1157,7 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
 							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
 								if(did == 0x0110) {
 					          SendDID_103A();
-										YX_Sync_F187();
+										//YX_Sync_F187();
 				        }
                 DID_DataUpdate();
             }
