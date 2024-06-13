@@ -2886,12 +2886,12 @@ INT8U YX_CAN_SoftStatus(void)
 *******************************************************************************/
 void SendTimeCan(INT8U* data)
 {
-    INT8U senddata[13] = {0x18,0xFE,0xE6,0x4A,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x7D,0x7D}; /* 0x18FEE64A */
+    INT8U senddata[13] = {0x18,0xFE,0xE6,0x4A,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0xFA,0xFA}; /* 0x18FEE64A */
 
     if(data[6] || data[4] || data[0] ) {
 		    data[6] = 2000 + data[6] - 1985;
-		    data[4] = (data[4] / 0.25);
-		    data[0] = (data[0] / 0.25);
+		    data[4] = (data[4] * 4);
+		    data[0] = (data[0] * 4);
     }
 		
     senddata[5]  = data[0]; 				 //TICK  
