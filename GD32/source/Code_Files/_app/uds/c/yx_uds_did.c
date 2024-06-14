@@ -738,7 +738,9 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
 static void UDS_DID102A_Handle(void)
 {
     if((s_uds_did_e2rom_data.DID_102A[18] == 0x00) && (s_car_signal != CAR_SIGNAL_QINGQI)) {     /* ÎÞVIST */
-		    Control_IdleWarmup();
+		    Control_IdleWarmup(true);
+    } else {
+        Control_IdleWarmup(FALSE);
     }
 }
 /*******************************************************************

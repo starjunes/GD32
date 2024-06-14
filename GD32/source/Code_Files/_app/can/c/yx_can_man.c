@@ -2911,7 +2911,7 @@ void SendTimeCan(INT8U* data)
 **  输入参数:  
 **  返回参数:  无
 *******************************************************************************/
-void Control_IdleWarmup(void)
+void Control_IdleWarmup(BOOLEAN onoff)
 {
     //INT8U senddata[13] = {0x18,0xFF,0x02,0x41,0x08,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xE3,0xFF}; /* 0x18FF0241 */
 		CAN_DATA_SEND_T candata;
@@ -2923,7 +2923,12 @@ void Control_IdleWarmup(void)
     candata.period =  10;
     memset(&candata.Data, 0xFF, sizeof(candata.Data));
 		candata.Data[6] = 0xE3;
-    PORT_CanSend(&candata);
+		if(onoff) {
+        PORT_CanSend(&candata);
+		} else {
+		    candata.period =  0;
+		    PORT_CanSend(&candata);
+		}
 }
 /*******************************************************************************
  ** 函数名:    YX_CAN_Init

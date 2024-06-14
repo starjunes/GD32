@@ -212,7 +212,7 @@ BOOLEAN YX_MMI_CanSendMul(INT8U com,INT32U id, INT8U* data, INT16U len);
 **  输入参数:  
 **  返回参数:  无
 *******************************************************************************/
-void Control_IdleWarmup(void);
+void Control_IdleWarmup(BOOLEAN onoff);
 /*******************************************************************************
  ** 函数名:    YX_CAN_Init
  ** 函数描述:  CAN通讯驱动模块提前初始化
