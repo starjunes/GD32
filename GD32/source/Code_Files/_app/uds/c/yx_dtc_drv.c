@@ -211,8 +211,8 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
 		{U014600, 0xC14600, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost, 			 1, 				1}, 		// GATWAY节点超时 //
 		/* MPU端故障 */
     {B156D12, 0x956D12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},    // GPS模块故障
-    {B156F12, 0x956F12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},    // 4G模块故障
-    {B157112, 0x957112, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},    // SIM卡故障
+    {B156F12, 0x956F12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},    // 4G模块故障
+    {B157112, 0x957112, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},    // SIM卡故障
     {B157B00, 0x957B00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // T-box 未定位
     //{B157E00, 0x957E00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // T-box 专网拨号不成功
     {B157800, 0x957800, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六模块获取发动机VIN失败
@@ -220,8 +220,8 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
 		{B157E00, 0x957E00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 1, 			 10}, 	 //  T-box 专网拨号不成功
 		{B158200, 0x958200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},   // 国六企业平台连接失败
     {B158300, 0x958300, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六企业平台连接失败
-		{B157511, 0x957511, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 10,			 500},	 // 4G天线短路
-		{B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      10,       500},   // 4G天线开路
+		{B157511, 0x957511, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 200,			 500},	 // 4G天线短路
+		{B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},   // 4G天线开路
     {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   200,		   500},	 // 终端检测gps开路
 		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   200,		   500},	 // 终端检测gps短路
     {B157900, 0x957900, (EN_MASK_85_IS_SET /*| EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON*/),                      0, 40, MiscIsDetect,      200,      200},    // 国六模块电源线束断开
