@@ -156,18 +156,18 @@ static BOOLEAN s_bat_pow_low_sta = FALSE;
 static NODE_LOST_T s_node_lost[MAX_NODE_LOST_NUM];
 static const NODE_LOST_OBJ_T s_nodelost_obj[MAX_NODE_LOST_NUM] = {
     {0x00,       500,   &s_node_lost[0]},    // 所有伙伴ECU超时（J6低配节点超时）  
-    {0x18FEF100, 100,   &s_node_lost[1]},    // EMS节点超时
+    {0x0CF00400, 20,    &s_node_lost[1]},    // EMS节点超时
     {0x0CFE6C17, 50,    &s_node_lost[2]},    // IC仪表节点超时    
-    {0x18D00021, 100,   &s_node_lost[3]},    // BCM节点超时//
-    {0x18FF6003, 50,    &s_node_lost[4]},    // TCU节点超时//
+    {0x0CFE4121, 35,    &s_node_lost[3]},    // BCM节点超时//
+    {0x18F00503, 100,   &s_node_lost[4]},    // TCU节点超时//
     {0x18F00010, 100,   &s_node_lost[5]},    // Retarder节点超时//
     {0x18F0010B, 100,   &s_node_lost[6]},    // ABS/EBS节点超时//
     {0x18FEF433, 500,   &s_node_lost[7]},    // TPMS节点超时//
-    {0x18FE582F, 100,   &s_node_lost[8]},    // ECAS节点超时//
+    {0x0CFE5A2F, 100,   &s_node_lost[8]},    // ECAS节点超时//
     {0x18FEFCC6, 500,   &s_node_lost[9]},    // GCT节点超时//
-    {0x18FC08F4, 100,   &s_node_lost[10]},    // IBS节点超时//
-    {0x18FF0241, 100,   &s_node_lost[11]},    // VIST节点USB通讯失效 //
-    {0x18FF4FF4, 100,   &s_node_lost[12]},    // gatway节点超时 //
+    {0x18FF4FF4, 100,   &s_node_lost[10]},    // IBS节点超时//
+    {0x18FF0241, 500,   &s_node_lost[11]},    // VIST节点USB通讯失效 //
+    {0x0CFE6C17, 50,    &s_node_lost[12]},    // gatway节点超时 //
 };
 static INT8U s_support_dtc[MAX_DISP_CODE]; /* 支持DTC */
 static INT8U s_onoff_dtc[MAX_DISP_CODE];   /* 开启检测对应DTC */
@@ -197,18 +197,18 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
     /* 节点丢失故障类型 */
     {U000200, 0xC00200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // 所有伙伴ECU超时（J6低配节点超时）  
     {U010000, 0xC10000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // EMS节点超时  
-    {U015500, 0xC15500, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // IC仪表节点超时  
+    {U015500, 0xC15500, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         5},     // IC仪表节点超时  
 			
-		{U014000, 0xC14000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // BCM节点超时//
-		{U010100, 0xC10100, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // TCU节点超时//
-		{U012A00, 0xC12A00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // Retarder节点超时//
-		{U012200, 0xC12200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // ABS/EBS节点超时//
-		{U012700, 0xC12700, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // TPMS节点超时//
-		{U013200, 0xC13200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // ECAS节点超时//
-		{U103C00, 0xD03C00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // GCT节点超时//
-		{U103B00, 0xD03B00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // IBS节点超时//
-		{B158000, 0x958000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // VIST节点USB通讯失效 //
-		{U014600, 0xC14600, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost, 			 1, 				1}, 		// GATWAY节点超时 //
+		{U014000, 0xC14000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         3},     // BCM节点超时//
+		{U010100, 0xC10100, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         10},     // TCU节点超时//
+		{U012A00, 0xC12A00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         10},     // Retarder节点超时//
+		{U012200, 0xC12200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         10},     // ABS/EBS节点超时//
+		{U012700, 0xC12700, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         100},     // TPMS节点超时//
+		{U013200, 0xC13200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         10},     // ECAS节点超时//
+		{U103C00, 0xD03C00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         100},     // GCT节点超时//
+		{U103B00, 0xD03B00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         10},     // IBS节点超时//
+		{B158000, 0x958000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         500},     // VIST节点USB通讯失效 //
+		{U014600, 0xC14600, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost, 			 1, 				5}, 		// GATWAY节点超时 //
 		/* MPU端故障 */
     {B156D12, 0x956D12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      2000,     500},    // GPS模块故障
     {B156F12, 0x956F12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      3000,     500},    // 4G模块故障
