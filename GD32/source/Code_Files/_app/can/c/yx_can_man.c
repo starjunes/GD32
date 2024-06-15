@@ -59,7 +59,7 @@
 #define NONE_TYPE   0
 #define UDS_TYPE    1
 #define J1939_TYPE  2
-#define PERIOD_MSG1              0x18FDA94A   /* FM_1(·À²ð±¨ÎÄ) */
+#define PERIOD_MSG1              0x18FDA94A   /* WCM1³µÁªÍø×´Ì¬ */
 #define PERIOD_MSG2              0x18FFDA4A   /* FM_2(·À²ð±¨ÎÄ) */
 #define PERIOD_MSG3              0x18FECA4A   /* DM1_FM(¹ÊÕÏ±¨ÎÄ) */
 
@@ -131,7 +131,7 @@ static PERIOD_SEND_T s_period_can,s_period_uds,s_spcial_uds;  // ¹Ì¶¨´ÎÊýÖÜÆÚ±¨Î
 
 static PERIOD_MSG_T s_period_msg[] = {    
     {0, 100,   1, PERIOD_MSG1, {0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}}, 
-		{0, 100,   1, PERIOD_MSG2, {0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},  
+		{0, 100,   1, PERIOD_MSG2, {0xF7, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},  
     {0, 0xffff,1, PERIOD_MSG3, {0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF}},
 };
 #define PERIOD_NUM    (sizeof(s_period_msg) / sizeof(s_period_msg[0]))
