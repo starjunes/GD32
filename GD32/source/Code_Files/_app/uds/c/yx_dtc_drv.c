@@ -192,8 +192,8 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
     /* 基础故障类型 */
     {U000100, 0xC00100, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON | EN_MASK_VOL_NORMAL),                      0, 40, BusIsOff ,         1,        1},     // CAN1 BusOff
     {U003700, 0xC03700, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON | EN_MASK_VOL_NORMAL),                      0, 40, BusIsOff ,         1,        1},     // CAN1 BusOff
-    {B157216, 0x957216, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, MainPowerIsLow,    200,     200},     // 终端电源电压欠压(<19.5v故障，恢复到20.5v解除故障)
-    {B157F00, 0x957F00, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, BatPowerIsLow,     200,     200},    // 备用电池电压低(<3v故障，恢复到3.3解除故障)
+    {B157216, 0x957216, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, MainPowerIsLow,    6000,    50},     // 终端电源电压欠压(<19.5v故障，恢复到20.5v解除故障)
+    {B157F00, 0x957F00, (EN_MASK_85_IS_SET | EN_MASK_KL15_ON),                                           0, 40, BatPowerIsLow,     10,      50},    // 备用电池电压低(<3v故障，恢复到3.3解除故障)
     /* 节点丢失故障类型 */
     {U000200, 0xC00200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // 所有伙伴ECU超时（J6低配节点超时）  
     {U010000, 0xC10000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // EMS节点超时  
@@ -210,21 +210,20 @@ static const DTC_REG_T s_obj_dtc_tbl[] = {
 		{B158000, 0x958000, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost,        1,         1},     // VIST节点USB通讯失效 //
 		{U014600, 0xC14600, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_NO_BUS_OFF | EN_MASK_KL15_ON), 0, 40, NodeIsLost, 			 1, 				1}, 		// GATWAY节点超时 //
 		/* MPU端故障 */
-    {B156D12, 0x956D12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},    // GPS模块故障
-    {B156F12, 0x956F12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},    // 4G模块故障
-    {B157112, 0x957112, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},    // SIM卡故障
-    {B157B00, 0x957B00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // T-box 未定位
-    //{B157E00, 0x957E00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // T-box 专网拨号不成功
-    {B157800, 0x957800, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六模块获取发动机VIN失败
-    {B157A00, 0x957A00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六模块获取发动机VIN不一致
-		{B157E00, 0x957E00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 1, 			 10}, 	 //  T-box 专网拨号不成功
-		{B158200, 0x958200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},   // 国六企业平台连接失败
-    {B158300, 0x958300, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        10},    // 国六企业平台连接失败
-		{B157511, 0x957511, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 200,			 500},	 // 4G天线短路
-		{B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      200,      500},   // 4G天线开路
-    {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   200,		   500},	 // 终端检测gps开路
-		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   200,		   500},	 // 终端检测gps短路
-    {B157900, 0x957900, (EN_MASK_85_IS_SET /*| EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON*/),                      0, 40, MiscIsDetect,      200,      200},    // 国六模块电源线束断开
+    {B156D12, 0x956D12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      2000,     500},    // GPS模块故障
+    {B156F12, 0x956F12, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      3000,     500},    // 4G模块故障
+    {B157112, 0x957112, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      3000,     500},    // SIM卡故障
+    {B157B00, 0x957B00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1000,      1 },    // T-box 未定位
+    {B157800, 0x957800, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        1  },    // 国六模块获取发动机VIN失败
+    {B157A00, 0x957A00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        1  },    // 国六模块获取发动机VIN不一致
+		{B157E00, 0x957E00, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 3, 			 1  }, 	 //  T-box 专网拨号不成功
+		{B158200, 0x958200, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        1  },   // 国六企业平台连接失败
+    {B158300, 0x958300, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      1,        1  },    // 国六企业平台连接失败
+		{B157511, 0x957511, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON), 										 0, 40, MiscIsDetect, 		 3000,		 500},	 // 4G天线短路
+		{B157513, 0x957513, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),                      0, 40, MiscIsDetect,      3000,     500},   // 4G天线开路
+    {B156E11, 0x956E11, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),	                     0, 40, MiscIsDetect, 	   2000,		 500},	 // 终端检测gps开路
+		{B156E13, 0x956E13, (EN_MASK_85_IS_SET | EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON),		                   0, 40, MiscIsDetect, 	   2000,		 500},	 // 终端检测gps短路
+    {B157900, 0x957900, (EN_MASK_85_IS_SET /*| EN_MASK_VOL_NORMAL | EN_MASK_KL15_ON*/),                  0, 40, MiscIsDetect,      1000,     10 },  // 国六模块电源线束断开
 };
 
 /*
