@@ -457,6 +457,7 @@ void LightSleep(void)
     bal_Pullup_CAN0STB();
     bal_Pullup_CAN1STB();
     bal_Pullup_CAN2STB();
+		dal_CAN_WakeReset_Period();
 
 	#if EN_NEW_BAT_CTL > 0
 	if (s_normalmode == TRUE) {

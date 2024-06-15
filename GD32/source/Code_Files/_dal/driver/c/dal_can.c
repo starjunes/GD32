@@ -1289,6 +1289,34 @@ void dal_CAN_Reset_PeriodSendPeriod(void)
       	}
     }
 }
+/*******************************************************************
+ ** 函数名:     dal_CAN_WakeReset_Period
+ ** 函数描述:   周期性重新计数
+ ** 参数:        无
+ ** 返回:        无
+ ********************************************************************/
+void dal_CAN_WakeReset_Period(void) 
+{
+    INT8U i, j, k;
+ 
+    for (i = 0; i < MAX_CANCHAN; i++) {
+      	k = 0;
+      	for (j = 0; j < MAX_RXIDOBJ; j++) {
+        		if (k >= s_msg_period[i].sdobjused) {
+        			break;
+        		}
+        		if (s_msg_period[i].idcbt[j].isused) {
+							  if(s_msg_period[i].idcbt[j].id == 0x18FDA94A) {
+								    s_msg_period[i].idcbt[j].timecnt = s_msg_period[i].idcbt[j].period - 1; 
+								} else if(s_msg_period[i].idcbt[j].id == 0x18FFDA4A) {
+								    s_msg_period[i].idcbt[j].timecnt = s_msg_period[i].idcbt[j].period - 2; 
+								}
+								k++;
+        		}						
+      	}
+    }
+}
+
 #if 0
 /*******************************************************************
 ** 函数名:     ChickCanID
