@@ -393,8 +393,9 @@ __attribute__ ((section ("IRQ_HANDLE"))) static void USER_CAN0_RX0_IRQHandler(vo
         CAN_msg.type = 0; // 数据帧
     }
 
-		if(RxMessage.rx_dlen != 8) {
+		if(RxMessage.rx_dlen > 8) {
 		    RxMessage.rx_dlen = 8;
+				CAN_msg.len = RxMessage.rx_dlen;
 		} 
 
     MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
@@ -435,8 +436,9 @@ __attribute__ ((section ("IRQ_HANDLE"))) static void USER_CAN1_RX1_IRQHandler(vo
         CAN_msg.type = 0; // 数据帧
     }
 		
-		if(RxMessage.rx_dlen != 8) {
+		if(RxMessage.rx_dlen > 8) {
 		    RxMessage.rx_dlen = 8;
+				CAN_msg.len = RxMessage.rx_dlen;
 		} 
     MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
     WriteBlockRoundBuf(&s_can_round, (INT8U*)&CAN_msg, sizeof(CAN_msg));
