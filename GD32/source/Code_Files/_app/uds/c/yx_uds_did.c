@@ -1312,6 +1312,21 @@ INT16U YX_Get_VehSpeed(void)
 {
     return s_vehSpeed;
 }
+/*****************************************************************************
+**  函数名:   YX_Notice_Reset
+**  函数描述: 通知复位
+**  参数:     无
+**  返回:     无
+*****************************************************************************/
+void YX_Notice_Reset(void)
+{
+    STREAM_T* wstrm;
+		
+		wstrm = bal_STREAM_GetBufferStream();
+		bal_WriteHWORD_Strm(wstrm, CLIENT_CODE);//CLIENT_CODE
+		bal_WriteBYTE_Strm(wstrm, 0x32);
+		YX_COM_DirSend(CLIENT_FUNCTION_UP_REQ, bal_GetStrmStartPtr(wstrm), bal_GetStrmLen(wstrm)); 
+}
 /*******************************************************************
 ** 函数名: YX_UDS_DID_Init
 ** 函数描述:DID数据初始化

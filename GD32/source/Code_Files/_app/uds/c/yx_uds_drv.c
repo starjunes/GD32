@@ -513,6 +513,7 @@ static void UDS_SID11_EcuReset(INT8U resettype)
             if (s_uds_module.reset_type == RESET_HARD) {
 							  if(resettype == RESET_HARD) {
                     YX_UDS_NegativeResponse(SID_11, NRC_78);
+										YX_Notice_Reset();
 							  }
                 /* 复位前先更新dtc的pp参数 */
                 YX_DTC_PP_Update_When_Reset();  

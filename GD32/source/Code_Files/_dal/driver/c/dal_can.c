@@ -392,10 +392,14 @@ __attribute__ ((section ("IRQ_HANDLE"))) static void USER_CAN0_RX0_IRQHandler(vo
     } else {
         CAN_msg.type = 0; // 数据帧
     }
-		if(RxMessage.rx_dlen <= 8) { 
-        MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
-        WriteBlockRoundBuf(&s_can_round, (INT8U*)&CAN_msg, sizeof(CAN_msg));
+
+		if(RxMessage.rx_dlen > 8) {
+		    RxMessage.rx_dlen = 8;
 		}
+		
+    MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
+    WriteBlockRoundBuf(&s_can_round, (INT8U*)&CAN_msg, sizeof(CAN_msg));
+	
 }
 
 /*******************************************************************
@@ -430,11 +434,13 @@ __attribute__ ((section ("IRQ_HANDLE"))) static void USER_CAN1_RX1_IRQHandler(vo
     } else {
         CAN_msg.type = 0; // 数据帧
     }
-		if(RxMessage.rx_dlen <= 8) { 
-        MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
-        WriteBlockRoundBuf(&s_can_round, (INT8U*)&CAN_msg, sizeof(CAN_msg));
-		}
-
+		
+		if(RxMessage.rx_dlen > 8) {
+		    RxMessage.rx_dlen = 8;
+		} 
+    MMI_MEMCPY(CAN_msg.databuf, 8, RxMessage.rx_data, RxMessage.rx_dlen);
+    WriteBlockRoundBuf(&s_can_round, (INT8U*)&CAN_msg, sizeof(CAN_msg));
+		
 #if EN_LOCK > 0
 
     #if EN_CAN_EXCHG > 0
