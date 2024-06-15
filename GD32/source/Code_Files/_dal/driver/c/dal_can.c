@@ -283,7 +283,7 @@ void SendCANMsg_Period(void)
 
     if (++pried >= 200) {
         pried = 0;
-        #if DEBUG_CAN > 0
+        #if DEBUG_CAN > 1
         Debug_SysPrint("<**** [can测试], (发送中断):%d, (发送接口):%d, (接收扫描入口):%d, (接收中断):%d ****>\r\n",sendcnttest1,sendcnttest2,recvcnt1,recvcnt2);
         #endif
     }

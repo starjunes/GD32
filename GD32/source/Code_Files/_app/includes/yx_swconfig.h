@@ -63,6 +63,7 @@
 #define EN_UDS_TRANS            0          /* 1:开启UDS下载功能 0:关闭UDS下载功能 */ 
 #define SOFT_BUSOFF_RECOBRY     1          /* 1:软件恢复BUSOFF  0:自动恢复busoff */
 #define ACC_OFF_STOP_SEND       1          /* 1:开启acc off 1000ms内关闭报文发送  0:关闭此功能 */
+#define EN_CAN_FILTER           0          /* 0:MCU自配置滤波   1:MCU配置滤波原有逻辑  */
 /*
 *****************************************************************************************
 * 定义全局宏

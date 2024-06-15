@@ -1756,16 +1756,18 @@ void CanLocateFiltidSet(void)
     for (i = 0; i < MAX_CANIDS; i++) {                      /* 清除所有配置过的ID滤波对象 */
         SetIDPara(&canid, i, 1);
     }
-
+    #if EN_CAN_FILTER  > 0
     PORT_ClearCanFilter(LOCK_CAN_CH);                           /* 清除消息对象 */
-
+    #endif
     idnum = sizeof(s_filtid)/sizeof(s_filtid[0]);
     #if DEBUG_CAN > 0
         debug_printf("idnum = %d\r\n",idnum);
     #endif
     //idnum = 4;
     for (i = 0; i < idnum; i++) {
+			  #if EN_CAN_FILTER  > 0
         PORT_SetCanFilter(s_filtid[i].chn, 1,s_filtid[i].filtrid, s_filtid[i].filtrid_mask);
+				#endif
         canid.id = s_filtid[i].filtrid;
         canid.stores = 1;
         canid.isused = TRUE;
@@ -2465,7 +2467,6 @@ void Lock_Init(void)
     bal_pp_ReadParaByID(KMS_LOCK_PARA_,(INT8U *)&s_kms_obj, sizeof(KMS_LOCK_OBJ_T));
     #endif
     CanLocateFiltidSet();
-    
     s_lock_tmr = OS_InstallTmr(TSK_ID_OPT, 0, LockTmrProc);
     SecurityKeySet(s_sclockpara.securityKey, s_sclockpara.securityKeylen);
     ACCON_HandShake();

@@ -62,6 +62,14 @@
 #define PERIOD_MSG1              0x18FDA94A   /* WCM1车联网状态 */
 #define PERIOD_MSG2              0x18FFDA4A   /* FM_2(防拆报文) */
 #define PERIOD_MSG3              0x18FECA4A   /* DM1_FM(故障报文) */
+#define MAX_FILTER_ID            14           /* 需要小于14 */
+#define   CAN_FILTER_ON_WAIT     60          /* 等待5s */
+typedef enum {
+    CAN_FILTER_CONFIG_INIT = 0x00,           /* 尚未配置模式 */
+    CAN_FILTER_CONFIG_ON   = 0x01,           /* 配置滤波模式 */
+    CAN_FILTER_CONFIG_OFF  = 0x02,           /* 完全透传模式 */
+    CAN_FILTER_CONFIG_WAIT = 0x03,            /* 完全透传模式 */
+} CAN_FILTER_CONFIG_E;
 
 typedef struct {
     INT8U   chn;
@@ -127,7 +135,17 @@ typedef struct {
     INT8U   send_cnt;		// 已发送次数
     INT32U recvid;
 } PERIOD_SEND_T;
+
+typedef struct {
+    INT8U  modify;
+    INT32U filterid;
+    INT32U filterid_mask;
+} FILTER_CAN_CFG_T;
+
 static PERIOD_SEND_T s_period_can,s_period_uds,s_spcial_uds;  // 固定次数周期报文
+static CAN_FILTER_CONFIG_E s_can_filter_config = CAN_FILTER_CONFIG_INIT; 
+static INT8U  s_can_filter_modify = FALSE;
+static INT8U s_tmr_modifycan;
 
 static PERIOD_MSG_T s_period_msg[] = {    
     {0, 100,   1, PERIOD_MSG1, {0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}}, 
@@ -148,6 +166,87 @@ static RSP_FC_T s_rsp_fc[MAX_UDS_GROUPS] = {
     {FALSE,  FALSE, 0, UDS_PHSCL_RESPID, FUNC_REQID},
     
 };
+static FILTER_CAN_CFG_T s_filter_id_cfg[MAX_CAN_CHN -1][MAX_FILTER_ID] = {   
+    /* 网管报文 */           /*  */
+   { {0, 0x40000000, 0xA3000000},
+     {0, 0x18fecaa1, 0xebf00018},
+     {0, 0x18f00f00, 0xf3f00008},
+     {0, 0x19ff2000, 0xeaf000c0},
+     {0, 0x18f00010, 0xffd000c0},
+     {0, 0x18ff4ff4, 0xebf00008},
+     {0, 0x18f0000f, 0xfff000e0},
+     {0, 0x18feee00, 0xe3f00008},
+     {0, 0x18fe5600, 0xebe100f4},
+     {0, 0x18feca00, 0xfbffffff},
+     {0, 0x18f2f1f9, 0xfffff9ff},
+     {0, 0x19ff3500, 0xfed800ff},
+     {0, 0x18ff30a0, 0xffffffff},
+		 {0, 0x18daf100, 0xffad8005}
+	 },
+	 { {0, 0x18ebfff9, 0xfff8ffff},
+	   {0, 0x18f2f1f9, 0xfffff9ff},
+	   {0, 0x18daf6f1, 0xffffffff},
+	   {0, 0x18db33f1, 0xFFFFFFFF},
+	   {0, 0x18daf100, 0xFFFFFFFF},
+		 {0, 0x7f0,      0xFFFFFFFF},
+		 {0, 0x18daf100, 0xffad8005},
+		 {0, 0x00,       0x00      },
+		 {0, 0x00,       0x00      },
+		 {0, 0x00,       0x00      },
+     {0, 0x00,       0x00      },
+     {0, 0x00,       0x00      },
+     {0, 0x00,       0x00      },
+     {0, 0x00,       0x00      }
+	 },	 
+};
+static INT16U s_can_filter_count = 0;
+/********************************************************************************
+**  函数名:     PORT_SetCanFilter
+**  函数描述:   CAN滤波设置
+**  参数:       [in] chn:通道号
+**              [in] fmat: 帧格式，0：标准帧，1：扩展帧
+**              [in] filtid: 滤波id
+**              [in] maskid: 掩码id
+**  返回:       设置结果
+********************************************************************************/
+void YX_CAN_FilterModify(INT8U com, INT32U filtid, INT32U maskid, INT8U onoff)
+{
+    INT8U i;
+		
+    if(com > (MAX_CAN_CHN -1))    return;
+				
+    if(onoff == CAN_FILTER_ON) { 
+				#if DEBUG_CAN > 0
+        debug_printf("chn=%d filtid=%x maskid=%x onoff=%d\r\n",com,filtid, maskid, onoff);
+        #endif
+    		for(i = 0; i < MAX_FILTER_ID; i++) {
+    			  if((s_filter_id_cfg[com][i].modify == CAN_FILTER_OFF) &&  
+						    ((s_filter_id_cfg[com][i].filterid  != filtid)||(s_filter_id_cfg[com][i].filterid_mask != maskid))) {
+    		        
+    						s_filter_id_cfg[com][i].filterid      = filtid;
+    				    s_filter_id_cfg[com][i].filterid_mask = maskid;
+    						s_filter_id_cfg[com][i].modify        = CAN_FILTER_ON;
+								s_can_filter_modify       = true;
+								s_can_filter_config       = CAN_FILTER_CONFIG_WAIT;
+								s_can_filter_count        = CAN_FILTER_ON_WAIT;
+								if(!OS_TmrIsRun(s_tmr_modifycan)) {
+								    OS_StartTmr(s_tmr_modifycan, MILTICK, 1);
+								}
+								break;
+    			  }
+    		}
+    } else {
+				#if DEBUG_CAN > 0
+        debug_printf("YX_CAN_FilterModify Clean chn = %d \r\n",com);
+        #endif 
+        for(i = 0; i < MAX_FILTER_ID; i++) {
+    			  if((s_filter_id_cfg[com][i].modify == CAN_FILTER_ON)) {
+    						s_filter_id_cfg[com][i].modify = CAN_FILTER_OFF;
+    			  }
+    		}
+    }
+}
+
 /*****************************************************************************
 **  函数名:  SetFcFlagBySendid
 **  函数描述: 根据uds发送id设置流控响应标志
@@ -1139,7 +1238,7 @@ void CANDataHdl(CAN_DATA_HANDLE_T *CAN_msg)
 		CAN_TxData(data, FALSE,CAN_msg->channel);
 		return ;
 	}*/
-    #if DEBUG_CAN > 0
+    #if DEBUG_CAN > 1
     debug_printf("can:%d, 接收到id = %x ",CAN_msg->channel, id);
     printf_hex(CAN_msg->databuf, CAN_msg->len);
     #endif
@@ -1388,7 +1487,11 @@ static BOOLEAN SetID(INT8U idnums, INT8U *idpara, CAN_FILTERCTRL_E onoff, INT8U 
 
     idindex = 0;
     if (onoff == CAN_FILTER_OFF) {
+			  #if EN_CAN_FILTER > 0
         PORT_ClearCanFilter((CAN_CHN_E)channel);
+				#else
+				YX_CAN_FilterModify(channel, 0xFFFFFFFF, 0xFFFFFFFF,CAN_FILTER_OFF);
+				#endif
         return TRUE;
     }
     for (i = 0; i < idnums; i++) {
@@ -1410,10 +1513,14 @@ static BOOLEAN SetID(INT8U idnums, INT8U *idpara, CAN_FILTERCTRL_E onoff, INT8U 
         } else {
         	frameformat =FMAT_EXT;
         }
+				#if EN_CAN_FILTER > 0
         if (!PORT_SetCanFilter((CAN_CHN_E)channel, frameformat, canid.id, 0xffffffff)){
             return FALSE;
         }
-
+				#else
+				YX_CAN_FilterModify((CAN_CHN_E)channel, canid.id, 0xffffffff,CAN_FILTER_ON);
+        #endif
+				
         if (canid.mode == CAN_COVER_OLD) {
             k = canid.stores;
         } else {
@@ -1479,7 +1586,11 @@ static BOOLEAN SetScreenID(INT8U idnums, INT8U *idpara, CAN_FILTERCTRL_E onoff, 
 
     idindex = 0;
     if (onoff == CAN_FILTER_OFF) {
+			  #if EN_CAN_FILTER > 0
         PORT_ClearCanFilter((CAN_CHN_E)channel);
+				#else
+				YX_CAN_FilterModify(channel, 0xFFFFFFFF, 0xFFFFFFFF,CAN_FILTER_OFF);
+				#endif
     }
     tempi = 2;
     for (i = 0; i < idnums; i++) {
@@ -1495,13 +1606,16 @@ static BOOLEAN SetScreenID(INT8U idnums, INT8U *idpara, CAN_FILTERCTRL_E onoff, 
          #if DEBUG_CAN > 0
             debug_printf_dir("SetID:%x,%x,%d\r\n",filter_id,screen_id,frameformat);
         #endif
+				#if EN_CAN_FILTER > 0
         if (!PORT_SetCanFilter((CAN_CHN_E)channel, frameformat, filter_id, screen_id)) {
             #if DEBUG_CAN > 0
                 debug_printf_dir("CAN配置失败\r\n");
             #endif
             return FALSE;
         }
-
+        #else
+				YX_CAN_FilterModify(channel, filter_id, screen_id,CAN_FILTER_ON);
+				#endif
         idcnt = idpara[tempi++];
         #if DEBUG_CAN > 0
             debug_printf_dir("idcnt%d\r\n",idcnt);
@@ -1873,7 +1987,7 @@ void BusOnOffReqHdl(INT8U mancode,INT8U command, INT8U *data, INT16U datalen)
         return;
     }
 
-
+    #if EN_CAN_FILTER > 0
     if (0x01 == data[1]) {                                                 /* 开启总线通信 */
          PORT_CanEnable((CAN_CHN_E)channel, true);
          s_can_para[channel].onoff = true;
@@ -1897,7 +2011,7 @@ void BusOnOffReqHdl(INT8U mancode,INT8U command, INT8U *data, INT16U datalen)
         YX_COM_DirSend( BUS_ONOFF_CTRL_ACK, ack, 3);
         return;
     }
-
+    #endif
     ack[2] = 0x01;
     YX_COM_DirSend( BUS_ONOFF_CTRL_ACK, ack, 3);
 }
@@ -2052,9 +2166,9 @@ void CANWorkModeSetHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen)
         YX_COM_DirSend( WORKMODE_SET_CAN_ACK, ack, 3);
         return;
     }
-
+    #if EN_CAN_FILTER > 0
     PORT_CanEnable((CAN_CHN_E)channel,false);//先关掉，设置完参数再开启，否则会设置失败
-
+    #endif
     #if DEBUG_CAN > 0
         debug_printf_dir("CAN%d模式设置:%d\r\n",data[0], data[1]);
     #endif
@@ -2081,6 +2195,7 @@ void CANWorkModeSetHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen)
     for (i = 0; i < MAX_CANIDS; i++) {                      /* 清除所有配置过的ID滤波对象 */
         SetIDPara(&canid, i, channel);
     }
+		#if EN_CAN_FILTER > 0
     PORT_ClearCanFilter((CAN_CHN_E)channel);                  /* 清除消息对象 */
 
   //  YX_COM_DirSend( WORKMODE_SET_CAN_ACK, ack, 3);
@@ -2098,6 +2213,10 @@ void CANWorkModeSetHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen)
         ack[2] = 0x05;
         YX_COM_DirSend( WORKMODE_SET_CAN_ACK, ack, 3);
     }
+		#endif
+		#else
+		ack[2] = 0x01;
+    YX_COM_DirSend( WORKMODE_SET_CAN_ACK, ack, 3);
    #endif
 }
 
@@ -2149,9 +2268,11 @@ void CANFilterIDSetReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datal
             for (i = 0; i < MAX_CANIDS; i++) {                      /* 清除所有配置过的ID滤波对象 */
                 SetIDPara(&canid, i, channel);
             }
-
+            #if EN_CAN_FILTER > 0
             PORT_ClearCanFilter((CAN_CHN_E)channel);                           /* 清除消息对象 */
-
+            #else
+						YX_CAN_FilterModify(channel, 0xFFFFFFFF, 0xFFFFFFFF,CAN_FILTER_OFF);
+            #endif
             if (SetID(data[2], &data[1], CAN_FILTER_ON, channel)) {
                 ack[2] = 0x01;
             } else {
@@ -2347,7 +2468,11 @@ void CANScreenIDSetReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datal
 			for (i = 0; i < MAX_CANIDS; i++) {  //清除所有配置过的ID滤波对象
 				SetIDPara(&canid, i, channel);
 			}
+		  #if EN_CAN_FILTER  > 0
 			PORT_ClearCanFilter((CAN_CHN_E)channel);
+			#else
+			YX_CAN_FilterModify(channel, 0xFFFFFFFF, 0xFFFFFFFF,CAN_FILTER_OFF);
+			#endif
 			ack[2] = 0x01;
 			if (SetScreenID(data[2], &data[1], CAN_FILTER_ON, channel)) {
 				ack[2] = 0x01;
@@ -2930,6 +3055,40 @@ void Control_IdleWarmup(BOOLEAN onoff)
 		    PORT_CanSend(&candata);
 		}
 }
+
+/*******************************************************************
+** 函数名: YX_MMI_CanLocalFilter
+** 描述: 本地打开CAN模块并滤波
+** 参数: 无
+** 返回: 无
+********************************************************************/
+void YX_MMI_CanLocalFilter(void)
+{
+    INT8U i,j;
+
+		s_can_para[0].baud = CAN_BAUD_250K;
+    s_can_para[0].frameformat= FMAT_EXT;
+    s_can_para[0].mode = CAN_MODE_REPORT;
+	
+    s_can_para[1].baud = CAN_BAUD_500K;
+    s_can_para[1].frameformat= FMAT_EXT;
+    s_can_para[1].mode = CAN_MODE_REPORT;
+		
+    for (i = 0; i < MAX_CAN_CHN-1; i++) {
+			  if(PORT_OpenCan((CAN_CHN_E)i, s_can_para[i].baud, s_can_para[i].frameformat)){
+            s_can_para[i].onoff = true;
+        } else {
+            s_can_para[i].onoff = false;
+				}
+				PORT_ClearCanFilter((CAN_CHN_E)i);
+				for(j = 0; j < MAX_FILTER_ID; j++) {
+					  if(s_filter_id_cfg[i][j].filterid == 0x00)  continue;
+				    CAN_RxFilterConfig(s_filter_id_cfg[i][j].filterid, s_filter_id_cfg[i][j].filterid_mask,CAN_FILTER_ON,i);
+				}
+				PORT_CanEnable((CAN_CHN_E)i, true);
+    }
+}
+
 /*******************************************************************************
  ** 函数名:    YX_CAN_Init
  ** 函数描述:  CAN通讯驱动模块提前初始化
@@ -2942,6 +3101,7 @@ void YX_CAN_PreInit(void)
     CAN_DATA_SEND_T candata;
 		
     PORT_InitCan();	
+		#if EN_CAN_FILTER  > 0
     s_can_para[0].baud = CAN_BAUD_250K;
     s_can_para[0].frameformat= FMAT_EXT;
     s_can_para[0].mode = CAN_MODE_REPORT;
@@ -2963,6 +3123,9 @@ void YX_CAN_PreInit(void)
         #endif
 				PORT_CanEnable((CAN_CHN_E)i, true);
 		}
+		#else
+		YX_MMI_CanLocalFilter();
+		#endif
 		bal_CAN0STB_Init();
 
     for (i = 0; i < (PERIOD_NUM -1); i++) { 			
@@ -2978,6 +3141,39 @@ void YX_CAN_PreInit(void)
 				#endif
 				candata.period = s_period_msg[i].period;
 				PORT_CanSend(&candata);
+    }
+}
+static void YX_CAN_SetFilter_Hdl(void *pdata)
+{
+    //static INT8U j;
+			
+    if( Sal_CanConfig_Allowed() && (s_can_filter_config == CAN_FILTER_CONFIG_ON)) return;
+		
+    switch(s_can_filter_config) {
+        case CAN_FILTER_CONFIG_ON:
+					   #if DEBUG_CAN > 0
+             debug_printf("s_can_filter_config %d\r\n",s_can_filter_config);
+             #endif
+             YX_MMI_CanLocalFilter();
+             s_can_filter_config = CAN_FILTER_CONFIG_INIT;
+						 if(OS_TmrIsRun(s_tmr_modifycan)) {
+						     OS_StopTmr(s_tmr_modifycan);
+						 }
+		    break;
+				
+				case CAN_FILTER_CONFIG_WAIT:
+					   if(s_can_filter_modify) {
+    					   if((--s_can_filter_count) == 0) {
+								 	  #if DEBUG_CAN > 0
+                    debug_printf("s_can_filter_config %d\r\n",s_can_filter_config);
+                    #endif
+        					  s_can_filter_count = 0;
+        						s_can_filter_modify = FALSE;
+        				    s_can_filter_config = CAN_FILTER_CONFIG_ON;
+    		         }
+					   	}
+        default:
+				break;
     }
 }
 /*******************************************************************************
@@ -3042,6 +3238,7 @@ void YX_CAN_Init(void)
 				MMI_MEMCPY(candata.Data, 8, s_period_msg[i].canData,8);
 				PORT_CanSend(&candata);
 		}*/
+		s_tmr_modifycan = OS_InstallTmr(TSK_ID_OPT,0, YX_CAN_SetFilter_Hdl);
     #if EN_UDS > 0
 		YX_UDS_Init();
 		#endif

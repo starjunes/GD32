@@ -77,7 +77,8 @@ static BOOLEAN             s_can_recv_sw = TRUE;
 static INT8U               s_udstmr;
 static UDS_MODULE_STATUS_T s_uds_module;
 static UDS_ERR_CNT_T       s_uds_fault_cnt = {0};
-
+static INT16U              s_filtrtid_delay = 0;
+static BOOLEAN             s_filtrid_onoff = FALSE;
 #if UDS_27_NRC_78 == 0
 #define UDS_TIMEOUT        500
 static INT16U              s_uds_timeout = 0;
@@ -985,7 +986,14 @@ static void UDSTmrProc(void *pdata)
     pdata = pdata;
     /* 通过累计模拟随机数 */
     s_rand_cnt++;
-
+    if(s_filtrid_onoff ) {
+		    if(--s_filtrtid_delay == 0x00){
+				    s_filtrid_onoff = FALSE;
+						#if EN_DEBUG > 1
+						debug_printf("s_filtrtid_delay4 = %d",s_filtrtid_delay);
+						#endif
+		    }
+    }
     if (s_uds_module.en_session) {
         if (++s_uds_module.session_cnt >= NOT_SESSION_DEFAULT_TIME) {
             s_uds_module.session_cnt = 0;
@@ -1134,7 +1142,11 @@ BOOLEAN UDS_SingleFrameHdl(INT8U* data, INT8U datalen)
     if ((id != UDS_PHSCL_REQID) && (id != FUNC_REQID)) {
         return FALSE;
     }
-
+    s_filtrtid_delay = 100;
+		s_filtrid_onoff  = TRUE;
+		#if EN_DEBUG > 1
+		debug_printf("s_filtrtid_delay2 = %d",s_filtrtid_delay);
+		#endif
     return UDS_CanDataHdl(id, CAN_msg->databuf, CAN_msg->len);
 }
 /*******************************************************************
@@ -1149,6 +1161,11 @@ BOOLEAN YX_UDS_MultFrameRecv(INT32U id, INT8U* data, INT16U len)
 {
     // 只有物理寻址有多帧数据
     if (id != UDS_PHSCL_REQID) return FALSE;
+		s_filtrtid_delay = 100;
+		s_filtrid_onoff = TRUE;
+		#if EN_DEBUG > 1
+		debug_printf("s_filtrtid_delay = %d",s_filtrtid_delay);
+		#endif
 
     return YX_UDS_Recv(TRUE, id, data, len);
 }
@@ -1625,6 +1642,16 @@ BOOLEAN YX_UDS_GetCanRecvEnableSta(void)
     return s_can_recv_sw;
 }
 
+/*******************************************************************
+** 函数名:   Sal_CanConfig_Allowed
+** 函数描述: 允许配置滤波
+** 参数: 无
+** 返回: 无
+********************************************************************/
+BOOLEAN Sal_CanConfig_Allowed(void)
+{
+    return s_filtrid_onoff;
+}
 /*******************************************************************
 ** 函数名: YX_UDS_Init
 ** 函数描述: 统一诊断服务初始化

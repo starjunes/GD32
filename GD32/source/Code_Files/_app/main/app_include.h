@@ -41,7 +41,7 @@
 #define DEBUG_PRINT          0                                       /* 打印机功能模块调试编译开关 */
 #define DEBUG_EXPDATA        0                                       /* 数据导出模块调试编译开关 */
 #define DEBUG_ICCARD         0                                       /* IC卡模块调试编译开关 */
-#define DEBUG_CAN            0                                       /* CAN模块调试编译开关 */
+#define DEBUG_CAN            1                                       /* CAN模块调试编译开关 */
 #define DEBUG_BT             0                                       /* 蓝牙模块调试编译开关 */
 #define DEBUG_PM             0                                       /* 协议机模块调试编译开关 */
 #define DEBUG_RFID           0                                       /* RFID调试 */
