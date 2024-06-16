@@ -736,7 +736,7 @@ static void UDS_SID27_Level(INT8U accesstype, INT8U* data, INT8U len)
             }
             
             if (s_uds_module.en_access_wait) {
-                YX_UDS_NegativeResponse(SID_27, NRC_24);
+                YX_UDS_NegativeResponse(SID_27, NRC_37);
                 break;
             }
             
