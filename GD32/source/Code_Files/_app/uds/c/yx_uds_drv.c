@@ -434,7 +434,9 @@ static void UDS_SID10_DiagnosticSessionControl(INT8U sessiontype)
                 // s_uds_module.reset_type = RESET_HARD;
             }
 						#else
-						YX_UDS_NegativeResponse(SID_10, NRC_12);
+						if(sessiontype == SESSION_PROGRAM) {
+						    YX_UDS_NegativeResponse(SID_10, NRC_12);
+						}
 						#endif
             break;
         case SESSION_EXTENDED:

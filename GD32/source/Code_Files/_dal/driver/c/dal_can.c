@@ -1470,7 +1470,7 @@ void CanBusOffHal(void)
 			 }
 		   #endif
 			 if ((s_can_busoff[chn] == FALSE) && CheckCanIsBusOff(chn)) {
-			     #if DEBUG_BUS_OFF > 0
+			     #if DEBUG_CAN > 0
 					 debug_printf("\r\n CheckCanIsBusOff[%d] = %d 处于BUSOFF状态，准备恢复\r\n", chn, CheckCanIsBusOff(chn));
 				   #endif
 					 s_can_busoff[chn] = TRUE;
@@ -1481,21 +1481,21 @@ void CanBusOffHal(void)
 			 if (s_can_busoff[chn]) {
 			     if (s_can_offcnt[chn] <= 5) {
 					     recover_wait = BUSOFF_RECOVER_FAST_WAIT;
-						   #if DEBUG_BUS_OFF > 1
+						   #if DEBUG_CAN > 0
 							 debug_printf("CAN%d BUSOFF快恢复\r\n", chn);
-							 debug_printf("s_can_para[chn].onoff %d \r\n",s_can_para[chn].onoff);
+							 
 						   #endif
 					 } else {
 							 s_can_offcnt[chn] = 6;
 							 recover_wait = BUSOFF_RECOVER_SLOW_WAIT;
-						   #if DEBUG_BUS_OFF > 1
+						   #if DEBUG_CAN > 0
 							 debug_printf("CAN%d BUSOFF慢恢复\r\n", chn);
 						   #endif
 					 }
 					 s_can_delay[chn]++;
 					
 					 if (s_can_delay[chn] >= recover_wait - 1) {
-						   #if DEBUG_BUS_OFF > 0
+						   #if DEBUG_CAN > 0
 							 debug_printf("s_can_delay[%d] = %d recover_wait = %d\r\n", chn,s_can_delay[chn],recover_wait);
 						   #endif
 							 //s_can_para[chn].onoff = FALSE;
@@ -1513,7 +1513,7 @@ void CanBusOffHal(void)
 				    s_can_delay[chn]++;
 				
 					  if (s_can_delay[chn] >= BUSOFF_CNT_CLEAR_WAIT) {
-						    #if DEBUG_BUS_OFF > 1
+						    #if DEBUG_CAN > 0
 							  debug_printf("CAN%d 恢复后超过5s没有busoff\r\n", chn);
 						    #endif
 							  s_can_delay[chn] = 0;
