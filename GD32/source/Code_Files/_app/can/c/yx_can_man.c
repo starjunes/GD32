@@ -2762,6 +2762,7 @@ void CANDataTransReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen
 						 printf_hex(senddata.Data, sendlen);
 						 debug_printf("CAM_SEND_SPCIAL id %x chn %d %d\r\n",s_spcial_uds.send.can_id,s_spcial_uds.send.channel,s_spcial_uds.period);
 						 #endif
+						 SetFcFlagBySendid(id);
              if (s_spcial_uds.send.can_id < 0x7FF) {
                  s_spcial_uds.recvid = s_spcial_uds.send.can_id + 8;
              } else {
