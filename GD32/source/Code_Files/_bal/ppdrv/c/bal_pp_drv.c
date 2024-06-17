@@ -13,6 +13,7 @@
 *******************************************************************************/
 //#include "yx_includes.h"
 #include "bal_pp_drv.h"
+#include "dal_include.h"
 //#include "bal_pp_reg.h"
 //#include "port_nvrec.h"
 /*
@@ -147,6 +148,9 @@ INT8U bal_pp_ReadParaByID(INT8U id, INT8U *dptr, INT16U rlen)
 ********************************************************************/
 BOOLEAN bal_pp_StoreParaByID(INT8U id, INT8U *sptr, INT16U slen)
 {
+    #if EN_DEBUG > 0
+		debug_printf("bal_pp_StoreParaByID = %d",id);
+		#endif
     StorePubPara(id, sptr);
     return true;
 }

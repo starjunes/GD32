@@ -646,6 +646,7 @@ void SendCF(void)
                         }
                         CAN_TxData(data, FALSE, s_sendpacket[i].channel);
                         s_sendpacket[i].packet_com = FALSE;
+												s_sendpacket[i].sendid = 0x00;
                         s_sendpacket[i].sendcontinue = FALSE;
                         if (s_sendpacket[i].packet_buf != NULL) {
                             PORT_Free(s_sendpacket[i].packet_buf);
@@ -1898,6 +1899,7 @@ static void PacketTimeOut(void* pdata)
                          s_sendpacket[i].wait_fc_time_out = 0;
 												 s_sendpacket[i].wait_fc = false;
 												 s_sendpacket[i].packet_com = FALSE;
+												 s_sendpacket[i].sendid = 0x00;
                          s_sendpacket[i].sendcontinue = FALSE;
                          if (s_sendpacket[i].packet_buf != NULL ) {
                             PORT_Free(s_sendpacket[i].packet_buf);
@@ -2090,7 +2092,7 @@ void CANCommParaSetReqHdl(INT8U mancode, INT8U command,INT8U *data, INT16U datal
 			return;
 		}
 		// ±£´æ²¨ÌØÂÊ
-		CanBaudSet(s_can_para[channel].baud, channel);
+		//CanBaudSet(s_can_para[channel].baud, channel);
 		
 		switch (data[2]) {
 		case 0x01:
