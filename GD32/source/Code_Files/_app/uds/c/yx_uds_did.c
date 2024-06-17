@@ -723,7 +723,18 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
         return FALSE;
         }				 
         break;
-        
+        case 0x1007:
+        if(data[0] < 0x20) {
+				    return FALSE;
+        }
+				if((data[0] == 0x20) && (data[1] < 0x16)) {
+					  return FALSE;
+				}
+				
+				if((data[2] == 0x00) || (data[3] == 0x00)) {
+					  return FALSE;
+				}
+        break;
         default:
         break;
     }
