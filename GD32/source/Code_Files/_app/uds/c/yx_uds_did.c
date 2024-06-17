@@ -598,7 +598,7 @@ void YX_EXT_PRO_Send(INT8U type, INT16U flow, INT8U* data, INT16U len)
 ********************************************************************/
 static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
 {
-    INT8U j;
+    INT8U j,a = FALSE, b= FALSE;
     INT16U phy_range;
     
     switch (did) {
@@ -733,6 +733,18 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
 				
 				if((data[2] == 0x00) || (data[3] == 0x00)) {
 					  return FALSE;
+				}
+        break;
+				case 0x1003:
+				for (j = 0; j < len; j++) {
+          if(data[j] == 0x2e) {
+  				   a = true;
+          } else if(data[j] == 0x3a) {
+             b = true;
+          }
+				}
+				if((a == FALSE) || (b == FALSE)) {
+				    return FALSE;
 				}
         break;
         default:
