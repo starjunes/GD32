@@ -1308,6 +1308,7 @@ void dal_CAN_WakeReset_Period(void)
     INT8U i, j, k;
  
     for (i = 0; i < MAX_CANCHAN; i++) {
+			  DAL_CAN_ClearBuf(i);
       	k = 0;
       	for (j = 0; j < MAX_RXIDOBJ; j++) {
         		if (k >= s_msg_period[i].sdobjused) {
