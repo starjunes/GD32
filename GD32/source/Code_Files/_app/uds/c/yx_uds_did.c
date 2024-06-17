@@ -366,6 +366,7 @@ static const UDS_DID_OBJ_T s_uds_did_obj[MAX_DID_NUM] = {
     {0xF19D, DID_RW,  sizeof(s_uds_did_e2rom_data.DID_F19D), s_uds_did_e2rom_data.DID_F19D, DID_DATA_TYPE_BCD,   NULL, NULL},   
     {0xF1A1, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_F1A1), s_uds_did_e2rom_data.DID_F1A1, DID_DATA_TYPE_ASCII, NULL, NULL}, 
     {0x1026, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_1026), s_uds_did_e2rom_data.DID_1026, DID_DATA_TYPE_HEX,   NULL, NULL}, 
+    {0x103E, DID_RO,  sizeof(s_uds_did_e2rom_data.DID_103E), s_uds_did_e2rom_data.DID_103E, DID_DATA_TYPE_ASCII,   NULL, NULL}, 
 };
 INT8U s_did_status[MAX_DID_NUM]= {0x00};
 static INT8U s_did_num = MAX_DID_NUM;
@@ -1156,7 +1157,7 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
 							  (did == 0x1002) || (did == 0x1003) || (did == 0x1028) || (did == 0x1009) || (did == 0x1010) || 
 							  (did == 0x1015) || (did == 0x3102) || (did == 0x3103) || (did == 0xF194) || (did == 0x2100) ||
 							  (did == 0xF192) || (did == 0xF199) || (did == 0x102A) || (did == 0x102B) || (did == 0x102C)
-							  || (did == 0x0100)|| (did == 0x0110)|| (did == 0xF187) || (did == 0x1026)) {
+							  || (did == 0x0100)|| (did == 0x0110)|| (did == 0xF187) || (did == 0x1026)|| (did == 0x103E)) {
 							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
 								if(did == 0x0110) {
 					          SendDID_103A();
