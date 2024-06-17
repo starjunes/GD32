@@ -1316,9 +1316,9 @@ void dal_CAN_WakeReset_Period(void)
         		}
         		if (s_msg_period[i].idcbt[j].isused) {
 							  if(s_msg_period[i].idcbt[j].id == 0x18FDA94A) {
-								    s_msg_period[i].idcbt[j].timecnt = s_msg_period[i].idcbt[j].period - 1; 
+								    s_msg_period[i].idcbt[j].timecnt = s_msg_period[i].idcbt[j].period - 7; 
 								} else if(s_msg_period[i].idcbt[j].id == 0x18FFDA4A) {
-								    s_msg_period[i].idcbt[j].timecnt = s_msg_period[i].idcbt[j].period - 2; 
+								    s_msg_period[i].idcbt[j].timecnt = s_msg_period[i].idcbt[j].period - 8; 
 								}
 								k++;
         		}						
