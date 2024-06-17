@@ -609,6 +609,10 @@ void SendCF(void)
                             s_sendpacket[i].cf_cnt--;
                             if (s_sendpacket[i].cf_cnt == 0) {
                                 s_sendpacket[i].sendcontinue = FALSE;       /* 达到块大小 停止下次发送  */
+																if(s_sendpacket[i].sendid == UDS_PHSCL_RESPID) {                /* 发送完首帧，等待流控响应 */      
+                                    s_sendpacket[i].wait_fc = TRUE;
+                                    s_sendpacket[i].wait_fc_time_out = 0;
+				 	                      }
                                 #if DEBUG_CAN > 0
                                 debug_printf("将停止下次CF发送,%d->0\r\n",  s_sendpacket[i].blocksize);
                                 #endif
