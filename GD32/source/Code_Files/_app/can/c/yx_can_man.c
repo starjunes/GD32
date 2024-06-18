@@ -104,7 +104,7 @@ static SEND_PARA_T s_sendpara;
 static CAN_PARA_T s_can_para[MAX_CAN_CHN];
 static AAPCAN_MSG_T  s_msgbt[MAX_CAN_CHN];                    /* 接收的CAN id表 */
 #define MAXPACKETPARANUM         10                            /* 多包接收最多缓存包数 */
-#define PACKETOVERTMR            500                            /* 超时清除计数值 */
+#define PACKETOVERTMR            5000                          /* 超时清除计数值 */
 static PACKET_PARA_T s_packetpara[MAXPACKETPARANUM] ;
 static MULTIPACKET_SEND_T s_sendpacket[MAXPACKETPARANUM];
 static INT8U  s_packet_tmr;
@@ -1871,62 +1871,7 @@ static void PacketTimeOut(void* pdata)
     #endif
     YX_PeriodDataTran();
     CanResendHdl();
-    for (i = 0 ; i < MAXPACKETPARANUM; i++) {
-        if (s_packetpara[i].packet_com == TRUE) {
-            if (++s_packetpara[i].packet_tmrcnt > PACKETOVERTMR) {
-           #if DEBUG_UDS > 0
-               debug_printf("接收超时，清除第%d组多帧\r\n", i);
-           #endif
-               s_packetpara[i].packet_com = FALSE;
-               if (s_packetpara[i].packet_buf != NULL) {
-                  PORT_Free(s_packetpara[i].packet_buf);
-                  s_packetpara[i].packet_buf = NULL;
-               }
-            }
-						#if EN_UDS > 0
-            if (s_packetpara[i].wait_cf) {
-                if (++s_packetpara[i].wait_cf_time_out >= UDS_TRANS_TIMEOUT) {
-                    s_packetpara[i].wait_cf_time_out = 0;
-                    s_packetpara[i].wait_cf = 0;
-                    s_packetpara[i].packet_com = FALSE;
-                    if (s_packetpara[i].packet_buf != NULL) {
-                       PORT_Free(s_packetpara[i].packet_buf);
-                       s_packetpara[i].packet_buf = NULL;
-                    }
-                }
-            }
-            #endif
-        }
-
-        if (s_sendpacket[i].packet_com == TRUE) {               /* 多包发送超时处理 */
-					  if(s_sendpacket[i].sendid == UDS_PHSCL_RESPID) {                /* 发送完首帧，等待流控响应 */      
-                 if(s_sendpacket[i].wait_fc) {
-								 	   /* 等待流控响应超时80ms(N_BS = 80ms),结束多帧发送 */
-								 	   if(++s_sendpacket[i].wait_fc_time_out > 8) {
-                         s_sendpacket[i].wait_fc_time_out = 0;
-												 s_sendpacket[i].wait_fc = false;
-												 s_sendpacket[i].packet_com = FALSE;
-												 s_sendpacket[i].sendid = 0x00;
-                         s_sendpacket[i].sendcontinue = FALSE;
-                         if (s_sendpacket[i].packet_buf != NULL ) {
-                            PORT_Free(s_sendpacket[i].packet_buf);
-                            s_sendpacket[i].packet_buf = NULL;
-                         }
-								 	   }
-                 }
-				 	  } else {
-                if (++s_sendpacket[i].packet_tmrcnt > PACKETOVERTMR) {
-                   s_sendpacket[i].packet_com = FALSE;
-                   s_sendpacket[i].sendcontinue = FALSE;
-                   if (s_sendpacket[i].packet_buf != NULL ) {
-                      PORT_Free(s_sendpacket[i].packet_buf);
-                      s_sendpacket[i].packet_buf = NULL;
-                   }
-                }
-				 	  }
-        }
-    }
-
+   
     SendCF();
 
     Can_LossCanMsg(); 
@@ -1936,7 +1881,72 @@ static void PacketTimeOut(void* pdata)
 		CanSendDtcMsg();  /* 丢失节点故障发送 */
 		Fc_Rsp_TimeOut_Hdl();
 }
-
+/*******************************************************************************
+**  函数名称:  CANPara_Timeover
+**  功能描述:  CAN参数超时
+**  输入参数:  无
+**  输出参数:  无
+**  返回参数:  无
+*******************************************************************************/
+static void CANPara_Timeover(void)
+{
+    INT8U i;
+    for (i = 0 ; i < MAXPACKETPARANUM; i++) {
+    	 if (s_packetpara[i].packet_com == TRUE) {
+    			 if (++s_packetpara[i].packet_tmrcnt > PACKETOVERTMR) {
+    		       #if DEBUG_UDS > 0
+    					 debug_printf("接收超时，清除第%d组多帧\r\n", i);
+    		       #endif
+    					 s_packetpara[i].packet_com = FALSE;
+    					 if (s_packetpara[i].packet_buf != NULL) {
+    						  PORT_Free(s_packetpara[i].packet_buf);
+    						  s_packetpara[i].packet_buf = NULL;
+    					 }
+    			 }
+    		   #if EN_UDS > 0
+    			 if (s_packetpara[i].wait_cf) {
+    					 if (++s_packetpara[i].wait_cf_time_out >= UDS_TRANS_TIMEOUT) {
+    							 s_packetpara[i].wait_cf_time_out = 0;
+    							 s_packetpara[i].wait_cf = 0;
+    							 s_packetpara[i].packet_com = FALSE;
+    							 if (s_packetpara[i].packet_buf != NULL) {
+    									PORT_Free(s_packetpara[i].packet_buf);
+    									s_packetpara[i].packet_buf = NULL;
+    							 }
+    					 }
+    			 }
+    		   #endif
+    	 }
+    
+    	 if (s_sendpacket[i].packet_com == TRUE) {							 /* 多包发送超时处理 */
+    			 if(s_sendpacket[i].sendid == UDS_PHSCL_RESPID) { 							 /* 发送完首帧，等待流控响应 */ 		 
+    						if(s_sendpacket[i].wait_fc) {
+    								/* 等待流控响应超时75ms(N_BS = 75ms),结束多帧发送 */
+    								if(++s_sendpacket[i].wait_fc_time_out > 75) {
+    										s_sendpacket[i].wait_fc_time_out = 0;
+    										s_sendpacket[i].wait_fc = false;
+    										s_sendpacket[i].packet_com = FALSE;
+    										s_sendpacket[i].sendid = 0x00;
+    										s_sendpacket[i].sendcontinue = FALSE;
+    										if (s_sendpacket[i].packet_buf != NULL ) {
+    											 PORT_Free(s_sendpacket[i].packet_buf);
+    											 s_sendpacket[i].packet_buf = NULL;
+    										}
+    								}
+    						}
+    			 } else {
+    					 if (++s_sendpacket[i].packet_tmrcnt > PACKETOVERTMR) {
+    							s_sendpacket[i].packet_com = FALSE;
+    							s_sendpacket[i].sendcontinue = FALSE;
+    							if (s_sendpacket[i].packet_buf != NULL ) {
+    								 PORT_Free(s_sendpacket[i].packet_buf);
+    								 s_sendpacket[i].packet_buf = NULL;
+    							}
+    					 }
+    			 }
+    	 }
+    }
+}
 /**************************************************************************************************
 **  函数名称:  BusTypeSetReqHdl
 **  功能描述:  总线设置请求处理函数
@@ -3138,6 +3148,7 @@ void YX_CAN_PreInit(void)
 		#endif
 		bal_CAN0STB_Init();
 		PORT_RegCanCallbakFunc(CANDataHdl);
+		PORT_CanSTminTimeoutCallbakFunc(CANPara_Timeover);
 
     for (i = 0; i < (PERIOD_NUM -1); i++) { 			
         candata.can_DLC = 8;

@@ -31,7 +31,8 @@
 #define  MAX_CAP_CNT         40
 
 typedef enum {
-    TM_CANCF = 0x00,                                                /* 定时连续帧 */
+    TM_CANCF    = 0x00,                                                /* 定时连续帧 */
+		TM_CANSTMIN = 0x01,                                                /* STmin */
     TM_MAX
 }TM_LBINDEX_E;
 
@@ -51,6 +52,16 @@ static TIME_LBAPP_E    s_TMfunctionentry[TM_MAX];
 void dal_CanSeqCFSendCallbakFunc(void (* handle) (void))
 {
     s_TMfunctionentry[TM_CANCF].lbhandle = handle;
+}
+/*******************************************************************
+** 函数名:     Dal_CANLBRepReg
+** 函数描述:   CAN回调上报函数
+** 参数:       [in] handle             指向APP层的函数指针
+** 返回:       无
+********************************************************************/
+void dal_CanSTminTimeoutCallbakFunc(void (* handle) (void))
+{
+    s_TMfunctionentry[TM_CANSTMIN].lbhandle = handle;
 }
 
 /**************************************************************************************************
@@ -72,6 +83,9 @@ __attribute__ ((section ("IRQ_HANDLE"))) static void ss_TIM6_IRQHandler(void) __
 				    if(++lock_can >= 5) {
                 s_TMfunctionentry[TM_CANCF].lbhandle();
 					  }
+        }
+				if (s_TMfunctionentry[TM_CANSTMIN].lbhandle != PNULL) {
+                s_TMfunctionentry[TM_CANSTMIN].lbhandle();
         }
     }
 	timer_interrupt_flag_clear(TIMER6, TIMER_INT_FLAG_UP);

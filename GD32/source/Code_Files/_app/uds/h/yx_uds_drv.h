@@ -49,7 +49,7 @@
 #else
 #define FC_BS                       0
 #define FC_STMIN                    2
-#define UDS_TRANS_TIMEOUT           15
+#define UDS_TRANS_TIMEOUT           150
 #endif
 
 /*

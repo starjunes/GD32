@@ -109,7 +109,7 @@ typedef struct {
     INT32U  sendid;
     INT32U  recvid;
     INT8U   prot_type;
-		BOOLEAN wait_fc;                                           /* UDS:发送完首帧(FF),等待流控帧(FC)响应超时150ms */
+		BOOLEAN wait_fc;                                           /* UDS:发送完首帧(FF),等待流控帧(FC)响应超时75ms */
     INT16U  wait_fc_time_out;                                  /* UDS:等待流控帧(FC)超时时间计数 */    
 } MULTIPACKET_SEND_T;
 

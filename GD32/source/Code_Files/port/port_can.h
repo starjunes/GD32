@@ -145,7 +145,7 @@ BOOLEAN PORT_AddCanID(CAN_CHN_E chn, INT8U fmat, INT32U id);
 void PORT_RegCanCallbakFunc(CAN_CALLBAK_HDL handle);
 void PORT_CanRecCallbakFunc(CAN_CALLBAK_HDL handle);
 void PORT_CanSeqCFSendCallbakFunc(CAN_SEQCFSEND_HDL handle);
-
+void PORT_CanSTminTimeoutCallbakFunc(CAN_SEQCFSEND_HDL handle);
 
 /********************************************************************************
 ** º¯ÊýÃû:     PORT_GetBusOffFlag

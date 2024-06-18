@@ -179,6 +179,10 @@ void PORT_CanSeqCFSendCallbakFunc(CAN_SEQCFSEND_HDL handle)
 {
     dal_CanSeqCFSendCallbakFunc(handle);
 }
+void PORT_CanSTminTimeoutCallbakFunc(CAN_SEQCFSEND_HDL handle)
+{
+    dal_CanSTminTimeoutCallbakFunc(handle);
+}
 //#if SOFT_BUSOFF_RECOBRY > 0
 /**************************************************************************************************
 **  º¯ÊýÃû³Æ:  GetBusOffStatus

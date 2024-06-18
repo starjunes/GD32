@@ -28,5 +28,6 @@
 //#define	OSC_64L		2*18963	//六四分频时，TH1 TL1从0000变成FFFF总共需要189.63mS
 
 void dal_CanSeqCFSendCallbakFunc(void (* handle) (void));
+void dal_CanSTminTimeoutCallbakFunc(void (* handle) (void));
 void   InitFrKb(void);
 #endif
