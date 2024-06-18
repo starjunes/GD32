@@ -603,7 +603,7 @@ void SendCF(void)
     for (i = 0; i < MAXPACKETPARANUM; i++) {
         if(UDS_TYPE == s_sendpacket[i].prot_type){
             if ((s_sendpacket[i].packet_com) && (s_sendpacket[i].sendcontinue)) {
-                if (++s_sendpacket[i].tmrcnt >= s_sendpacket[i].periods) {
+                if (s_sendpacket[i].tmrcnt++ >= s_sendpacket[i].periods) {
                     if (s_sendpacket[i].blocksize > 0) {
                         if (s_sendpacket[i].cf_cnt > 0) {
                             s_sendpacket[i].cf_cnt--;
