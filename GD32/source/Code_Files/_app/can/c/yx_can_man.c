@@ -3134,6 +3134,7 @@ void YX_CAN_PreInit(void)
 		YX_MMI_CanLocalFilter();
 		#endif
 		bal_CAN0STB_Init();
+		PORT_RegCanCallbakFunc(CANDataHdl);
 
     for (i = 0; i < (PERIOD_NUM -1); i++) { 			
         candata.can_DLC = 8;
@@ -3228,7 +3229,7 @@ void YX_CAN_Init(void)
     }*/
 		memset(&s_sendpara, 0x00, sizeof(s_sendpara));
     Lock_Init();
-	PORT_RegCanCallbakFunc(CANDataHdl);
+	
 	PORT_CanSeqCFSendCallbakFunc(SendLockMsg);
 
 	#if DEBUG_CANSFLFSEND > 0
