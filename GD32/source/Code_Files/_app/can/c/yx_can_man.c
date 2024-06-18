@@ -1030,6 +1030,9 @@ static BOOLEAN UDS_CANMsgAnalyze(INT8U *data, INT16U datalen)
                 senddata.can_DLC = 8;
                 senddata.period = 0xffff;
                 senddata.channel = CAN_msg->channel;
+								if(senddata.can_id == UDS_PHSCL_RESPID) { 							 /* 发送完首帧，等待流控响应 */ 		 
+										 data2[7] = 0x28;
+								}
                 memcpy(senddata.Data, data2 + 5, senddata.can_DLC);
                 #endif
 

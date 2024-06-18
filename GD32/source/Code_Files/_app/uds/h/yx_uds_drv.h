@@ -31,7 +31,7 @@
 
 #define UNUSE_BYTE_FULL             0x00                       /* 无效数据填充0xAA */
 
-#define P2_SERVER                   50                         /* P2Server = 50ms(单位1ms) */
+#define P2_SERVER                   40                         /* P2Server = 50ms(单位1ms) */
 #define EXT_P2_SERVER               500                        /* P2*Server = 5000ms(单位10ms) */
 
 #define NOT_SESSION_DEFAULT_TIME    500                        /* 持续非默认会话最大时间(单位:10ms) */
