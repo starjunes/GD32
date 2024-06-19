@@ -83,6 +83,7 @@ static BOOLEAN             s_filtrid_onoff = FALSE;
 #define UDS_TIMEOUT        500
 static INT16U              s_uds_timeout = 0;
 #endif
+static BOOLEAN             s_reset_delay = FALSE;
 /*
 ********************************************************************************
 * 定义本地接口
@@ -519,7 +520,7 @@ static void UDS_SID11_EcuReset(INT8U resettype)
 										YX_Notice_Reset();
 							  }
                 /* 复位前先更新dtc的pp参数 */
-                YX_DTC_PP_Update_When_Reset();  
+                //YX_DTC_PP_Update_When_Reset();  
 
                 /* 复位前先更新did的pp参数 */
                 YX_UDS_DID_SaveDataToFlash();
@@ -1032,7 +1033,11 @@ static void UDSTmrProc(void *pdata)
             s_uds_module.reset_cnt = 0;
             if (s_uds_module.reset_type == RESET_HARD) {
                 /* MCU复位 */
-                PORT_ResetCPU();
+								if(s_reset_delay) {
+									 s_reset_delay = FALSE;
+								} else {
+                    PORT_ResetCPU();
+								}
             } else {
                 /* 应用软件复位，MCU本身没复位 */
                  /* 软件复位:会话模式回到默认模式和安全范围等级回到lock */
@@ -1149,6 +1154,9 @@ BOOLEAN UDS_SingleFrameHdl(INT8U* data, INT8U datalen)
 		#if EN_DEBUG > 1
 		debug_printf("s_filtrtid_delay2 = %d",s_filtrtid_delay);
 		#endif
+		if(s_uds_module.reset_type == RESET_HARD) { 
+			s_reset_delay = TRUE;
+		}
     return UDS_CanDataHdl(id, CAN_msg->databuf, CAN_msg->len);
 }
 /*******************************************************************

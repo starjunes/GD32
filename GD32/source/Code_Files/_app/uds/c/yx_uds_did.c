@@ -462,7 +462,7 @@ static void DID_HandleTmr(void* pdata)
                 for (i = 0; i < MAX_DID_NUM; i++) {
                     if (s_did_status[i] == 1) {
                         s_did_status[i] = 0;
-												if(i != 9){
+												if(i != 10){
                             isNeedSaveToFlash = TRUE;
 												}
                         /* ÉÏ±¨µ½ÆÁ */
@@ -1187,7 +1187,12 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
 					          SendDID_103A();
 										//YX_Sync_F187();
 				        }
-								if((did != 0x1009) && (did != 0x1010) && (did != 0x1010) && (did != 0x1015) && (did != 0x103d)) {
+								if((did != 0x1009) && (did != 0x1010) && (did != 0x0110) && (did != 0x1015) && (did != 0x103d)) {
+									  #if EN_DEBUG > 0
+                    debug_printf("did = %x\r\n",did);
+										printf_hex(data,len);
+										debug_printf("\r\n");
+                    #endif
                     DID_DataUpdate();
 								}
             }

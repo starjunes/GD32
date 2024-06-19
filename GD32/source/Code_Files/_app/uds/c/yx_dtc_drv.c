@@ -1064,7 +1064,7 @@ static void DTC_HandleTmr(void* pdata)
     /* 故障记录处理 */
     DtcMapHdl();
     /* 更新pp参数 */
-    Update_Dtc_Para();
+    //Update_Dtc_Para();
 }
 
 /*****************************************************************************
