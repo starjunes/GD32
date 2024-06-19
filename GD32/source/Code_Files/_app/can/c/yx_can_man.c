@@ -3176,7 +3176,7 @@ static void YX_CAN_SetFilter_Hdl(void *pdata)
 					   #if DEBUG_CAN > 0
              debug_printf("s_can_filter_config %d\r\n",s_can_filter_config);
              #endif
-             YX_MMI_CanLocalFilter();
+             //YX_MMI_CanLocalFilter();
              s_can_filter_config = CAN_FILTER_CONFIG_INIT;
 						 if(OS_TmrIsRun(s_tmr_modifycan)) {
 						     OS_StopTmr(s_tmr_modifycan);
