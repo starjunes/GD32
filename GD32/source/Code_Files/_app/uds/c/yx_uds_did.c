@@ -976,7 +976,7 @@ void YX_UDS_DID_SID2E_WriteDataByIdentifier(INT8U *data, INT8U len)
     } else if (YX_UDS_GetSession() == SESSION_EXTENDED) {
         ;
     } else {
-        YX_UDS_NegativeResponse(SID_2E, NRC_7F);
+        YX_UDS_NegativeResponse(SID_2E, NRC_31);
         return;
     }
 
