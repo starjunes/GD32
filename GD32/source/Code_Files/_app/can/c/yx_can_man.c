@@ -3164,6 +3164,11 @@ void YX_CAN_PreInit(void)
 				candata.period = s_period_msg[i].period;
 				PORT_CanSend(&candata);
     }
+		s_packet_tmr = OS_InstallTmr(TSK_ID_OPT, 0, PacketTimeOut);
+    OS_StartTmr(s_packet_tmr, MILTICK, 1);
+		#if EN_UDS > 0
+		YX_UDS_Init();
+		#endif
 }
 static void YX_CAN_SetFilter_Hdl(void *pdata)
 {
@@ -3249,8 +3254,6 @@ void YX_CAN_Init(void)
 	#if DEBUG_CANSFLFSEND > 0
 	YX_CAN_SelfCheckInit();//CAN×Ô¼ì³õÊ¼»¯
 	#endif
-    s_packet_tmr = OS_InstallTmr(TSK_ID_OPT, 0, PacketTimeOut);
-    OS_StartTmr(s_packet_tmr, MILTICK, 1);
     /*for (i = 0; i < (PERIOD_NUM -1); i++) {       
         candata.can_DLC = 8;
         candata.can_id = s_period_msg[i].canId;
@@ -3261,9 +3264,7 @@ void YX_CAN_Init(void)
 				PORT_CanSend(&candata);
 		}*/
 		s_tmr_modifycan = OS_InstallTmr(TSK_ID_OPT,0, YX_CAN_SetFilter_Hdl);
-    #if EN_UDS > 0
-		YX_UDS_Init();
-		#endif
+
     #if EN_DEBUG > 1
     // test
     CAN_DATA_SEND_T candata1;

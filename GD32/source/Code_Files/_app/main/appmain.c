@@ -135,12 +135,13 @@ BUS_TYPE_E GetBusType(INT8U channel)
 void AppStart(void)
 {
     BOOLEAN result;
+		YX_CAN_PreInit();
+		InitFrKb();/* 硬件定时器 */
     g_appQ  =  QCreate(s_msgbuf, sizeof(s_msgbuf)/sizeof(s_msgbuf[0]));
 	APP_ASSERT(g_appQ != PNULL);
     result = QRegister(APP_Q_ID, g_appQ, AppMsgHdlEntry);
     APP_ASSERT(result);
     //PMCore_Init();
-    YX_CAN_PreInit();
     InitFlash();
     ClearWatchdog(); 
     InitAllPubPara();
@@ -153,7 +154,7 @@ void AppStart(void)
     #endif
 
     //PulseSignalStat_Init();
-    InitFrKb();/* 硬件定时器 */
+
 	
     #if ((EN_IO_EXTEND > 0) || (EN_IO_EXTEND_R6 > 0))
     IOExtend_Config();// IO扩展，必须在比较前配置 

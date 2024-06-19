@@ -1210,6 +1210,9 @@ static void PowerMonitorTmr(void* pdata)
     				 bal_Pulldown_CAN0STB();
     				 bal_Pulldown_CAN1STB();
     				 bal_Pulldown_CAN2STB();
+						 #if EN_DEBUG > 0
+             debug_printf("bal_Pulldown_CAN0STB \r\n");
+		         #endif
 				 }
 		 } else {
 				 if((value > MAIN_POW_OPEN_CAN_10V) && (value < MAIN_POW_OPEN_CAN_35V)) {					 

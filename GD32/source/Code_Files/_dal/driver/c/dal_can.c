@@ -102,6 +102,7 @@ static ROUNDBUF_T     s_can_round;
 static BOOLEAN        s_sendstat[MAX_CANCHAN] = {0};
 
 static INT32U pried,sendcnttest1 = 0,sendcnttest2=0,recvcnt1,recvcnt2;
+static BOOLEAN s_scan_onoff = true;
 /*******************************************************************
 ** 函数名:     can_msg_handler
 ** 函数描述:   报文处理函数
@@ -307,8 +308,21 @@ void SendCANMsg_Period(void)
             }
         }
     }
+		if(s_scan_onoff) {
+		    can_rx_scan();
+		}
 }
 
+/*******************************************************************
+** 函数名:     Clean_ScanFlagHandler
+** 函数描述:   清空ScanFlag标志
+** 参数:       无
+** 返回:       无
+********************************************************************/
+void Clean_ScanFlagHandler(void)
+{
+    s_scan_onoff = FALSE;
+}
 /*******************************************************************
 ** 函数名:     USER_CAN0_TX0_IRQHandler
 ** 函数描述:   CAN0中断处理函数

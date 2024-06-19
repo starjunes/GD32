@@ -29,6 +29,7 @@
 #include "port_plat.h"
 #include "cm_backtrace.h"
 #include "yx_version.h"
+#include "yx_can_man.h"
 
 #if EN_DEBUG > 0
 static INT8U const s_temphexbuf[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x01,0x02,0x03,0x04
@@ -118,7 +119,7 @@ int main(void)
     Debug_SysPrint("data6 = %d\r\n", ramdata[6]);
     Debug_SysPrint("data7 = %d\r\n", ramdata[7]);
 	#endif
-	
+	  Clean_ScanFlagHandler();
     while (1) {
       #if EN_USB > 0
         USBH_Process(&USB_OTG_Core, &USB_Host);
