@@ -737,6 +737,9 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
         break;
 				case 0x1003:
 				for (j = 0; j < len; j++) {
+					if((data[j] < 0x1e) && (data[j] > 0x00)) {
+					    return FALSE;
+					}
           if(data[j] == 0x2e) {
   				   a = true;
           } else if(data[j] == 0x3a) {
