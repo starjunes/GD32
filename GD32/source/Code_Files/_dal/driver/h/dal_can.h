@@ -37,13 +37,13 @@
 #define CAN_BS2_1000K         CAN_BT_BS2_3TQ
 #define CAN_PRES_1000K        (PCLK1_FREQ / (1000000 * 12))  //83.3%  /* Prescaler */
       
-#define CAN_BS1_500K          CAN_BT_BS1_16TQ
-#define CAN_BS2_500K          CAN_BT_BS2_3TQ
-#define CAN_PRES_500K         (PCLK1_FREQ / (500000 * 20))   //85.0%  /* Prescaler */
+#define CAN_BS1_500K          CAN_BT_BS1_13TQ
+#define CAN_BS2_500K          CAN_BT_BS2_1TQ
+#define CAN_PRES_500K         (PCLK1_FREQ / (500000 * 15))   //85.0%  /* Prescaler */
 
-#define CAN_BS1_250K          CAN_BT_BS1_16TQ   
-#define CAN_BS2_250K          CAN_BT_BS2_3TQ
-#define CAN_PRES_250K         (PCLK1_FREQ / (250000 * 20))   //87.5%  /* Prescaler */
+#define CAN_BS1_250K          CAN_BT_BS1_14TQ   
+#define CAN_BS2_250K          CAN_BT_BS2_1TQ
+#define CAN_PRES_250K         (PCLK1_FREQ / (250000 * 16))   //87.5%  /* Prescaler */
 
 #define CAN_PRES_125K         (PCLK1_FREQ / (125000 * 15))       /* Prescaler */
 #define CAN_PRES_100K         (PCLK1_FREQ / (100000 * 15))       /* Prescaler */
@@ -421,12 +421,19 @@ BOOLEAN CheckCanIsErrer(INT8U channel);
  ********************************************************************/
 void dal_CAN_WakeReset_Period(void);
 /*******************************************************************
-** 函数名:     Clean_ScanFlagHandler
-** 函数描述:   清空ScanFlag标志
+** 函数名:     Set_ScanFlagHandler
+** 函数描述:   设置ScanFlag标志
 ** 参数:       无
 ** 返回:       无
 ********************************************************************/
-void Clean_ScanFlagHandler(void);
+void Set_ScanFlagHandler(BOOLEAN onoff);
+/*******************************************************************
+** 函数名:     Get_ScanFlagHandler
+** 函数描述:   获取ScanFlag标志
+** 参数:       无
+** 返回:       无
+********************************************************************/
+BOOLEAN Get_ScanFlagHandler(void);
 #if EN_UDS > 0
 /*******************************************************************
 ** 函数名称:   HAL_CAN_SendIdAccessSet

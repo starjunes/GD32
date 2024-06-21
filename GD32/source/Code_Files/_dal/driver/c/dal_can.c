@@ -314,14 +314,24 @@ void SendCANMsg_Period(void)
 }
 
 /*******************************************************************
-** 函数名:     Clean_ScanFlagHandler
-** 函数描述:   清空ScanFlag标志
+** 函数名:     Set_ScanFlagHandler
+** 函数描述:   设置ScanFlag标志
 ** 参数:       无
 ** 返回:       无
 ********************************************************************/
-void Clean_ScanFlagHandler(void)
+void Set_ScanFlagHandler(BOOLEAN onoff)
 {
-    s_scan_onoff = FALSE;
+    s_scan_onoff = onoff;
+}
+/*******************************************************************
+** 函数名:     Get_ScanFlagHandler
+** 函数描述:   获取ScanFlag标志
+** 参数:       无
+** 返回:       无
+********************************************************************/
+BOOLEAN Get_ScanFlagHandler(void)
+{
+    return s_scan_onoff;
 }
 /*******************************************************************
 ** 函数名:     USER_CAN0_TX0_IRQHandler
