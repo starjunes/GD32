@@ -50,7 +50,7 @@ extern INT8U DEBUG_UART_NO;
 #define     DEBUG_COM_REC               0       //串口服务接收
 #define     DEBUG_COM_SEND              0       //串口服务发送
 #define     DEBUG_COM_LINK              0       //串口连接状态调试
-#define     DEBUG_ADC_MAINPWR           1       //调试主电AD值
+#define     DEBUG_ADC_MAINPWR           0       //调试主电AD值
 #define     DEBUG_SIGNAL_STATUS         0       //调试外部输入信号量
 #define     DEBUG_CRASH_STATUS          0       //调试碰撞模块
 #define     DEBUG_GSEN_STATUS           0       //调试GSENSOR工作状态
