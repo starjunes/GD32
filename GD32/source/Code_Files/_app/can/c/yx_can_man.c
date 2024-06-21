@@ -876,7 +876,7 @@ BOOLEAN YX_SendudsMul(void)
 			  if(!s_sendpacket[i].packet_com) {
             continue;
         }
-        if((UDS_PHSCL_RESPID == s_sendpacket[i].sendid) && (s_sendpacket[i].packet_com == TRUE)) {
+        if((UDS_TYPE == s_sendpacket[i].prot_type) && (UDS_PHSCL_RESPID == s_sendpacket[i].sendid) && (s_sendpacket[i].packet_com == TRUE)) {
             return true;
         }
     }
@@ -1946,6 +1946,7 @@ static void CANPara_Timeover(void)
     			 }
     	 }
     }
+		YX_UDS_ResetCnt();
 }
 /**************************************************************************************************
 **  º¯ÊýÃû³Æ:  BusTypeSetReqHdl
@@ -3149,7 +3150,8 @@ void YX_CAN_PreInit(void)
 		bal_CAN0STB_Init();
 		PORT_RegCanCallbakFunc(CANDataHdl);
 		PORT_CanSTminTimeoutCallbakFunc(CANPara_Timeover);
-
+		HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
+		HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0); 
     for (i = 0; i < (PERIOD_NUM -1); i++) { 			
         candata.can_DLC = 8;
 				candata.can_id = s_period_msg[i].canId;
