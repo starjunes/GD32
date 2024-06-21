@@ -84,6 +84,7 @@ static BOOLEAN             s_filtrid_onoff = FALSE;
 static INT16U              s_uds_timeout = 0;
 #endif
 static BOOLEAN             s_reset_delay = FALSE;
+static INT8U               s_reset_cnt   = 0;
 /*
 ********************************************************************************
 * 定义本地接口
@@ -498,9 +499,10 @@ static void UDS_SID11_Response(INT8U resettype)
 ********************************************************************/
 static void UDS_SID11_EcuReset(INT8U resettype)
 {
-    BOOLEAN response;
+    BOOLEAN response,response1;
 
     response = FALSE;
+		response1 = FALSE;
 
     switch (resettype) {
         case RESET_HARD:
@@ -514,6 +516,7 @@ static void UDS_SID11_EcuReset(INT8U resettype)
 
             s_uds_module.reset_type = (resettype & (~SUPPRESS_RESP));
             s_uds_module.reset_cnt = 0;
+						s_reset_cnt = 0;
             if (s_uds_module.reset_type == RESET_HARD) {
 							  if(resettype == RESET_HARD) {
                     YX_UDS_NegativeResponse(SID_11, NRC_78);
@@ -526,15 +529,20 @@ static void UDS_SID11_EcuReset(INT8U resettype)
                 YX_UDS_DID_SaveDataToFlash();
 
                 /* 复位前保存错误计数 */
-                Update_UDS_Fault_Cnt();
+								if (s_uds_module.access_fault_cnt_pre != s_uds_module.access_fault_cnt) { 
+										response1 = TRUE;
+                    UDS_SID11_Response(resettype);                    
+                    Update_UDS_Fault_Cnt();
+								}
             }
             if (!OS_TmrIsRun(s_udstmr)) {
                 OS_StartTmr(s_udstmr, UDS_PERIOD);
             }
-            if ((resettype == RESET_HARD) || (resettype == RESET_SOFT)) {
-                response = TRUE;
-            }
-
+						if(response1 == FALSE)  {
+                if ((resettype == RESET_HARD) || (resettype == RESET_SOFT)) {
+                    response = TRUE;
+                }
+						}
             break;
         default :
             YX_UDS_NegativeResponse(SID_11, NRC_12);
@@ -1013,7 +1021,7 @@ static void UDSTmrProc(void *pdata)
             s_uds_module.access_status = 0x00;
             if (s_uds_module.access_fault_cnt != 0) {
                 s_uds_module.access_fault_cnt--;
-                Update_UDS_Fault_Cnt();
+                //Update_UDS_Fault_Cnt();
             }
         }
     }
@@ -1058,6 +1066,21 @@ static void UDSTmrProc(void *pdata)
     
 }
 
+/*******************************************************************
+** 函数名:      YX_UDS_ResetCnt
+** 函数描述:    UDS数据处理
+** 参数:        
+** 返回:        是否为uds数据
+********************************************************************/
+void YX_UDS_ResetCnt(void) 
+{
+    if(Get_ScanFlagHandler() && (s_uds_module.reset_type == RESET_HARD)) {
+        if(++s_reset_cnt >= 40) {
+    			 s_reset_cnt = 0;			 
+            PORT_ResetCPU();
+       	}
+     }
+}
 /*******************************************************************
 ** 函数名:      UDS_CanDataHdl
 ** 函数描述:    UDS数据处理

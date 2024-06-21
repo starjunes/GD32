@@ -68,11 +68,12 @@ int main(void)
     #if EN_DEBUG > 0
     //RCC_ClocksTypeDef RCC_Clocks;
     #endif
+	Set_ScanFlagHandler(TRUE);
 	System_Initiate();
 	KernelStart();
 	//PORT_InitUart(USART_DEBUG, 115200, 1000 , 1000);
 	cm_backtrace_init("ae64m4", "dy-fw",APPDAL_VERSION_STR);
-	#if EN_DEBUG > 0
+	#if 1 /* 默认打印请勿删掉 频繁1101复位有问题 */
     /* 调试串口初始化不可置于后面，不然要是打开调试开关，其他部分有打印，就会出错 */
     //Debug_Initiate();
     PORT_InitUart(USART_DEBUG, 115200, 1000 , 1000);
@@ -119,7 +120,7 @@ int main(void)
     Debug_SysPrint("data6 = %d\r\n", ramdata[6]);
     Debug_SysPrint("data7 = %d\r\n", ramdata[7]);
 	#endif
-	  Clean_ScanFlagHandler();
+	  Set_ScanFlagHandler(FALSE);
     while (1) {
       #if EN_USB > 0
         USBH_Process(&USB_OTG_Core, &USB_Host);
