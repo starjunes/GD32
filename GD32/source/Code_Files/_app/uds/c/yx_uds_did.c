@@ -631,13 +631,18 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
             for (j = 0; j < len; j++) {
                 switch (j) {
                     case 0x00:
-                        if((data[j] == 0x02) || (data[j] == 0x04) || (data[j] == 0x05) || (data[j] == 0x08) || (data[j] == 0x0D)) {
-                            return TRUE;
-                        } else {
-                            return FALSE;
-                        }
+											  if(data[j] < 0x19) {
+                            if((data[j] == 0x02) || (data[j] == 0x04) || (data[j] == 0x05) || (data[j] == 0x08) || (data[j] == 0x0D)) {
+                                return TRUE;
+                            } else {
+                                data[j] == 0x02;
+                                return TRUE;
+                            }
+											  } else {
+											      return FALSE;
+											  }
                     break;
-
+                    #if 0
                     case 0x01:
                         if(data[j] > 6) {
                             return FALSE;
@@ -696,6 +701,7 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
                             return FALSE;
                         }
                     break;
+										#endif
                     default:
                     break;
                 }
@@ -703,26 +709,18 @@ static BOOLEAN Jude_Diddata_Validity(INT16U did, INT8U *data, INT8U len)
         break;
         case 0x102B:
             for (j = 0; j < len; j++) {
-                if ((data[j] == 0x01) || (data[j] == 0x02) || (data[j] == 0x06) || (data[j] == 0x07) || (data[j] == 0x09)) {
-                    return TRUE;
-                } else {
-                    return FALSE;
-                }
+							  if(data[j] < 0x0B) {
+                    if ((data[j] == 0x01) || (data[j] == 0x02) || (data[j] == 0x06) || (data[j] == 0x07) || (data[j] == 0x09)) {
+                        return TRUE;
+                    } else {
+                        data[j] = 0x06;
+                        return TRUE;
+                    }
+							  } else {
+							     return FALSE;
+							  }
             } 					 	 
-        break;
-        case 0x102C:
-            for (j = 0; j < len; j++) {
-                if (data[j] > 0x04) {
-                   return FALSE;
-                }
-            } 						 
-        break;
-        case 0x1035:
-        phy_range = (data[0] << 8) + data[1];
-        if (phy_range > 5000) {
-        return FALSE;
-        }				 
-        break;
+        break;      
         case 0x1007:
         if(data[0] < 0x20) {
 				    return FALSE;

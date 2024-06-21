@@ -1487,6 +1487,8 @@ void YX_DTC_PP_Update_When_Reset(void)
         #if DEBUG_DTC_PARA_SAVE > 0
         debug_printf("<YX_DTC_PP_Update_When_Reset，保存DTC状态>\r\n");
         #endif
+    } else {
+        Update_DTC_Data();    /* 更新pp参数 */
     }
 }
 

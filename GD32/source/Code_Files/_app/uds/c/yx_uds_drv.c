@@ -523,7 +523,7 @@ static void UDS_SID11_EcuReset(INT8U resettype)
 										YX_Notice_Reset();
 							  }
                 /* 复位前先更新dtc的pp参数 */
-                //YX_DTC_PP_Update_When_Reset();  
+                YX_DTC_PP_Update_When_Reset();  
 
                 /* 复位前先更新did的pp参数 */
                 YX_UDS_DID_SaveDataToFlash();
