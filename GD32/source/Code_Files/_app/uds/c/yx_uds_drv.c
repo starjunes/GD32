@@ -79,6 +79,7 @@ static UDS_MODULE_STATUS_T s_uds_module;
 static UDS_ERR_CNT_T       s_uds_fault_cnt = {0};
 static INT16U              s_filtrtid_delay = 0;
 static BOOLEAN             s_filtrid_onoff = FALSE;
+static BOOLEAN             s_notic_onoff   = FALSE;
 #if UDS_27_NRC_78 == 0
 #define UDS_TIMEOUT        500
 static INT16U              s_uds_timeout = 0;
@@ -1000,6 +1001,8 @@ static void UDSTmrProc(void *pdata)
     if(s_filtrid_onoff ) {
 		    if(--s_filtrtid_delay == 0x00){
 				    s_filtrid_onoff = FALSE;
+						s_notic_onoff   = FALSE;
+						YX_Notice_EXUDS(FALSE);
 						#if EN_DEBUG > 1
 						debug_printf("s_filtrtid_delay4 = %d",s_filtrtid_delay);
 						#endif
@@ -1172,6 +1175,10 @@ BOOLEAN UDS_SingleFrameHdl(INT8U* data, INT8U datalen)
     if ((id != UDS_PHSCL_REQID) && (id != FUNC_REQID)) {
         return FALSE;
     }
+		if((s_notic_onoff == FALSE) && YX_COM_Islink()) {  
+			  s_notic_onoff = true;
+		    YX_Notice_EXUDS(TRUE);
+		}
     s_filtrtid_delay = 100;
 		s_filtrid_onoff  = TRUE;
 		#if EN_DEBUG > 1
