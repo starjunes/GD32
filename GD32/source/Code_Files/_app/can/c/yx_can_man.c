@@ -1784,7 +1784,7 @@ static void SendCanMsg_OnOff(void)
 static void CanSendDtcMsg(void)
 {
     static INT8U senddtc_cnt = 0;
-    INT8U bufLen, sendBuf[128];
+    INT8U bufLen, sendBuf[144];
 		CAN_DATA_SEND_T candata;
 		
     if(senddtc_cnt++ >= 99) {
@@ -1806,7 +1806,7 @@ static void CanSendDtcMsg(void)
                 MMI_MEMCPY(candata.Data, 8,sendBuf,8);
     				    PORT_CanSend(&candata);
             } else {  
-                YX_MMI_CanSendMul(CAN_CHN_1, s_period_msg[PERIOD_NUM - 1].canId,sendBuf,bufLen);
+                YX_MMI_CanSendMul(CAN_CHN_1, s_period_msg[PERIOD_NUM - 1].canId,sendBuf,(bufLen+2));
             }
         } else {    // 无故障时，发默认值     
     				MMI_MEMCPY(candata.Data, 8, s_period_msg[PERIOD_NUM - 1].canData,8);

@@ -82,11 +82,11 @@ typedef struct {
 typedef union {
     INT8U DM1_DTC[4];
     struct {
-        unsigned _SPN_LOW : 16;   // 可疑参数编号SPN低字节
-        unsigned _SPN_HIG : 3;    // 可疑参数编号SPN高3位
+        unsigned _SPN_LOW : 16;   // 可疑参数编号SPN低字节 
         unsigned _FMI     : 5;    // 故障模式标志
-        unsigned _CM      : 1;    // 可以参数编号的转化方式(默认0)
+        unsigned _SPN_HIG : 3;    // 可疑参数编号SPN高3位
         unsigned _OC      : 7;    // 发生次数
+        unsigned _CM      : 1;    // 可以参数编号的转化方式(默认0)
     } bitFiled;
 } DM1_DTC_T;
 

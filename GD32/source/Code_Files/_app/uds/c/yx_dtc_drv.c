@@ -238,7 +238,7 @@ static void DTC_Dm1Init(void)
     for (idx = 0; idx < MAX_DISP_CODE; idx++) {
         s_dm1_dtc_tab[idx].bitFiled._CM = 0;
         s_dm1_dtc_tab[idx].bitFiled._OC = 127;    // 127表示未知次数
-        if ((idx == B157216) || (idx == B156E13)) {
+        if ((idx == B157216) || (idx == B156E13)|| (idx == B157513)) {
             s_dm1_dtc_tab[idx].bitFiled._FMI = 5;
         } else if((idx == B156E11) || (idx == B157511)) {
             s_dm1_dtc_tab[idx].bitFiled._FMI = 6;
@@ -280,7 +280,7 @@ static void DTC_Dm1Init(void)
     s_dm1_dtc_tab[B156E11].bitFiled._SPN_LOW = 0xFDE7;    // GPS短路//
     s_dm1_dtc_tab[B156E13].bitFiled._SPN_LOW = 0xFDE7;    // GPS开路//
 
-    s_dm1_dtc_tab[U003700].bitFiled._SPN_LOW = 0xFDEA;    // GCAN2 BusOff//
+    s_dm1_dtc_tab[U003700].bitFiled._SPN_LOW = 0xFDF4;    // GCAN2 BusOff//
     s_dm1_dtc_tab[U014600].bitFiled._SPN_LOW = 0xFDFD;    // GATWAY节点超时 //
 }
 
