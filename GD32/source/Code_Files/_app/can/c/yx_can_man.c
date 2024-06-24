@@ -180,7 +180,7 @@ static FILTER_CAN_CFG_T s_filter_id_cfg[MAX_CAN_CHN -1][MAX_FILTER_ID] = {
      {0, 0x18feca00, 0xfbffffff},
      {0, 0x18f2f1f9, 0xfffff9ff},
      {0, 0x19ff3500, 0xfed800ff},
-     {0, 0x18ff30a0, 0xffffffff},
+     {0, 0x18ff30a0, 0xf8ff30Af},
 		 {0, 0x18daf100, 0xffad8005}
 	 },
 	 { {0, 0x18ebfff9, 0xfff8ffff},
@@ -190,7 +190,7 @@ static FILTER_CAN_CFG_T s_filter_id_cfg[MAX_CAN_CHN -1][MAX_FILTER_ID] = {
 	   {0, 0x18daf100, 0xFFFFFFFF},
 		 {0, 0x7f0,      0xFFFFFFFF},
 		 {0, 0x18daf100, 0xffad8005},
-		 {0, 0x00,       0x00      },
+		 {0, 0x1FFFFFF0, 0xFFFFFFFF},
 		 {0, 0x00,       0x00      },
 		 {0, 0x00,       0x00      },
      {0, 0x00,       0x00      },
