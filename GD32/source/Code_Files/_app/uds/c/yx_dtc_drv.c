@@ -237,7 +237,7 @@ static void DTC_Dm1Init(void)
 
     for (idx = 0; idx < MAX_DISP_CODE; idx++) {
         s_dm1_dtc_tab[idx].bitFiled._CM = 0;
-        s_dm1_dtc_tab[idx].bitFiled._OC = 127;    // 127表示未知次数
+        s_dm1_dtc_tab[idx].bitFiled._OC = 0;    // 127表示未知次数
         if ((idx == B157216) || (idx == B156E13)|| (idx == B157513)) {
             s_dm1_dtc_tab[idx].bitFiled._FMI = 5;
         } else if((idx == B156E11) || (idx == B157511)) {
@@ -282,6 +282,28 @@ static void DTC_Dm1Init(void)
 
     s_dm1_dtc_tab[U003700].bitFiled._SPN_LOW = 0xFDF4;    // GCAN2 BusOff//
     s_dm1_dtc_tab[U014600].bitFiled._SPN_LOW = 0xFDFD;    // GATWAY节点超时 //
+}
+/*******************************************************************************
+** 函数名:    SetDTC_Dm1_OC
+** 函数描述:  设置DM1故障码次数
+** 参数:       无
+** 返回:       无
+******************************************************************************/
+void SetDTC_Dm1_OC(INT8U dtc)
+{
+    INT8U idx;  
+
+    if(dtc == 0xFF) {
+		    for (idx = 0; idx < MAX_DISP_CODE; idx++) {
+				    s_dm1_dtc_tab[idx].bitFiled._OC = 0;
+			  }
+    } else {
+        if(s_dm1_dtc_tab[dtc].bitFiled._OC < 0x7F) {
+            s_dm1_dtc_tab[dtc].bitFiled._OC++;
+        } else {
+            s_dm1_dtc_tab[dtc].bitFiled._OC = 0x7F;
+        }
+    }
 }
 
 /*******************************************************************************
@@ -816,6 +838,7 @@ static BOOLEAN Set_DTCStatus(DTC_DISP_CODE_E dtc, INT8U mask, DTCSTATUS_OP_E op,
         debug_printf("<set dtc:%d>status(%x) mask(%x)\r\n", dtc, s_dtc_obj.dtc[dtc].status, mask);
         #endif
         if ((s_dtc_obj.dtc[dtc].status & mask) != mask) { /* 当前状态为未设置状态 */
+						SetDTC_Dm1_OC(dtc);
             status = s_dtc_obj.dtc[dtc].status;
             s_dtc_obj.dtc[dtc].status |= mask;
             /* 状态为已确认时才存储,并且所有故障码只存储已确认状态 */
@@ -1257,6 +1280,7 @@ void YX_DTC_SID14_ClearDiagnosticInformation(INT8U *data, INT16U len)
         } else {
             YX_UDS_NegativeResponse(SID_14, NRC_31);
         }
+				SetDTC_Dm1_OC(0xFF);
     } else {
         #if 0
         dtc_code_in = HexDtc2Long(data);
