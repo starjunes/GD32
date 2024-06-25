@@ -1771,6 +1771,7 @@ static void SendCanMsg_OnOff(void)
 					  s_op_static = FALSE;
 					  HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
             HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0); 
+						YX_Wake_SendCanMsg();
         }
     }
 }
@@ -3166,6 +3167,7 @@ void YX_CAN_PreInit(void)
 				candata.period = s_period_msg[i].period;
 				PORT_CanSend(&candata);
     }
+		YX_Wake_SendCanMsg();
 }
 static void YX_CAN_SetFilter_Hdl(void *pdata)
 {
@@ -3199,6 +3201,30 @@ static void YX_CAN_SetFilter_Hdl(void *pdata)
         default:
 				break;
     }
+}
+/*******************************************************************************
+ ** 函数名:    YX_CAN_Init
+ ** 函数描述:   CAN通讯驱动模块初始化
+ ** 参数:       无
+ ** 返回:       无
+ ******************************************************************************/
+void YX_Wake_SendCanMsg(void) 
+{
+    CAN_DATA_SEND_T candata;
+		
+   candata.can_DLC = 8;
+	 candata.can_id = 0x18FEE64A;
+	 candata.can_IDE = 1;
+	 candata.channel = 0;
+	 memset(&candata.Data, 0x00, sizeof(candata.Data));
+	 candata.Data[6]  = 0xFA;
+	 candata.Data[7]  = 0xFA;
+	 candata.period = 0xffff;
+	 PORT_CanSend(&candata);
+	 
+	 candata.can_id = s_period_msg[2].canId;
+	 MMI_MEMCPY(candata.Data, 8, s_period_msg[2].canData,8);
+	 PORT_CanSend(&candata);
 }
 /*******************************************************************************
  ** 函数名:    YX_CAN_Init
