@@ -3031,16 +3031,20 @@ INT8U YX_CAN_SoftStatus(void)
 **  输入参数:  CAN通道
 **  返回参数:  无
 *******************************************************************************/
-void SendTimeCan(INT8U* data)
+void SendTimeCan(INT8U* data, BOOLEAN ret)
 {
     INT8U senddata[13] = {0x18,0xFE,0xE6,0x4A,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0xFA,0xFA}; /* 0x18FEE64A */
 
-    if(data[6] || data[4] || data[0] ) {
-		    data[6] = 2000 + data[6] - 1985;
-		    data[4] = (data[4] * 4);
-		    data[0] = (data[0] * 4);
-    }
-		
+		if(ret) {
+        if(data[6] || data[4] || data[0] ) {
+    		    data[6] = 2000 + data[6] - 1985;
+    		    data[4] = (data[4] * 4);
+    		    data[0] = (data[0] * 4);
+        }
+		} else {
+		   senddata[11] = 0x00;
+			 senddata[12] = 0x00;
+		}
     senddata[5]  = data[0]; 				 //TICK  
     senddata[6]  = data[1]; 				 //MINITE  
     senddata[7]  = data[2]; 				 //HOUR
@@ -3217,8 +3221,6 @@ void YX_Wake_SendCanMsg(void)
 	 candata.can_IDE = 1;
 	 candata.channel = 0;
 	 memset(&candata.Data, 0x00, sizeof(candata.Data));
-	 candata.Data[6]  = 0xFA;
-	 candata.Data[7]  = 0xFA;
 	 candata.period = 0xffff;
 	 PORT_CanSend(&candata);
 	 

@@ -478,7 +478,7 @@ static void GetSignalstatusTmr(void* pdata)
 			count = 0;
 		}
 	}
-	SendTimeCan(data);
+	SendTimeCan(data,ret);
 }
 /*******************************************************************************
  ** º¯ÊıÃû:    YX_Signal_Init

@@ -22,7 +22,7 @@
 ********************************************************************************
 */
 //#define MAX_VERSION_LEN        30
-#define APPDAL_VERSION_STR     "c1775002t16-ae64gdm4-001"
+#define APPDAL_VERSION_STR     "c1775002t17-ae64gdm4-001"
 #define APP_VERSION_NUM        APPDAL_VERSION_STR
 #define APP_VERSION_TYPE       "ae64gdm4"
 
