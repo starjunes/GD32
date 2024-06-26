@@ -382,12 +382,14 @@ static void SignalHandleTmr(void* pdata)
 	}else{
 		acc1 = FALSE;
 	}
+	#if 0
 	if(acc0 == FALSE){
 		if (GetSpeedFlag() == TRUE){
 			acc1 = TRUE;
 			SetSpeedFlag(FALSE);
 		}
 	}
+	#endif
     if(acc0 != acc1){
         if(acc1 == TRUE){
 			#if DEBUG_LOCK > 0

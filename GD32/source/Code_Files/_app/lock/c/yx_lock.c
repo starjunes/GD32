@@ -835,15 +835,15 @@ void WC_CanDelayTmr(void)
 		case HAND_SEND2:
 			if (++delay_cnt >= 5) {
 				delay_cnt = 0;
-				WC_HandShake();
 				s_sclockstep = HAND_SEND3;
+				WC_HandShake();
 			}
 		break;
 		case HAND_SEND3:
 			if (++delay_cnt >= 5) {
 				delay_cnt = 0;
 				WC_HandShake();
-				s_wc_0100recv = FALSE;
+				// s_wc_0100recv = FALSE;
 				s_wc_0100cnt = 0;
 				s_sclockstep = CONFIG_CONFIRM_REC;
 			}
@@ -1207,13 +1207,13 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 			s_wc_0800cnt  = 0;
             if (s_sclockpara.ecutype == ECU_WEICHAI) {
 				if (s_wc_0100recv == TRUE) {
-					if (ecustatcnt++ < 5) {		// 握手时前面三帧忽略
+					if (ecustatcnt++ < 3) {		// 握手时前面三帧忽略
 						return;
 					} else {
-						ecustatcnt = 6;
+						ecustatcnt = 4;
 					}
 				}
-                if ((CONFIG_CONFIRM_REC == s_sclockstep) && ((CAN_msg->databuf[2] & WC_KEY_BIT) == WC_KEY_BIT)) {
+                if ((s_ishandover == false) && ((CAN_msg->databuf[2] & WC_KEY_BIT) == WC_KEY_BIT)) {
                     s_idfiltenable = TRUE;
                     s_sclockstep = CONFIG_OVER;
 					s_ishandover = TRUE;
