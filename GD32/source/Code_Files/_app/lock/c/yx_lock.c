@@ -1207,13 +1207,13 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 			s_wc_0800cnt  = 0;
             if (s_sclockpara.ecutype == ECU_WEICHAI) {
 				if (s_wc_0100recv == TRUE) {
-					if (ecustatcnt++ < 1) {		// 握手时前面三帧忽略
+					if (ecustatcnt++ < 3) {		// 握手时前面三帧忽略
 						return;
 					} else {
-						ecustatcnt = 2;
+						ecustatcnt = 4;
 					}
 				}
-                if ((CONFIG_CONFIRM_REC == s_sclockstep) && ((CAN_msg->databuf[2] & WC_KEY_BIT) == WC_KEY_BIT)) {
+                if ((s_ishandover == false) && ((CAN_msg->databuf[2] & WC_KEY_BIT) == WC_KEY_BIT)) {
                     s_idfiltenable = TRUE;
                     s_sclockstep = CONFIG_OVER;
 					s_ishandover = TRUE;
