@@ -102,7 +102,7 @@
 
 #define BAT_POW_LOW_3V       1500        // 3.0V
 #define BAT_POW_RECV_3_3V    1650        // 3.3V
-
+#define B_ADC_20V           1025    // 2.05v, 有电池
 /*
 ********************************************************************************
 * 定义结构
@@ -614,6 +614,7 @@ static BOOLEAN BatPwrHdl(void)
     
     value = PORT_GetADCValue(ADC_BAKPWR);
 
+    if(value < B_ADC_20V)  return TRUE;      /* 低于2.05默认无电池不报故障 */     
     // 低于3V异常后，要恢复到3.3v以上才正常
     if (value > BAT_POW_LOW_3V) {
         if (LowCheck) {
