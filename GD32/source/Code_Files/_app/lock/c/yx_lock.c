@@ -1495,7 +1495,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
 			s_sclockpara.serialnumber[i] = userdata[len + 1 + len1 - i - 1];
 		}*/
     } else {
-        if (memcmp(s_sclockpara.firmcode, &userdata[len+1], len1) != 0) {
+        if (memcmp(s_sclockpara.serialnumber, &userdata[len+1], len1) != 0) {
             change = TRUE;
             memcpy(s_sclockpara.serialnumber, &userdata[len + 1], len1);
         }
@@ -1611,7 +1611,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
     len++;
 
     if (change) {
-        #if EN_DEBUG > 0
+        #if DEBUG_LOCK > 0
             debug_printf("同步状态改变 \r\n");
             debug_printf("LockParaStore ecutype:%d unbindstat:%d\r\n", s_sclockpara.ecutype, s_sclockpara.unbindstat);
         #endif
