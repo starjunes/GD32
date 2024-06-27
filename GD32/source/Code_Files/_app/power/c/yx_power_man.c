@@ -1198,7 +1198,8 @@ static void PowerMonitorTmr(void* pdata)
 {
      INT32S value;
 		 STREAM_T* wstrm;
-
+     static INT8U wake_delay = 0;
+		 
 		 if(!s_mainpwr_adap)     return;
 	   value = PORT_GetADCValue(ADC_MAINPWR);
      #if EN_DEBUG > 1
@@ -1236,13 +1237,16 @@ static void PowerMonitorTmr(void* pdata)
 									s_sleep_mpu = FALSE;
 
 						  } else {
-						      WakeUpGsm();
-    					    Pause_Link(TRUE); 
-									s_close_mpu = FALSE;
-									s_sleep_mpu = FALSE;
-    					    #if EN_DEBUG > 0
-    		          debug_printf("主电 9 - 16-32 mpu唤醒\r\n");
-    		          #endif
+						      if(++wake_delay >= 120) {
+										  wake_delay = 0;
+     						      WakeUpGsm();
+         					    Pause_Link(TRUE); 
+     									s_close_mpu = FALSE;
+     									s_sleep_mpu = FALSE;
+         					    #if EN_DEBUG > 0
+         		          debug_printf("主电 9 - 16-32 mpu唤醒\r\n");
+         		          #endif
+						      }
     		      }
 		      }
 					if((value >  MAIN_POW_CLOSE_CAN_36V) && (s_close_mpu == FALSE) ) {  /* 大于36关闭MPU */
@@ -1259,6 +1263,7 @@ static void PowerMonitorTmr(void* pdata)
     				 Pause_Link(FALSE); 
 						 s_wait_check = FALSE;
 						 s_wait_mpunotify = FALSE;
+						 wake_delay = 0;
 		     } else {
 		         if(s_wait_check == FALSE) {
         		     if((value < s_intosleepmpu) || (value > MAIN_POW_INTOSLEEP_MPU_33V)) {  /* 小于8/15V 通知MPU休眠 */

@@ -26,7 +26,7 @@
 #define APP_VERSION_NUM        APPDAL_VERSION_STR
 #define APP_VERSION_TYPE       "ae64gdm4"
 
-#define CLIENT_VERSION_STR	   "Y4.35.2006"
+#define CLIENT_VERSION_STR	   "V4.35.2006"
 #define CHANGCHUN              "Y"           /* ³¤´º */
 #define QINGDAO                "V"           /* Çàµº */
 /*
