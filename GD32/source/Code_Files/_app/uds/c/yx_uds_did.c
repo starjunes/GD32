@@ -1239,29 +1239,29 @@ void YX_UDS_DID_UpdataCanData(INT32U canId, INT8U* data, INT8U len)
     if (len != 8) return;
 
     if (canId == 0x18FEE017) {          // 总里程
-        s_can_signal.totalDis[0] = data[4];
-        s_can_signal.totalDis[1] = data[5];
-        s_can_signal.totalDis[2] = data[6];
-        s_can_signal.totalDis[3] = data[7];
+        s_can_signal.totalDis[0] = data[7];
+        s_can_signal.totalDis[1] = data[6];
+        s_can_signal.totalDis[2] = data[5];
+        s_can_signal.totalDis[3] = data[4];
         
     } else if (canId == 0x18FEE900) {   // 总油耗
-        s_can_signal.tolalFuelCon[0] = data[4];
-        s_can_signal.tolalFuelCon[1] = data[5];
-        s_can_signal.tolalFuelCon[2] = data[6];
-        s_can_signal.tolalFuelCon[3] = data[7];
+        s_can_signal.tolalFuelCon[0] = data[7];
+        s_can_signal.tolalFuelCon[1] = data[6];
+        s_can_signal.tolalFuelCon[2] = data[5];
+        s_can_signal.tolalFuelCon[3] = data[4];
 
     } else if (canId == 0x18FEF200) {   // 瞬时燃油消耗率
-        s_can_signal.fuelRate[0] = data[0];
-        s_can_signal.fuelRate[1] = data[1];
+        s_can_signal.fuelRate[0] = data[1];
+        s_can_signal.fuelRate[1] = data[0];
         
     } else if (canId == 0x0CFE6C17) {   // 仪表车速
-        s_can_signal.vehSpeed[0] = data[6];
-        s_can_signal.vehSpeed[1] = data[7];
+        s_can_signal.vehSpeed[0] = data[7];
+        s_can_signal.vehSpeed[1] = data[6];
 				s_vehSpeed = (data[6] << 8) + data[7]; 
 				s_vehSpeed_over = 0;
     } else if (canId == 0x0CF00400) {   // 发动机转速
-        s_can_signal.engSpeed[0] = data[3];
-        s_can_signal.engSpeed[1] = data[4];
+        s_can_signal.engSpeed[0] = data[4];
+        s_can_signal.engSpeed[1] = data[3];
         
     }
 }
