@@ -1178,24 +1178,25 @@ BOOLEAN YX_UDS_DID_Down(INT16U did, INT8U *data, INT8U len)
         if (s_did_status[i] == 0) {         
             /* did == 0xF1A1 ||did == 0xF182 || did == 0xF187 为MCU默认配置，无需主机同步 */
             if ((did == 0xF190) || (did == 0xF193) || (did == 0xF195) || (did == 0xF19D) || (did == 0x1004) ||
-							  (did == 0x1002) || (did == 0x1003) || (did == 0x1028) || (did == 0x1009) || (did == 0x1010) || 
-							  (did == 0x1015) || (did == 0x3102) || (did == 0x3103) || (did == 0xF194) || (did == 0x2100) ||
-							  (did == 0xF192) || (did == 0xF199) || (did == 0x102A) || (did == 0x102B) || (did == 0x102C)
-							  || (did == 0x0100)|| (did == 0x0110)|| (did == 0xF187) || (did == 0x1026)|| (did == 0x103E) 
-							  || (did == 0x103d)) {
-							  YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
-								if(did == 0x0110) {
-					          SendDID_103A();
-										//YX_Sync_F187();
-				        }
-								if((did != 0x1009) && (did != 0x1010) && (did != 0x0110) && (did != 0x1015) && (did != 0x103d)) {
-									  #if EN_DEBUG > 0
+    			(did == 0x1002) || (did == 0x1003) || (did == 0x1028) || (did == 0x1009) || (did == 0x1010) || 
+    			(did == 0x1015) || (did == 0x3102) || (did == 0x3103) || (did == 0xF194) || (did == 0x2100) ||
+    			(did == 0xF192) || (did == 0xF199) || (did == 0x102A) || (did == 0x102B) || (did == 0x102C) || 
+    			(did == 0x0100) || (did == 0x0110) || (did == 0xF187) || (did == 0x1026) || (did == 0x103E) || 
+    			(did == 0x103d) || (did == 0x103b) || (did == 0x103c)) {
+			    YX_MEMCPY(s_uds_did_obj[i].data,len, data, len);
+				if(did == 0x0110) {
+			        SendDID_103A();
+					//YX_Sync_F187();
+				}
+				if((did != 0x1009) && (did != 0x1010) && (did != 0x0110) && (did != 0x1015) && (did != 0x103d) &&
+				   (did != 0x103b) && (did != 0x103C)) {
+				    #if EN_DEBUG > 0
                     debug_printf("did = %x\r\n",did);
-										printf_hex(data,len);
-										debug_printf("\r\n");
+					printf_hex(data,len);
+					debug_printf("\r\n");
                     #endif
                     DID_DataUpdate();
-								}
+			    }
             }
         }
 
