@@ -19,6 +19,8 @@
 #include "yx_uds_did.h"
 #include "bal_gpio_cfg.h"
 #include "port_can.h"
+#include "appmain.h"
+#include "yx_protocal_type.h"
 #if EN_UDS > 0
 
 /*
@@ -897,7 +899,24 @@ static BOOLEAN Set_DTCStatus(DTC_DISP_CODE_E dtc, INT8U mask, DTCSTATUS_OP_E op,
     }
     return TRUE;
 }
+/*******************************************************************
+** 函数名: YX_Report_DTCStatus
+** 描述:   通知MPU清除T-BOX故障码
+** 参数:   [in] dtc: 故障码 见 DTC_DISP_CODE_E(0xFF 表示清除所有故障码)
+** 返回: 
+********************************************************************/
+void YX_Report_DTCStatus(INT8U dtc) 
+{
+    STREAM_T* wstrm;
 
+	wstrm = bal_STREAM_GetBufferStream();
+	bal_WriteHWORD_Strm(wstrm, CLIENT_CODE);//CLIENT_CODE
+	bal_WriteBYTE_Strm(wstrm, 0x25);
+    bal_WriteBYTE_Strm(wstrm, 0x01);
+	bal_WriteBYTE_Strm(wstrm, 0x01);
+	bal_WriteBYTE_Strm(wstrm, dtc);
+	YX_COM_DirSend(CLIENT_FUNCTION_UP_REQ, bal_GetStrmStartPtr(wstrm), bal_GetStrmLen(wstrm)); 
+}
 /*******************************************************************
 ** 函数名: Clear_DTC
 ** 描述:   清除T-BOX故障码
@@ -928,6 +947,7 @@ static BOOLEAN Clear_DTC(DTC_DISP_CODE_E dtc, BOOLEAN info)
         s_mpu_dtc_sig_sta = 0;
         DTC_ResetMiscFlag();
         if (info) {
+			YX_Report_DTCStatus(dtc);
             #if EN_DTC_SYSC > 1
             i = 0x01;
             YX_EXT_PRO_Send(0x02, 0x00, &i, 1);    // 清除所有故障
@@ -942,7 +962,7 @@ static BOOLEAN Clear_DTC(DTC_DISP_CODE_E dtc, BOOLEAN info)
         s_dtc_obj.dtc[dtc].status = 0x00;
         s_dtc_obj.dtc[dtc].self_clr_cnt = 0;    /* 重置自清除计数 */
         DTC_ClearNodeLostCnt(dtc);
-        
+        YX_Report_DTCStatus(dtc);
         if (info) {
             #if EN_DTC_SYSC > 1
             YX_Report_DTCStatus(dtc);
