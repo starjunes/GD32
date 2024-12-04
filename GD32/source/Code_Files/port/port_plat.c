@@ -84,7 +84,7 @@ BOOLEAN PORT_StampTotime(INT32U stamp, INT8U* temp)
 	temp[0] = nowtime->tm_sec;
 	return TRUE;
 }
-
+static BOOLEAN is_set = FALSE;
 /********************************************************************************
 **  函数名:     PORT_SetSysTime
 **  函数描述:   设置系统时间
@@ -94,19 +94,20 @@ BOOLEAN PORT_StampTotime(INT32U stamp, INT8U* temp)
 BOOLEAN PORT_SetSysTime(SYSTIME_T *dt)
 {
 
-	INT8U time[7] = {0},rtc_time[7], ret;
+	INT8U time[7] = {0},rtc_time[7] = {0}, ret;
 	INT16U temp;
 	INT32U t1 = 0,t2 = 0;
 	static INT8U hop_cnt = 0;	// 数值连续跳变次数>=3，修改时间
 	// 如果设置全0为无效值，不做处理
 	if (memcmp(time, (INT8U*)dt, 6) == 0) {
-		#if DEBUG_TEMP > 0
+		#if EN_DEBUG > 0
 		debug_printf("PORT_SetSysTime 时间为全0，无效值，不做处理\r\n");
 		#endif
 		return FALSE;
 	}
 		
 	dal_rtc_settime((INT8U *)dt);
+	is_set = TRUE;
 	//dal_rtc_gettime(time, 7);
 	ret = HAL_sd2058_ReadCalendar(time);
 	if (ret == TRUE) {
@@ -132,14 +133,14 @@ BOOLEAN PORT_SetSysTime(SYSTIME_T *dt)
 			rtc_time[5] = dt->date.month;  	//月
 			rtc_time[6] = dt->date.year;  	//年
 			ret = HAL_sd2058_SetCalendar(rtc_time);
-			#if DEBUG_TEMP > 0
+			#if EN_DEBUG > 0
 			debug_printf("HAL_sd2058_SetCalendar ret:%d\r\n",ret);
 			#endif
 		}
 	} else {
 		hop_cnt = 0;
 	}
-	#if DEBUG_TEMP > 0
+	#if EN_DEBUG > 0
 	//ret = HAL_sd2058_ReadCalendar(time);
 	debug_printf("settime:%d/%d/%d %d:%d:%d\r\ncurtime:%d/%d/%d %d:%d:%d %d hop_cnt:%d\r\n",dt->date.year, dt->date.month, dt->date.day,dt->time.hour, dt->time.minute, dt->time.second,
 		time[6],time[5],time[4],time[2],time[1],time[0],time[3], hop_cnt);
@@ -453,9 +454,15 @@ void PORT_SetAlarmRepeat(INT16U alarmtime, BOOLEAN repeatenable, INT32U repeatin
 	//hal_rtc_SetAlarmRepeat(RTC_IDX_0, alarmtime, repeatenable, repeatinterval);
 }
 
-
-
-
+/********************************************************************************
+**  函数名称:  PORT_SetRtc
+**  功能描述:  内部RTC是否设置
+**  返回参数:  无
+********************************************************************************/
+BOOLEAN PORT_SetRtc(void) 
+{
+    return is_set;
+}
 # if 0 // 暂不支持
 /********************************************************************************
 ** 函数名:     PORT_EnterVLPRMode

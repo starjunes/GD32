@@ -433,7 +433,7 @@ INT8U GetAccState(void)
 static void GetSignalstatusTmr(void* pdata)
 {
     /*-----------------主机状态请求-------------------*/
-    INT8U  ack[32], len, num = 0,data[7];
+    INT8U  ack[32], len, num = 0,data[7],rtcdata[7];
 	static INT8U count = 0;
 	BOOLEAN ret;
 		
@@ -441,8 +441,21 @@ static void GetSignalstatusTmr(void* pdata)
 	YX_MEMSET(data, 0x00, sizeof(data));
 		
 	ret = HAL_sd2058_ReadCalendar(data);
+	#if DEBUG_EX_RTC > 0
+   	debug_printf("rtc ret = %d 年 %d 月 %d 日 %d 分 %d 秒 %d \r\n",ret,data[6], data[5], data[4], data[2], data[1], data[0]);
+   	#endif
 	if (ret == FALSE) {
 		s_disinfect_bak++;
+		if(PORT_SetRtc()) {
+			ret = true;
+    		dal_rtc_gettime(rtcdata, 7);
+    		data[6] = rtcdata[0]; 		//YEAR
+    	    data[5] = rtcdata[1]; 	    //MONTH
+    		data[4] = rtcdata[2]; 		//DATE
+    		data[2] = rtcdata[3]; 		//HOUR
+    	    data[1] = rtcdata[4]; 		//MINITE
+    		data[0] = rtcdata[5]; 		//TICK
+		}
 	} else {
 		if (s_disinfect_startflag == FALSE) {
 			s_disinfect_startflag = TRUE;
