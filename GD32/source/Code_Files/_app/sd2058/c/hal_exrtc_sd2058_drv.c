@@ -10,6 +10,7 @@
 #include "hal_exrtc_sd2058_drv.h"
 #include "debug_print.h"
 #include "dal_gsen_drv.h"
+#include "app_include.h"
 
 
 /********************************************************************************
