@@ -1897,6 +1897,31 @@ void YX_GZ_Test_Hdl(void)
     senddata[2] = 0x01;
     YX_COM_DirSend(GZ_TEST_REQ_ACK, senddata, 3);
 }
+
+/******************************************************************************
+ ** 函数名:     YX_RTC_Test_Hdl
+ ** 函数描述:   RTC状态检测处理
+ ** 参数:       无
+ ** 返回:       无
+ ******************************************************************************/
+void YX_RTC_Test_Hdl(void)
+{
+    INT8U senddata[3];
+
+	#if DEBUG_ADC_MAINPWR
+	debug_printf("RTC状态检测通知\r\n");
+	#endif
+
+    senddata[0] = 0x07;
+    senddata[1] = 0x01;
+    if(HAL_sd2058_Open()){
+        senddata[2] = 0x01;
+    }else {
+        senddata[2] = 0x00;
+    }
+    YX_COM_DirSend(GZ_TEST_REQ_ACK, senddata, 3);
+}
+
 /*******************************************************************************
 ** 函数名:    Get_SystemVol
 ** 函数描述:  获取系统12V还是24系统

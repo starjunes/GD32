@@ -77,6 +77,9 @@ void GZ_TestReq_Hdl(INT8U mancode, INT8U command,INT8U *data, INT16U datalen)
 	   case 0x06:                            // ¼ì²âÍ¨Öª
             YX_GZ_Test_Hdl();
             break;            
+	   case 0x07:                            // RTC×´Ì¬
+            YX_RTC_Test_Hdl();
+            break;                        
         default:
             break;
     }
