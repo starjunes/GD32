@@ -174,7 +174,17 @@ void PORT_RegCanCallbakFunc(CAN_CALLBAK_HDL handle)
     //dal_can_lbrepregist((CAN_CALLBAK_FP)handle);
     Dal_CANLBRepReg(LB_ANALYZE, handle);
 }
-
+/********************************************************************************
+**  函数名:     PORT_CanInitCallbakFunc
+**  函数描述:   CAN回调函数注册
+**  参数:
+**             [in] handle: 回调函数
+**  返回:      无
+********************************************************************************/
+void PORT_CanInitCallbakFunc(CAN_CALLBUSOFF_HDL handle)
+{
+	Dal_CanInitCBRepReg(CB_CANINIT, handle);
+}
 void PORT_CanSeqCFSendCallbakFunc(CAN_SEQCFSEND_HDL handle)
 {
     dal_CanSeqCFSendCallbakFunc(handle);

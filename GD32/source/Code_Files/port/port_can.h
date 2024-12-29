@@ -63,6 +63,7 @@ typedef struct {
 // CAN接收回调函数
 typedef void (*CAN_CALLBAK_HDL)(CAN_DATA_HANDLE_T *);
 typedef void (*CAN_SEQCFSEND_HDL)(void);
+typedef void (*CAN_CALLBUSOFF_HDL)(INT8U chn);
 /********************************************************************************
 **  函数名:     PORT_InitCan
 **  函数描述:   CAN初始化dal层的CAN收发器
@@ -146,6 +147,14 @@ void PORT_RegCanCallbakFunc(CAN_CALLBAK_HDL handle);
 void PORT_CanRecCallbakFunc(CAN_CALLBAK_HDL handle);
 void PORT_CanSeqCFSendCallbakFunc(CAN_SEQCFSEND_HDL handle);
 void PORT_CanSTminTimeoutCallbakFunc(CAN_SEQCFSEND_HDL handle);
+/********************************************************************************
+**  函数名:     PORT_CanInitCallbakFunc
+**  函数描述:   CAN回调函数注册
+**  参数:
+**             [in] handle: 回调函数
+**  返回:      无
+********************************************************************************/
+void PORT_CanInitCallbakFunc(CAN_CALLBUSOFF_HDL handle);
 
 /********************************************************************************
 ** 函数名:     PORT_GetBusOffFlag

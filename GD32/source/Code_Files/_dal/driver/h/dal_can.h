@@ -208,6 +208,10 @@ typedef enum {
     LB_MAX
 }CAN_LBINDEX_E;
 
+typedef enum {
+    CB_CANINIT    = 0x00,                                            /* 定时连续帧 */
+    CB_MAX
+}CAN_CBINDEX_E;
 /*******************************************************************
 ** 函数名:     Dal_CAN_Init
 ** 函数描述:   CAN底层初始化
@@ -223,6 +227,13 @@ void Dal_CAN_Init(void);
 ** 返回:       无
 ********************************************************************/
 void Dal_CANLBRepReg(CAN_LBINDEX_E index, void (* handle) (CAN_DATA_HANDLE_T *CAN_msg));
+/*******************************************************************
+** 函数名:     Dal_CanInitCBRepReg
+** 函数描述:   CAN回调上报函数
+** 参数:       [in] handle             指向APP层的函数指针
+** 返回:       无
+********************************************************************/
+void Dal_CanInitCBRepReg(CAN_CBINDEX_E index, void (* handle) (INT8U chn));
 
 /*******************************************************************
 ** 函数名:     CANRegularReport

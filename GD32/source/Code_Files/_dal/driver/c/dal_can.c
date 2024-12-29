@@ -78,6 +78,11 @@ typedef struct {
     ID_SEND_T     idcbt[MAX_RXIDOBJ];                                /* ID²ÎÊýÊôÐÔ */
 } CAN_SEND_T;
 
+typedef struct {
+    CAN_CBINDEX_E index;                                             /* »Øµ÷Ë÷ÒýºÅ */
+    void  (*lbhandle) (INT8U chn);                                   /* »Øµ÷º¯ÊýÖ¸Õë */
+} CAN_CBAPP_E;
+
 /*************************************************************************************************/
 /*                           CAN»Øµ÷APP²ã½á¹¹Ìå                                                  */
 /*************************************************************************************************/
@@ -95,6 +100,7 @@ static CAN_FILTER_T   s_can_filter[MAX_CANCHAN];                     /* CAN¹ýÂËÆ
 static CAN_SEND_T     s_msg_period[MAX_CANCHAN];                     /* ÖÜÆÚ·¢ËÍµÄCANÏûÏ¢¿é */
 
 static CAN_LBAPP_E    s_lbfunctionentry[LB_MAX];
+static CAN_CBAPP_E    s_cbfunctionentry[LB_MAX];
 static INT8U          s_can_buf[sizeof(CAN_DATA_HANDLE_T) * 40];
 static INT8U          s_can_send_buf[MAX_CANCHAN][CAN_SEND_PKG_LEN * 60];
 static ROUNDBUF_T     s_can_send_round[MAX_CANCHAN];
@@ -502,6 +508,16 @@ void Dal_CAN_Init(void)
 void Dal_CANLBRepReg(CAN_LBINDEX_E index, void (* handle) (CAN_DATA_HANDLE_T *CAN_msg))
 {
     s_lbfunctionentry[index].lbhandle = handle;
+}
+/*******************************************************************
+** º¯ÊýÃû:     Dal_CanInitCBRepReg
+** º¯ÊýÃèÊö:   CAN»Øµ÷ÉÏ±¨º¯Êý
+** ²ÎÊý:       [in] handle             Ö¸ÏòAPP²ãµÄº¯ÊýÖ¸Õë
+** ·µ»Ø:       ÎÞ
+********************************************************************/
+void Dal_CanInitCBRepReg(CAN_CBINDEX_E index, void (* handle) (INT8U chn))
+{
+    s_cbfunctionentry[index].lbhandle = handle;
 }
 #if 0
 /*******************************************************************
@@ -1442,6 +1458,29 @@ BOOLEAN CheckCanIsBusOff(INT8U channel)
         return FALSE;
     }
 }
+/*****************************************************************************
+**  º¯ÊýÃû:  CanBusOffTestSendPack
+**  º¯ÊýÃèÊö: ÓÃÓÚ´Ù·¢bus off£¬ÇÒÒòÎªÍø¹ÜÐèÒªÔÚbus offºó·¢limphome±¨ÎÄ£¬ËùÒÔÓÃ
+              limphome±¨ÎÄ×ö´Ù·¢
+**  ²ÎÊý:    [in] com :
+**  ·µ»Ø:    ÎÞ
+*****************************************************************************/
+static void CanBusOffTestSendPack(INT8U chn)
+{
+    INT8U cdata[13] = {0x18, 0xFE, 0xE6, 0x4A, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFA, 0xFA};
+	
+	INT32U CANx;
+    if(chn == 0x00) {
+		CANx = CAN0;
+	} else {
+		CANx = CAN1;
+	}
+	s_sendstat[chn] = CAN_SEND_IDLENOW;
+    can_interrupt_disable(CANx, CAN_INT_TME); /* ¹Ø±Õ·¢ËÍÖÐ¶Ï */ 
+    can_transmission_stop(CANx, 0); 
+    can_interrupt_enable(CANx, CAN_INT_TME);  /* ´ò¿ª·¢ËÍÖÐ¶Ï */
+	DAL_CAN_TxData_Dir(cdata, chn);
+}
 /**************************************************************************************************
 **  º¯ÊýÃû³Æ:  CanBussOffManual
 **  ¹¦ÄÜÃèÊö:  ÊÖ¶¯ÍË³öbusoff
@@ -1525,7 +1564,12 @@ void CanBusOffHal(void)
 						   #endif
 							 //s_can_para[chn].onoff = FALSE;
 							 //hal_clear_cancbrxbuf(chn);
-							 CanBussOffManual(chn);
+							 if(s_cbfunctionentry[CB_CANINIT].lbhandle != NULL) {
+							 	s_cbfunctionentry[CB_CANINIT].lbhandle(chn);
+							 } else {
+							    CanBussOffManual(chn);
+							 }
+						     CanBusOffTestSendPack(chn);							 
 							 //s_can_para[chn].onoff = TRUE;
 
 						   #if DEBUG_BUS_OFF > 1

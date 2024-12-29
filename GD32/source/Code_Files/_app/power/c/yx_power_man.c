@@ -454,6 +454,7 @@ void LightSleep(void)
     bal_Pulldown_GYRPWR();     // 拉低上电六轴传感器 
     chargestate |= ISCHARGE;
     bal_Pullup_CHGEN();
+	YX_MMI_CanLocalFilter();
     bal_Pullup_CAN0STB();
     bal_Pullup_CAN1STB();
     bal_Pullup_CAN2STB();

@@ -211,6 +211,7 @@ static INT16U s_can_filter_count = 0;
 ********************************************************************************/
 void YX_CAN_FilterModify(INT8U com, INT32U filtid, INT32U maskid, INT8U onoff)
 {
+    #if 0
     INT8U i;
 		
     if(com > (MAX_CAN_CHN -1))    return;
@@ -245,6 +246,7 @@ void YX_CAN_FilterModify(INT8U com, INT32U filtid, INT32U maskid, INT8U onoff)
     			  }
     		}
     }
+	#endif
 }
 
 /*****************************************************************************
@@ -3114,7 +3116,36 @@ void YX_MMI_CanLocalFilter(void)
 				PORT_CanEnable((CAN_CHN_E)i, true);
     }
 }
-
+/*******************************************************************
+** 函数名: YX_CanLocalFilter_Busoff
+** 描述: 本地打开CAN模块并滤波
+** 参数: 无
+** 返回: 无
+********************************************************************/
+void YX_CanLocalFilter_Busoff(INT8U chn)
+{
+    INT8U j;
+    if(chn == CAN_CHN_1) {
+	    s_can_para[0].baud = CAN_BAUD_250K;
+    } else {	
+        s_can_para[1].baud = CAN_BAUD_500K;
+    }
+    s_can_para[1].frameformat = FMAT_EXT;
+    s_can_para[1].mode = CAN_MODE_REPORT;
+		
+    
+	if(PORT_OpenCan((CAN_CHN_E)chn, s_can_para[chn].baud, s_can_para[chn].frameformat)) {
+        s_can_para[chn].onoff = true;
+    } else {
+        s_can_para[chn].onoff = false;
+	}
+	PORT_ClearCanFilter((CAN_CHN_E)chn);
+	for(j = 0; j < MAX_FILTER_ID; j++) {
+		if(s_filter_id_cfg[chn][j].filterid == 0x00)  continue;
+	    CAN_RxFilterConfig(s_filter_id_cfg[chn][j].filterid, s_filter_id_cfg[chn][j].filterid_mask,CAN_FILTER_ON,chn);
+	}
+	PORT_CanEnable((CAN_CHN_E)chn, true);
+}
 /*******************************************************************************
  ** 函数名:    YX_CAN_Init
  ** 函数描述:  CAN通讯驱动模块提前初始化
@@ -3127,7 +3158,8 @@ void YX_CAN_PreInit(void)
     CAN_DATA_SEND_T candata;
 		
     PORT_InitCan();	
-		#if EN_CAN_FILTER  > 0
+	PORT_CanInitCallbakFunc(YX_CanLocalFilter_Busoff);
+	#if EN_CAN_FILTER  > 0
     s_can_para[0].baud = CAN_BAUD_250K;
     s_can_para[0].frameformat= FMAT_EXT;
     s_can_para[0].mode = CAN_MODE_REPORT;
