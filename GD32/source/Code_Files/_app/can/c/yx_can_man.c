@@ -3130,8 +3130,8 @@ void YX_CanLocalFilter_Busoff(INT8U chn)
     } else {	
         s_can_para[1].baud = CAN_BAUD_500K;
     }
-    s_can_para[1].frameformat = FMAT_EXT;
-    s_can_para[1].mode = CAN_MODE_REPORT;
+    s_can_para[chn].frameformat = FMAT_EXT;
+    s_can_para[chn].mode = CAN_MODE_REPORT;
 		
     
 	if(PORT_OpenCan((CAN_CHN_E)chn, s_can_para[chn].baud, s_can_para[chn].frameformat)) {
