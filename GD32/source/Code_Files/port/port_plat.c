@@ -97,7 +97,7 @@ BOOLEAN PORT_SetSysTime(SYSTIME_T *dt)
 	INT8U time[7] = {0},rtc_time[7] = {0}, ret;
 	INT16U temp;
 	INT32U t1 = 0,t2 = 0;
-	static INT8U hop_cnt = 0;	// 数值连续跳变次数>=3，修改时间
+	static INT8U hop_cnt = 0,count = 0;	// 数值连续跳变次数>=3，修改时间
 	// 如果设置全0为无效值，不做处理
 	if (memcmp(time, (INT8U*)dt, 6) == 0) {
 		#if EN_DEBUG > 0
@@ -120,12 +120,14 @@ BOOLEAN PORT_SetSysTime(SYSTIME_T *dt)
 		t1 = PORT_GetSysTimestamp(rtc_time);
 		t2 = PORT_GetSysTimestamp(time);
 		temp = abs(t1- t2);
+		count++;
 	} else {
 		temp = 31;
 	}
-	if (temp > 30) {
-		if (++hop_cnt >= 3) {
+	if ((temp > 30) || (count >= 10)) {
+		if ((++hop_cnt >= 3) || (count >= 10)) {
 			hop_cnt = 0;
+			count = 0;
 			rtc_time[0] = dt->time.second;	//秒
 			rtc_time[1] = dt->time.minute;	//分
 			rtc_time[2] = dt->time.hour;  	//时
