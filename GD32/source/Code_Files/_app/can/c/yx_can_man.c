@@ -1764,16 +1764,18 @@ static void SendCanMsg_OnOff(void)
         if(s_op_delay++ >= 50) {
             s_op_delay = 0;					
             s_op_static = TRUE;
+			bal_Pulldown_CAN0STB();
             HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_DISABLE, UDS_PHSCL_RESPID, 0);
             HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_DISABLE, UDS_PHSCL_RESPID, 0);        
         }
     } else {	
-        if((!acc_sta) && s_op_static) {                            /* ACC On并且已经停发报文 */
-			      s_op_delay  = 0;
-					  s_op_static = FALSE;
-					  HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
+        if((!acc_sta) && s_op_static) {                              /* ACC On并且已经停发报文 */
+		    s_op_delay  = 0;
+			s_op_static = FALSE;
+			HAL_CAN_SendIdAccessSet(CAN_CHN_1, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0);
             HAL_CAN_SendIdAccessSet(CAN_CHN_2, CAN_SEND_ALL_PACKET, UDS_PHSCL_RESPID, 0); 
-						YX_Wake_SendCanMsg();
+			bal_Pullup_CAN0STB();
+			YX_Wake_SendCanMsg();
         }
     }
 }
@@ -1800,7 +1802,7 @@ static void CanSendDtcMsg(void)
     		candata.period  = s_period_msg[PERIOD_NUM - 1].period;
     		
         if (YX_DTC_GetStatus(&sendBuf[2], &bufLen)) {
-            sendBuf[0] = 0x40;                         // bit6~7 = 01,表示故障指示灯
+            sendBuf[0] = 0x00;                         // bit6~7 = 01,表示故障指示灯
             sendBuf[1] = 0xFF;                         // 预留，默认0xff
     
             if (bufLen == 4) {                         // 表示1个故障(单帧处理)
@@ -3246,9 +3248,9 @@ static void YX_CAN_SetFilter_Hdl(void *pdata)
  ******************************************************************************/
 void YX_Wake_SendCanMsg(void) 
 {
-    CAN_DATA_SEND_T candata;
+     CAN_DATA_SEND_T candata;
 		
-   candata.can_DLC = 8;
+     candata.can_DLC = 8;
 	 candata.can_id = 0x18FEE64A;
 	 candata.can_IDE = 1;
 	 candata.channel = 0;
