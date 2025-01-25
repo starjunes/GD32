@@ -30,6 +30,8 @@
 #include "hal_exrtc_sd2058_drv.h"
 #include "public.h"
 #include "appmain.h"
+#include "port_plat.h"
+#include "dal_rtc.h"
 #if EN_UDS > 0
 /*
 ********************************************************************************
@@ -306,14 +308,25 @@ static BOOLEAN DID_Read1007(INT8U* pData, INT8U didLen)
         pData[5] = sd_Hex2BCD(data[1]); 		//MINITE
         pData[6] = sd_Hex2BCD(data[0]); 		//TICK
     } else { 
-        pData[0] = 0x20; 	        //YEAR
-        pData[1] = 0x24; 		//YEAR
-        pData[2] = 0x04; 	  //MONTH
-        pData[3] = 0x11; 		//DATE
-        pData[4] = 0x11; 		//HOUR
-        pData[5] = 0x52; 		//MINITE
-        pData[6] = 0x58; 		//TICK
-        return FALSE;
+    	if(PORT_SetRtc()) {
+    		dal_rtc_gettime(data, 7);
+    		pData[0] = 0x20; 	                 //YEAR
+            pData[1] = sd_Hex2BCD(data[0]); 	 //YEAR
+            pData[2] = sd_Hex2BCD(data[1]); 	 //MONTH
+            pData[3] = sd_Hex2BCD(data[2]); 	 //DATE
+            pData[4] = sd_Hex2BCD(data[3]); 	 //HOUR
+            pData[5] = sd_Hex2BCD(data[4]); 	 //MINITE
+            pData[6] = sd_Hex2BCD(data[5]); 	 //TICK
+		} else {
+            pData[0] = 0x20; 	                 //YEAR
+            pData[1] = 0x24; 		             //YEAR
+            pData[2] = 0x04; 	                //MONTH
+            pData[3] = 0x11; 		            //DATE
+            pData[4] = 0x11; 		            //HOUR
+            pData[5] = 0x52; 		            //MINITE
+            pData[6] = 0x58; 		            //TICK
+            return FALSE;
+		}
     }
 
     return TRUE;
