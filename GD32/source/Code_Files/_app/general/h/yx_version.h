@@ -22,11 +22,11 @@
 ********************************************************************************
 */
 //#define MAX_VERSION_LEN        30
-#define APPDAL_VERSION_STR     "c1775006-ae64gdm4-001"
+#define APPDAL_VERSION_STR     "c1775007-ae64gdm4-001"
 #define APP_VERSION_NUM        APPDAL_VERSION_STR
 #define APP_VERSION_TYPE       "ae64gdm4"
 
-#define CLIENT_VERSION_STR	   "V4.37.2006"
+#define CLIENT_VERSION_STR	   "V4.38.2006"
 #define CHANGCHUN              "Y"           /* ³¤´º */
 #define QINGDAO                "V"           /* Çàµº */
 /*
