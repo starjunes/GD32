@@ -21,15 +21,17 @@
 /*                           ECU类型枚举                                                 */
 /*************************************************************************************************/
 typedef enum {
-    ECU_WEICHAI = 0,                /* 潍柴 */
-	ECU_KMS_Q6,						/*康明斯国六*/
-	ECU_YUCHAI,						/*玉柴国六*/
+    ECU_WEICHAI = 0,                /* 潍柴               102a 0x08 0x09 0x0E 0x14 0x15 0x17 0x18 */
+	ECU_KMS_Q6,						/* 康明斯国六*/
+	ECU_YUCHAI,						/* 玉柴国六              102a 0x0A 0x0B 0x11 */
     ECU_DACHAI,                     /* 大柴 */
     ECU_XICHAI,                  	/* 锡柴 */
-    ECU_YUNNEI,                     /* 云内 */
-    ECU_XICHAI_EMSVI,				/* 锡柴EMSVI_需加密 */
-    ECU_XICHAI_EMSMDI,				/* 锡柴EMSMDI */
-    ECU_XICHAI_EMSECO,				/* 锡柴EMSEcontrol */
+    ECU_YUNNEI,                     /* 云内               102a 0x0D           */
+    ECU_XICHAI_EMSVI,				/* 锡柴EMSVI_需加密 102a 0x02                */
+    ECU_XICHAI_EMSMDI,				/* 锡柴EMSMDI         102a 0x04           */
+    ECU_XICHAI_EMSECO,				/* 锡柴EMSEcontrol    102a 0x06           */
+    ECU_QUANCAI_C878,               /* 全柴C878           102A 0x0C           */ 
+    ECU_KMS_X3 = 16,                     /* 康明斯X3            102A 0x06 0x07      */  
     MAX_ECU_TYPE
 } ECU_TYPE_E;
 

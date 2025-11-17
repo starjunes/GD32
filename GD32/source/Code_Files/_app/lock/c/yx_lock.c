@@ -1449,16 +1449,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
     BOOLEAN unbindchange = FALSE;
     INT8U len = 0,len1 = 0, i = 0;
 	INT8U buf[16] = {0};
-
-    //if (userdatalen != 8) return;
-
-    #if 0 /* 对于潍柴锁车，10s后就停止了；对于玉柴锁车，由车台控制何时停止 */
-    if (s_sclockpara.ecutype != ECU_YUCHAI) { /* 玉柴, 由车台控制何时停止 */
-        if (s_parasendstat) {
-            StopCANMsg_Period(0x18ea0021,0);  /* 第一次收到车台同步帧(FDH)，停止发送0x18ea0021 */
-        }
-    }
-    #endif
+    INT8U j = 0;
 
     s_parasendstat = FALSE;
     #if DEBUG_LOCK > 0
@@ -1466,33 +1457,46 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
         printf_hex(userdata,userdatalen);
         debug_printf("\r\n");
     #endif
-
-	if (userdata[0] != ECU_KMS_Q6){						//康明斯长度不一样
+    debug_printftompu("LockParaStore ");
+	for(j; j < userdatalen; j++) {
+		debug_printftompu("%d ", userdata[j]);
+	}
+	debug_printftompu("\r\n");
+	if ((userdata[0] != ECU_KMS_Q6) && (userdata[0] != ECU_KMS_X3) && (userdata[0] != ECU_YUCHAI)) { //康明斯和国六康明斯长度不一样
 		if (userdatalen != 13) {                        // 总长度不符合
 			#if EN_DEBUG > 0
-	            debug_printf("总长度不符合");
+            debug_printf("ECU_TYPE:%d 总长度不符合\r\n",userdata[0]);
 	        #endif
 	        SendLockPara();
 	        return;
 	    }
 	}
     if (s_sclockpara.ecutype != userdata[len]) {
-        //if (userdata[len] >= MAX_ECU_TYPE) {        // 发动机类型非法
-        //    SendLockPara();
-        //    return;
-        //}
         change = TRUE;
         s_sclockpara.ecutype = userdata[len];
+        #if EN_DEBUG > 0
+        debug_printf("ECU_TYPE:%d \r\n",userdata[len]);
+        #endif
     }
     len++;
     len1 = userdata[len];
 	if (s_sclockpara.ecutype == ECU_YUCHAI) {           // 玉柴及潍柴的固定密钥和GPSID长度分别为(3和3)及(2和4)
-        if (len1 != 2) {                                // 固定密钥长度非法
+        if (len1 != 3) {                                // 固定密钥长度非法
             SendLockPara();
             return;
         }
     } else if (s_sclockpara.ecutype == ECU_WEICHAI) {
         if (len1 != 3) {                                // 固定密钥长度非法
+            SendLockPara();
+            return;
+        }
+    } else if(s_sclockpara.ecutype == ECU_QUANCAI_C878) {
+        if (len1 != 3) {                                // 固定密钥长度非法
+            SendLockPara();
+            return;
+        }
+    } else if(s_sclockpara.ecutype == ECU_KMS_X3) {
+        if (len1 != 8) {                                // 固定密钥长度非法
             SendLockPara();
             return;
         }
@@ -1508,7 +1512,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
             memcpy(s_sclockpara.firmcode, &userdata[len + 1], len1);
         }
     }
-    len += (len1 + 1);
+    len += (len1 + 1); //5
 
     len1 = userdata[len];
     if (s_sclockpara.ecutype == ECU_YUCHAI) {
@@ -1521,21 +1525,39 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
             SendLockPara();
             return;
         }
+    } else if(s_sclockpara.ecutype == ECU_QUANCAI_C878) {
+        if (len1 != 3) {                                // GPSID非法
+            SendLockPara();
+            return;
+        }
+    } else if(s_sclockpara.ecutype == ECU_KMS_X3) {
+        if (len1 != 3) {                                // GPSID非法
+            SendLockPara();
+            return;
+        }
     } 
     if (s_sclockpara.srlnumberlen != len1) {
         change = TRUE;
         s_sclockpara.srlnumberlen = len1;
         memcpy(s_sclockpara.serialnumber, &userdata[len + 1], len1);
-        /*for (i = 0; i < len1; i++){
-			s_sclockpara.serialnumber[i] = userdata[len + 1 + len1 - i - 1];
-		}*/
     } else {
         if (memcmp(s_sclockpara.serialnumber, &userdata[len+1], len1) != 0) {
             change = TRUE;
             memcpy(s_sclockpara.serialnumber, &userdata[len + 1], len1);
         }
     }
-    len += (len1 + 1);
+
+    if((s_sclockpara.ecutype == ECU_QUANCAI_C878) || (s_sclockpara.ecutype == ECU_KMS_X3)) {
+        if (s_sclockpara.unbindstat != userdata[11]) {
+            s_sclockpara.unbindstat = userdata[11];
+            change = TRUE;
+            #if DEBUG_LOCK > 0
+            debug_printf("解绑状态同步 s_sclockpara.unbindstat: %d\r\n", s_sclockpara.unbindstat);
+            #endif
+        }
+        goto END;
+    }
+    len += (len1 + 1); //9
 
 	len1 = userdata[len];
 	if (s_sclockpara.ecutype == ECU_KMS_Q6) {		//康明斯securityKey
@@ -1562,7 +1584,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
 
 	len1 = userdata[len];
 	if (s_sclockpara.ecutype == ECU_KMS_Q6) {		//康明斯deratespeed
-		if(len1 != 2 || len1 == 0){
+		if(len1 != 2 || len1 == 0) {
 			SendLockPara();
             return;
 		}
@@ -1575,7 +1597,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
 			s_sclockpara.deratespeed[i] = userdata[len + 1 + len1 - i - 1];
 		}
     } else {
-    	for (i = 0; i < len1; i++){
+    	for (i = 0; i < len1; i++) {
 			buf[i] = userdata[len + 1 + len1 - i - 1];
 		}
         if (STR_EQUAL != bal_ACmpString(FALSE, s_sclockpara.deratespeed, buf, s_sclockpara.deratespeedlen, len1)) {
@@ -1592,7 +1614,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
         s_sclockpara.unbindstat = userdata[len];
         change = TRUE;
         unbindchange = TRUE;
-        if(!s_sclockpara.unbindstat){
+        if(!s_sclockpara.unbindstat) {
 			if (s_sclockpara.ecutype == ECU_YUCHAI) {
 	            s_sclockstep = CONFIG_REQ;
 				#if DEBUG_LOCK > 0
@@ -1602,13 +1624,13 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
 			} else if ((s_sclockpara.ecutype == ECU_XICHAI_EMSVI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSMDI) || (s_sclockpara.ecutype == ECU_XICHAI_EMSECO)) {
 				s_sclockstep = CHECK_CODE_SEND;
 				xc_period_cnt = 0;
-			    s_xclockpara.checkcode = 0xFFFFFFFF;   /* 上电第一帧握手检验码0xFF */
+			    s_xclockpara.checkcode = 0xFFFFFFFF;                            /* 上电第一帧握手检验码0xFF */
 				XC_Checkcode();
 				#if DEBUG_LOCK > 0
 				debug_printf("ECU_XICHAI CHECK_CODE_SEND\r\n");
 				#endif
 			}
-        }else{
+        } else {
         	if (s_sclockpara.ecutype == ECU_YUCHAI) {
 	            f_handsk = FALSE;
             	StopCANMsg_Period(0x18ea0021, LOCK_CAN_CH);
@@ -1630,7 +1652,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
     if (s_sclockpara.limitfunction != userdata[len]) {
         change = TRUE;
 
-        if(userdata[len] == LC_CMD_BIND){
+        if(userdata[len] == LC_CMD_BIND) {
            YC_Set18ea0021Period();
         }
 
@@ -1648,6 +1670,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
     }
     len++;
 
+ END:
     if (change) {
         #if DEBUG_LOCK > 0
             debug_printf("同步状态改变 \r\n");

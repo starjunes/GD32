@@ -19,6 +19,7 @@
 #define SEEDLEN                     4
 #define MASKLEN                     4
 #define RANDLEN                     8
+#define YUC_GPSID_LEN               4
 
 #define HANDKEYLEN                  8
 #define LOCKPSWLEN                  4
@@ -37,7 +38,7 @@ typedef struct {
 
 static LOCKKEY_T s_lockkey;
 //static INT8U mask[4] = {0x40, 0x39, 0x00, 0x00};                                /* 32bit MASK码，由玉柴提供*/
-static INT8U mask[4] = {0x35, 0xef, 0x48, 0xab};                                /* 32bit MASK码，由玉柴提供*/
+static INT8U mask[4] = {0xEF, 0x13, 0x33, 0x32};                                /* 32bit MASK码，由玉柴提供*/
 
 
 /*******************************************************************
