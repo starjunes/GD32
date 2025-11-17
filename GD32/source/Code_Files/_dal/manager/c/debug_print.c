@@ -17,6 +17,7 @@
 #include "dal_usart.h"
 #include "debug_print.h"
 #include "gd32f30x_usart.h"
+#include "yx_com_send.h"
 
 #define DBG_BUF_SIZE    1024
 #define STAT_INIT_      0x01
@@ -283,5 +284,26 @@ BOOLEAN debug_printf(const char * fmt, ...)
     return TRUE;
     #endif
 } 
-
+/*******************************************************************
+** 函数名:     debug_printftompu
+** 函数描述:   发送远程调试给MPU
+** 参数:       无
+** 返回:       无
+********************************************************************/
+BOOLEAN debug_printftompu(const char * fmt, ...)
+{
+    if(!YX_COM_Islink())   return FALSE;
+	
+    va_list ap;
+    INT16U len;
+    INT8U buf[128] = {0};
+    va_start(ap, fmt);
+    len = vsnprintf((char *)buf, 128, fmt, ap);
+    va_end(ap);
+    if (len <= 128) {
+        YX_COM_DirSend(LOG_TO_MPU, buf, len);
+		return TRUE;
+    }
+	return FALSE;
+} 
 

@@ -133,6 +133,9 @@ typedef enum {
     UPDATA_REPORT_CAN            = 0x23,             /* CAN升级数据上报(UP) */
     UPDATA_REPORT_CAN_ACK        = 0xa3,             /* CAN升级数据上报应答(DOWN) */
 
+    LOG_TO_MPU			             = 0xE7,			       /* log上报 */
+	  LOG_TO_MPU_ACK		           = 0xE7,			       /* log上报应答(DOWN) */
+
     CLIENT_FUNCTION_UP_REQ       = 0xFC,             /* 客户特殊功能请求(UP) */
     CLIENT_FUNCTION_UP_REQ_ACK   = 0xFC,             /* 客户特殊功能请求应答(DOWN) */
 
