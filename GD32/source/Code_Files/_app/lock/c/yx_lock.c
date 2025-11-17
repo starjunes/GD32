@@ -2131,7 +2131,7 @@ static void LockTmrProc(void*index)
             if (s_sclockpara.ecutype != ECU_YUCHAI) {/* 玉柴10s超时不停止发送，由车台控制何时停止 */
                 StopCANMsg_Period(0x18ea0021, LOCK_CAN_CH);
             }else{
-                if(s_sclockpara.unbindstat == 0){
+                if(s_sclockpara.unbindstat == 1){
 					#if DEBUG_LOCK > 0
 						debug_printf("%s stop 0x18ea0021\r\n",__FUNCTION__);
 					#endif
