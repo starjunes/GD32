@@ -203,59 +203,129 @@ static void get_rand_str(INT8U *rand, INT8U *ptr, INT8U size)
                 [in]  len:            种子长度
 ** 返回:        NULL
 ********************************************************************/
-void YX_LC_InputSeed(INT8U *seed, INT8U len)
+void YX_LC_InputSeed(INT8U algor, INT8U *seed, INT8U seedlen)
 {
     INT8U gpsid[4];
-    INT8U randin[8], randout[8], key[8];
+    INT8U randin[12], randout[8], key[8];
+    INT8U randlen = 0;
     MD5VAL_T md5val;
 
     memset((INT8U *)&s_lockkey, 0, sizeof(LOCKKEY_T));
 
-    if (seed == NULL || len != SEEDLEN) {
+    if (seed == NULL || seedlen != SEEDLEN) {
         return;
     }
 
     memcpy(randin, seed, SEEDLEN);
-    memcpy(randin + SEEDLEN, mask, MASKLEN);
-
-    get_rand_str(randin, randout, RANDLEN);
-    md5val = YX_Get_MD5(randout, RANDLEN);
-    GetGpsID(gpsid);
-	
+    randlen = SEEDLEN;
     #if DEBUG_LOCK > 0
-        debug_printf("YX_LC_InputSeed gpsid: ");
-        printf_hex(gpsid, 4);
-        debug_printf("\r\n");
+    debug_printf("YX_LC_InputSeed seed: ");
+    printf_hex(randin, 4);
+    debug_printf("\r\n");
+    #endif
+    memcpy(randin + SEEDLEN, mask, MASKLEN);
+    randlen += MASKLEN;
+    #if DEBUG_LOCK > 0
+    debug_printf("YX_LC_InputSeed mask: ");
+    printf_hex(randin, 8);
+    debug_printf("\r\n");
     #endif
 
-    key[0] = (md5val.b & 0xff);
-    key[1] = (md5val.b & 0xff00) >> 8;
-    key[2] = (md5val.b & 0xff0000) >> 16;
-    key[3] = (md5val.b & 0xff000000) >> 24;
-    key[4] = (md5val.c & 0xff);
-    key[5] = (md5val.c & 0xff00) >> 8;
-    key[6] = (md5val.c & 0xff0000) >> 16;
-    key[7] = (md5val.c & 0xff000000) >> 24;
+    GetGpsID(gpsid);
+    #if DEBUG_LOCK > 0
+    debug_printf("YX_LC_InputSeed gpsid: ");
+    printf_hex(gpsid, 4);
+    debug_printf("\r\n");
+    #endif
 
-    s_lockkey.handkey[0] = key[2];
-    s_lockkey.handkey[1] = gpsid[0];
-    s_lockkey.handkey[2] = key[3];
-    s_lockkey.handkey[3] = gpsid[1];
-    s_lockkey.handkey[4] = key[4];
-    s_lockkey.handkey[5] = gpsid[2];
-    s_lockkey.handkey[6] = key[5];
-    s_lockkey.handkey[7] = gpsid[3];
-    s_lockkey.handkeylen = HANDKEYLEN;
+    if (algor == 0x01) {
+        memcpy(randin + randlen, gpsid, YUC_GPSID_LEN); //新算法写入gpsid
+        randlen += YUC_GPSID_LEN;
+        #if DEBUG_LOCK > 0
+        debug_printf("玉柴锁车新算法rand:");
+        printf_hex(randin, randlen);
+        debug_printf("\r\n");
+        #endif
+    }
 
-    s_lockkey.lockpsw[0] = key[0];
-    s_lockkey.lockpsw[1] = key[1];
-    s_lockkey.lockpsw[2] = key[4];
-    s_lockkey.lockpsw[3] = key[5];
-    s_lockkey.lockpswlen = LOCKPSWLEN;
+    get_rand_str(randin, randout, RANDLEN);
+    #if DEBUG_LOCK > 0
+    debug_printf("玉柴锁车算法rand:");
+    printf_hex(randin, randlen);
+    debug_printf("\r\n");
+    #endif
+    
+    md5val = YX_Get_MD5(randout, RANDLEN);
+	
+    if (algor == 0x00) {  //老算法
+        key[0] = (md5val.b & 0xff);
+        key[1] = (md5val.b & 0xff00) >> 8;
+        key[2] = (md5val.b & 0xff0000) >> 16;
+        key[3] = (md5val.b & 0xff000000) >> 24;
+        key[4] = (md5val.c & 0xff);
+        key[5] = (md5val.c & 0xff00) >> 8;
+        key[6] = (md5val.c & 0xff0000) >> 16;
+        key[7] = (md5val.c & 0xff000000) >> 24;
 
-    s_lockkey.unbindpsw[0] = key[6];
-    s_lockkey.unbindpsw[1] = key[7];
-    s_lockkey.unbindpswlen = UNBINDPSWLEN;
+        s_lockkey.handkey[0] = key[2];
+        s_lockkey.handkey[1] = gpsid[0];
+        s_lockkey.handkey[2] = key[3];
+        s_lockkey.handkey[3] = gpsid[1];
+        s_lockkey.handkey[4] = key[4];
+        s_lockkey.handkey[5] = gpsid[2];
+        s_lockkey.handkey[6] = key[5];
+        s_lockkey.handkey[7] = gpsid[3];
+        s_lockkey.handkeylen = HANDKEYLEN;
+
+        s_lockkey.lockpsw[0] = key[0];
+        s_lockkey.lockpsw[1] = key[1];
+        s_lockkey.lockpsw[2] = key[4];
+        s_lockkey.lockpsw[3] = key[5];
+        s_lockkey.lockpswlen = LOCKPSWLEN;
+
+        s_lockkey.unbindpsw[0] = key[6];
+        s_lockkey.unbindpsw[1] = key[7];
+        s_lockkey.unbindpswlen = UNBINDPSWLEN;
+    }else {     
+        s_lockkey.handkey[0] = (md5val.b & 0xff);          //新算法
+        s_lockkey.handkey[1] = (md5val.b & 0xff00) >> 8;
+        s_lockkey.handkey[2] = (md5val.b & 0xff0000) >> 16;
+        s_lockkey.handkey[3] = (md5val.b & 0xff000000) >> 24;
+        s_lockkey.handkey[4] = (md5val.c & 0xff);
+        s_lockkey.handkey[5] = (md5val.c & 0xff00) >> 8;
+        s_lockkey.handkey[6] = (md5val.c & 0xff0000) >> 16; 
+        s_lockkey.handkey[7] = (md5val.c & 0xff000000) >> 24;
+        s_lockkey.handkeylen = HANDKEYLEN;
+       
+        s_lockkey.lockpsw[0] = (md5val.a & 0xff);
+        s_lockkey.lockpsw[1] = (md5val.a & 0xff00) >> 8;
+        s_lockkey.lockpsw[2] = (md5val.a & 0xff0000) >> 16;
+        s_lockkey.lockpsw[3] = (md5val.a & 0xff000000) >> 24;
+        s_lockkey.lockpswlen = LOCKPSWLEN;
+        
+        s_lockkey.unbindpsw[0] = (md5val.d & 0xff);
+        s_lockkey.unbindpsw[1] = (md5val.d & 0xff00) >> 8;
+        s_lockkey.unbindpswlen = UNBINDPSWLEN;
+    }
+
+    #if EN_DEBUG > 0
+    debug_printf("randin1(seed+mask):");
+    printf_hex((INT8U *)randin, sizeof(randin));
+    debug_printf("randout:");
+    printf_hex((INT8U *)randout, sizeof(randout));    
+    debug_printf(",64bit psw:");
+    printf_hex((INT8U *)key, sizeof(key));    
+    debug_printf("hkey:");
+    printf_hex((INT8U *)s_lockkey.handkey, sizeof(s_lockkey.handkey));   
+    debug_printf("gpsid:");
+    printf_hex((INT8U *)gpsid, sizeof(gpsid));  
+
+    // debug_printf("lockpsw:");
+    // printf_hex((INT8U *)s_lockkey.lockpsw, sizeof(s_lockkey.lockpsw)); 
+    // debug_printf("unbindpsw:");
+    // printf_hex((INT8U *)s_lockkey.unbindpsw, sizeof(s_lockkey.unbindpsw));
+    // debug_printf("\r\n");
+    #endif 
 }
 #endif
 /*******************************************************************

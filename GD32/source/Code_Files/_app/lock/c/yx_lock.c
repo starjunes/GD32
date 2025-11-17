@@ -1035,6 +1035,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
     #if LOCK_COLLECTION > 0
     INT8U can_buf[12] = {0};
 	#endif
+    INT8U algor; //玉柴新旧算法
 	static INT8U ecustatcnt = 0;
 
 	id   = bal_chartolong(CAN_msg->id);
@@ -1063,8 +1064,13 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     #if DEBUG_LOCK > 0
                         debug_printf("随机码帧校验成功，计算key\r\n");
                     #endif
+                    algor = (CAN_msg->databuf[6] & 0x30);  //第七个字节 5-6bit   01：新算法   00：旧算法
+                    #if DEBUG_LOCK > 0
+                    debug_printf("------algor: %d------\r\n", algor);
+                    debug_printftompu("------algor: %d------\r\n", algor);
+                    #endif
                     memcpy(s_seed, CAN_msg->databuf, 4);
-                    YX_LC_InputSeed(s_seed,4);
+                    YX_LC_InputSeed(algor, s_seed, 4);
                     YX_LC_GetHKey(s_key);
                     s_sclockstep = CHECK_CODE_SEND;
                     YC_HandShake();
@@ -1435,7 +1441,6 @@ static void SecurityKeySet(INT8U *buf,INT8U len)
 	#endif
 }
 
-
 /**************************************************************************************************
 **  函数名称:  LockParaStore
 **  功能描述:  锁车参数存储，用于同步锁车状态
@@ -1450,12 +1455,12 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
     INT8U len = 0,len1 = 0, i = 0;
 	INT8U buf[16] = {0};
     INT8U j = 0;
-
+    
     s_parasendstat = FALSE;
     #if DEBUG_LOCK > 0
-        debug_printf("下发锁车参数FD-01:");
-        printf_hex(userdata,userdatalen);
-        debug_printf("\r\n");
+    debug_printf("下发锁车参数FD-01:");
+    printf_hex(userdata,userdatalen);
+    debug_printf("\r\n");
     #endif
     debug_printftompu("LockParaStore ");
 	for(j; j < userdatalen; j++) {
@@ -1535,7 +1540,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
             SendLockPara();
             return;
         }
-    } 
+    }
     if (s_sclockpara.srlnumberlen != len1) {
         change = TRUE;
         s_sclockpara.srlnumberlen = len1;
@@ -1644,7 +1649,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
         }
 
         #if EN_DEBUG > 0
-            debug_printf("解绑状态改变:%d \r\n", s_sclockpara.unbindstat);
+        debug_printf("解绑状态改变:%d \r\n", s_sclockpara.unbindstat);
         #endif
     }
     len++;
@@ -1669,12 +1674,12 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
         s_sclockpara.limitfunction = userdata[len];
     }
     len++;
-
+    
  END:
     if (change) {
         #if DEBUG_LOCK > 0
-            debug_printf("同步状态改变 \r\n");
-            debug_printf("LockParaStore ecutype:%d unbindstat:%d\r\n", s_sclockpara.ecutype, s_sclockpara.unbindstat);
+        debug_printf("同步状态改变 \r\n");
+        debug_printf("LockParaStore ecutype:%d unbindstat:%d\r\n", s_sclockpara.ecutype, s_sclockpara.unbindstat);
         #endif
 
 

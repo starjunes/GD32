@@ -86,7 +86,7 @@ typedef struct {
                          [in]  len:            种子长度
 ** 返回:        NULL
 ********************************************************************/
-void YX_LC_InputSeed(INT8U *seed, INT8U len);
+void YX_LC_InputSeed(INT8U algor, INT8U *seed, INT8U len);
 
 /*******************************************************************
 ** 函数名:      YX_LC_GetHKey
