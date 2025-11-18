@@ -17,7 +17,7 @@
 
 #include "dal_include.h"
 
-#define MAX_CANIDS            105                                     /* CAN的ID对象总数 */
+#define MAX_CANIDS            120                                     /* CAN的ID对象总数 */
 
 
 #define MAX_RXIDOBJ           13                                     /* CAN的接收ID对象个数 */
