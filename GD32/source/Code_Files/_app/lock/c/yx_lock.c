@@ -127,6 +127,10 @@ static INT16U s_wc_0800cnt = 0;				// 消贷报文超时时间
 
 // 玉柴
 static INT8U s_yc_state = 0;		// 握手状态
+static INT8U s_yc_time = 0;		    // 握手超时状态
+static INT8U s_yc_recstate = 0;	    // ECU接受请求状态状态
+static INT8U  s_yc_check_cnt = 0;	// 玉柴校验等待计数
+
 static INT16U s_xcheckcodereq_delay = 0;
 static INT16U s_save_xcheck_delay = 0;
 static INT8U  s_xcheck_cnt        = 0;
@@ -960,20 +964,20 @@ void YC_CanDelayTmr(void)
                 LockSafeDataAdd(0x00, &s_handshake_ack, 1);
 			}
 			break;
-		case CONFIG_CONFIRM_REC:
-			if (++ycdelay_cnt >= 300) {
-				if (s_yc_state == 0x00) {
-					s_handshake_ack = HANDSHAKE_CHECKERR;	// 校验失败
-				} else if (s_yc_state == 0x11) {
-					s_handshake_ack = HANDSHAKE_OVER;	// 校验失败
-				}
-				ycdelay_cnt = 0;
-				s_sclockstep = CONFIG_OVER;
-				s_ishandover = TRUE;
-				f_handsk	= FALSE;
-                LockSafeDataAdd(0x00, &s_handshake_ack, 1);
-			}
-			break;
+		// case CONFIG_CONFIRM_REC:
+		// 	if (++ycdelay_cnt >= 300) {
+		// 		if (s_yc_state == 0x00) {
+		// 			s_handshake_ack = HANDSHAKE_CHECKERR;	// 校验失败
+		// 		} else if (s_yc_state == 0x11) {
+		// 			s_handshake_ack = HANDSHAKE_OVER;	// 校验失败
+		// 		}
+		// 		ycdelay_cnt = 0;
+		// 		s_sclockstep = CONFIG_OVER;
+		// 		s_ishandover = TRUE;
+		// 		f_handsk	= FALSE;
+        //         LockSafeDataAdd(0x00, &s_handshake_ack, 1);
+		// 	}
+		// 	break;
 		default:
 			ycdelay_cnt = 0;
 			break;
@@ -1047,9 +1051,15 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 	case ECU_YUCHAI:
 		if (id == 0x18fd0100) {
 			s_yc_state = (CAN_msg->databuf[5] & 0x30) >> 4;
+            s_yc_time = (CAN_msg->databuf[7] & 0x0c) >> 2;
+            s_yc_recstate = (CAN_msg->databuf[7] & 0x03);
 			#if DEBUG_LOCK > 0
-		        debug_printf("收到CANid:%x ecutype:%d s_sclockstep:%d buf\r\n", id, s_sclockpara.ecutype, s_sclockstep);
-			 	Debug_PrintHex(true, CAN_msg->databuf, CAN_msg->len);
+		        // debug_printf("收到CANid:%x ecutype:%d s_sclockstep:%d buf\r\n", id, s_sclockpara.ecutype, s_sclockstep);
+			 	// Debug_PrintHex(true, CAN_msg->databuf, CAN_msg->len);
+                debug_printf("握手状态：%d\r\n", s_yc_state);
+                debug_printf("握手超时：%d\r\n", s_yc_time);
+                debug_printf("握手接收状态：%d\r\n", s_yc_recstate);
+                debug_printf("绑定状态：%d\r\n", s_sclockpara.unbindstat);
 		    #endif
 			#if LOCK_COLLECTION > 0
 			memcpy(can_buf, CAN_msg->id, 4);
@@ -1089,7 +1099,8 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     debug_printf("已握手，结束流程\r\n");
 					#endif
                 }
-           } else if (s_sclockstep == CONFIG_CONFIRM_REC) {
+           } else if ((++s_yc_check_cnt > 5) && (s_sclockstep == CONFIG_CONFIRM_REC)) {
+                s_yc_check_cnt = 0;
                 if( (CAN_msg->databuf[5]& 0x30 ) == 0x10){//校验通过
                     s_sclockstep = CONFIG_OVER;
                     s_idfiltenable = TRUE;
@@ -1104,7 +1115,56 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
                     #if DEBUG_LOCK > 0
                         debug_printf("握手成功\r\n");
                     #endif
-                }/*else{
+                }
+                if( (s_yc_state == 0x00) && (s_yc_time == 0x03)){ //校验失败 key不正确
+                    s_sclockstep = CONFIG_OVER;
+                    s_idfiltenable = TRUE;
+                    f_handsk = false;
+                    s_ishandover = TRUE;
+                    s_handskenable = FALSE;
+                    s_handshake_ack = HANDSHAKE_CHECKERR;
+                    LockSafeDataAdd(0x00, &s_handshake_ack, 1);
+                    #if DEBUG_LOCK > 0
+                        debug_printf("握手失败 key不正确\r\n");
+                    #endif
+                }
+                if(s_yc_recstate == 0x00){  //请求报文超时
+                    s_sclockstep = CONFIG_OVER;
+                    s_idfiltenable = TRUE;
+                    f_handsk = false;
+                    s_ishandover = TRUE;
+                    s_handskenable = FALSE;
+                    s_handshake_ack = HANDSHAKE_REQTIMEOUT;
+                    LockSafeDataAdd(0x00, &s_handshake_ack, 1);
+                    #if DEBUG_LOCK > 0
+                        debug_printf("请求报文超时\r\n");
+                    #endif
+                }
+                if(s_yc_time == 0x01){ //校验失败 握手故障
+                    s_sclockstep = CONFIG_OVER;
+                    s_idfiltenable = TRUE;
+                    f_handsk = false;
+                    s_ishandover = TRUE;
+                    s_handskenable = FALSE;
+                    s_handshake_ack = HANDSHAKE_FAULT;
+                    LockSafeDataAdd(0x00, &s_handshake_ack, 1);
+                    #if DEBUG_LOCK > 0
+                        debug_printf("握手故障\r\n");
+                    #endif
+                }
+                if(s_yc_state == 0x03){ //校验失败 校验超时
+                    s_sclockstep = CONFIG_OVER;
+                    s_idfiltenable = TRUE;
+                    f_handsk = false;
+                    s_ishandover = TRUE;
+                    s_handskenable = FALSE;
+                    s_handshake_ack = HANDSHAKE_ECUTIMEOUT;
+                    LockSafeDataAdd(0x00, &s_handshake_ack, 1);
+                    #if DEBUG_LOCK > 0
+                        debug_printf("校验超时\r\n");
+                    #endif
+                }
+                /*else{
                     if((f_handskcnt++) == 3){
                         f_handskcnt = 0;
                         s_sclockstep = CONFIG_OVER;
@@ -1120,7 +1180,7 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
             memcpy(s_lockstatid, CAN_msg->id, 4);
             memcpy(s_lockstatid + 4,CAN_msg->databuf,8);
             //memcpy(s_seed, CAN_msg->databuf, 4);
-            #if DEBUG_LOCK > 0
+            #if DEBUG_LOCK > 1
                 debug_printf("id = %x\r\n",id);
             #endif
 
@@ -1467,7 +1527,7 @@ void LockParaStore(INT8U *userdata, INT8U userdatalen)
 		debug_printftompu("%d ", userdata[j]);
 	}
 	debug_printftompu("\r\n");
-	if ((userdata[0] != ECU_KMS_Q6) && (userdata[0] != ECU_KMS_X3) && (userdata[0] != ECU_YUCHAI)) { //康明斯和国六康明斯长度不一样
+	if ((userdata[0] != ECU_KMS_Q6) && (userdata[0] != ECU_KMS_X3) && (userdata[0] != ECU_YUCHAI)) { //玉柴、康明斯和国六康明斯长度不一样
 		if (userdatalen != 13) {                        // 总长度不符合
 			#if EN_DEBUG > 0
             debug_printf("ECU_TYPE:%d 总长度不符合\r\n",userdata[0]);
