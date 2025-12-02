@@ -73,6 +73,9 @@ typedef enum {
     HANDSHAKE_NOACK,                /*  5-ECU未反馈握手结果 */
     HANDSHAKE_NOSEED,               /*  6-ECU未响应随机数请求 */
     HANDSHAKE_BUSEXCEPTION,			/*  7-总线异常 */
+    HANDSHAKE_FAULT,                /*  8-yc握手故障 */
+    HANDSHAKE_REQTIMEOUT,           /*  9-yc请求报文超时 */
+    HANDSHAKE_ECUTIMEOUT,           /*  10-yc ECU上报校验超时 */
     MAX_STAT
 } HANDSHAKE_ACK_E;
 

@@ -1056,10 +1056,10 @@ void HandShakeMsgAnalyze(CAN_DATA_HANDLE_T *CAN_msg, INT16U datalen)
 			#if DEBUG_LOCK > 0
 		        // debug_printf("ÊÕµ½CANid:%x ecutype:%d s_sclockstep:%d buf\r\n", id, s_sclockpara.ecutype, s_sclockstep);
 			 	// Debug_PrintHex(true, CAN_msg->databuf, CAN_msg->len);
-                debug_printf("ÎÕÊÖ×´Ì¬£º%d\r\n", s_yc_state);
-                debug_printf("ÎÕÊÖ³¬Ê±£º%d\r\n", s_yc_time);
-                debug_printf("ÎÕÊÖ½ÓÊÕ×´Ì¬£º%d\r\n", s_yc_recstate);
-                debug_printf("°ó¶¨×´Ì¬£º%d\r\n", s_sclockpara.unbindstat);
+                // debug_printf("ÎÕÊÖ×´Ì¬£º%d\r\n", s_yc_state);
+                // debug_printf("ÎÕÊÖ³¬Ê±£º%d\r\n", s_yc_time);
+                // debug_printf("ÎÕÊÖ½ÓÊÕ×´Ì¬£º%d\r\n", s_yc_recstate);
+                debug_printf("Óñ²ñ°ó¶¨×´Ì¬£º%d\r\n", s_sclockpara.unbindstat);
 		    #endif
 			#if LOCK_COLLECTION > 0
 			memcpy(can_buf, CAN_msg->id, 4);
