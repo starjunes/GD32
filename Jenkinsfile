@@ -1,14 +1,15 @@
-//Jenkinsfileå’Œsonar-project.propertiesæ–‡ä»¶éœ€è¦åœ¨masterä¸Šå…ˆä¸Šä¼ ï¼›
+//JenkinsfileºÍsonar-project.propertiesÎÄ¼şĞèÒªÔÚmasterÉÏÏÈÉÏ´«£»
 pipeline {
     agent {
         node {
-            label 'yf3' //æ ¹æ®éƒ¨é—¨æŒ‡å®šæ ‡ç­¾ï¼Œè½¯ä»¶ä¸€éƒ¨=yf1 è½¯ä»¶äºŒéƒ¨=yf2 è½¯ä»¶ä¸‰éƒ¨=yf3
+            label 'yf3' //¸ù¾İ²¿ÃÅÖ¸¶¨±êÇ©£¬Èí¼şÒ»²¿=yf1 Èí¼ş¶ş²¿=yf2 Èí¼şÈı²¿=yf3
         }
     }
     tools {
-        jdk 'jdk17'  // è¿™é‡Œä½¿ç”¨åœ¨ Jenkins ä¸­é…ç½®çš„ JDK åç§°
+        // CÓïÑÔÏîÄ¿²»ĞèÒªJDK£¬¿ÉÒÔÒÆ³ı»ò±£Áô£¨²»Ó°Ïì£©
+        // jdk 'jdk17'
     }
-    triggers {//è§¦å‘å™¨ï¼Œå‚æ•°å†…é™¤äº†tokenéœ€è¦æ ¹æ®é¡¹ç›®è®¾ç½®å¤–ï¼Œå…¶ä»–å‚æ•°ä¸å˜
+    triggers {//´¥·¢Æ÷£¬²ÎÊıÄÚ³ıÁËtokenĞèÒª¸ù¾İÏîÄ¿ÉèÖÃÍâ£¬ÆäËû²ÎÊı²»±ä
         GenericTrigger(
             genericVariables: [
                 [key: 'ref', value: '$.ref', expressionType: 'JSONPath'],
@@ -16,136 +17,185 @@ pipeline {
                 [key: 'project', value: '$.project', expressionType: 'JSONPath'],
                 [key: 'object_attributes', value: '$.object_attributes', expressionType: 'JSONPath']
             ],
-            token: 'yf4-bike', //é¡¹ç›®å”¯ä¸€æ ‡è¯†ï¼Œ[äº§å“çº¿ç¼©å†™]-[å®¢æˆ·/é¡¹ç›®æ ‡è¯†]
+            token: 'yf4-bike', //ÏîÄ¿Î¨Ò»±êÊ¶£¬[²úÆ·ÏßËõĞ´]-[¿Í»§/ÏîÄ¿±êÊ¶]
             printContributedVariables: true,
             printPostContent: true
         )
     }
 
     stages {
-        stage('æ™ºèƒ½åˆ†ææå–') {
+        stage('ÖÇÄÜ·ÖÎöÌáÈ¡') {
             steps {
                 script {
-                    // è§£æ project JSON
+                    // ½âÎö project JSON
                     def projectJson = readJSON text: "${env.project}"
                     def ssh_url = projectJson.ssh_url
 
-                    // åˆå§‹åŒ–åˆ†æ”¯å˜é‡
+                    // ³õÊ¼»¯·ÖÖ§±äÁ¿
                     env.branch = ''
                     env.source_branch = ''
                     env.target_branch = ''
 
-                    // è§£æ object_attributes JSON
+                    // ½âÎö object_attributes JSON
                     def objectAttributesJson = [:]
                     if (env.object_attributes && env.object_attributes != 'null') {
                         try {
                             objectAttributesJson = readJSON text: "${env.object_attributes}"
                             echo "objectAttributesJson: ${objectAttributesJson}"
                         } catch (Exception e) {
-                            echo "è§£æobject_attributeså¤±è´¥: ${e.message}"
+                            echo "½âÎöobject_attributesÊ§°Ü: ${e.message}"
                         }
                     }
 
-                    // æ ¹æ®äº‹ä»¶ç±»å‹æ™ºèƒ½æå–åˆ†æ”¯
+                    // ¸ù¾İÊÂ¼şÀàĞÍÖÇÄÜÌáÈ¡·ÖÖ§
                     def objectKind = "${env.object_kind}"
 
                     if (objectKind == 'push') {
                         def ref = "${env.ref}"
                         if (ref) {
                             env.branch = ref.replace('refs/heads/', '')
-                            echo "Push äº‹ä»¶åˆ†æ”¯: ${env.branch}"
+                            echo "Push ÊÂ¼ş·ÖÖ§: ${env.branch}"
                         }
                     } else if (objectKind == 'merge_request') {
                         if (objectAttributesJson) {
                             env.source_branch = objectAttributesJson.source_branch ?: ''
                             env.target_branch = objectAttributesJson.target_branch ?: ''
-                            echo "MR äº‹ä»¶æºåˆ†æ”¯: ${env.source_branch}, ç›®æ ‡åˆ†æ”¯: ${env.target_branch}"
+                            echo "MR ÊÂ¼şÔ´·ÖÖ§: ${env.source_branch}, Ä¿±ê·ÖÖ§: ${env.target_branch}"
 
-                            // ä¿®æ­£é€»è¾‘ï¼šä½¿ç”¨æºåˆ†æ”¯è¿›è¡Œæ„å»º
+                            // ĞŞÕıÂß¼­£ºÊ¹ÓÃÔ´·ÖÖ§½øĞĞ¹¹½¨
                             if (env.source_branch && !env.source_branch.isEmpty()) {
                                 env.branch = env.source_branch
-                                echo "merge_request ä½¿ç”¨æºåˆ†æ”¯æ„å»º: ${env.branch}"
+                                echo "merge_request Ê¹ÓÃÔ´·ÖÖ§¹¹½¨: ${env.branch}"
                             }
                         } else {
-                            echo "object_attributes æ•°æ®ä¸å¯ç”¨"
+                            echo "object_attributes Êı¾İ²»¿ÉÓÃ"
                         }
                     }
 
-                    // ç¡®ä¿åˆ†æ”¯å˜é‡æœ‰å€¼
+                    // È·±£·ÖÖ§±äÁ¿ÓĞÖµ
                     if (!env.branch || env.branch.isEmpty() || env.branch == 'null') {
                         env.branch = 'master'
-                        echo "ä½¿ç”¨é»˜è®¤åˆ†æ”¯: ${env.branch}"
+                        echo "Ê¹ÓÃÄ¬ÈÏ·ÖÖ§: ${env.branch}"
                     }
 
-                    echo "æœ€ç»ˆä½¿ç”¨çš„åˆ†æ”¯: ${env.branch}"
+                    echo "×îÖÕÊ¹ÓÃµÄ·ÖÖ§: ${env.branch}"
 
-                    // æ‰§è¡Œåˆ†æ”¯checkoutï¼ˆç§»é™¤masteråˆ†æ”¯çš„é™åˆ¶ï¼‰
+                    // Ö´ĞĞ·ÖÖ§checkout£¨ÒÆ³ımaster·ÖÖ§µÄÏŞÖÆ£©
                     checkout scm: [
                         $class: 'GitSCM',
                         branches: [[name: "*/${env.branch}"]],
                         extensions: [[$class: 'LocalBranch']],
                         userRemoteConfigs: [[url: ssh_url]]
                     ]
-                    // è¯»å–sonaré…ç½®å¹¶å­˜å…¥ç¯å¢ƒå˜é‡ï¼Œæœ‰å…¶ä»–å‚æ•°æ—¶ï¼Œå¯ä»¥ç»§ç»­å¢åŠ 
-                    if (fileExists('sonar-project.properties')) {
-                        def sonarProps = readProperties file: 'sonar-project.properties'
-                        env.SONAR_PROJECT_KEY = sonarProps.SONAR_PROJECT_KEY ?: ''
-                        env.SONAR_PROJECT_NAME = sonarProps.SONAR_PROJECT_NAME ?: ''
-                        env.SONAR_HOST_URL = sonarProps.SONAR_HOST_URL ?: ''
-                        env.SONAR_TOKEN = sonarProps.SONAR_TOKEN ?: ''
-                        env.SONAR_EXCLUSIONS = sonarProps.SONAR_EXCLUSIONS ?: ''
-                        env.SONAR_SOURCES = sonarProps.SONAR_SOURCES ?: ''
-                        env.SONAR_TESTS = sonarProps.SONAR_TESTS ?: ''
-                        echo "SonarQubeé…ç½®å·²åŠ è½½åˆ°ç¯å¢ƒå˜é‡"
-                    }
                 }
             }
         }
 
-        stage('Maven ç¼–è¯‘') {
+        stage('cppcheck ´úÂëÖÊÁ¿¼ì²â') {
             steps {
                 script {
-                    sh "mvn clean compile -P dev -Dmaven.test.skip=true"
+                    echo "¿ªÊ¼ cppcheck ´úÂëÖÊÁ¿¼ì²â..."
+                    
+                    // ¶¨ÒåÔ´´úÂëÂ·¾¶
+                    def sourcePath = 'GD32/source/Code_Files'
+                    def reportDir = 'cppcheck-reports'
+                    def reportFile = "${reportDir}/cppcheck-report.xml"
+                    def txtReport = "${reportDir}/cppcheck-report.txt"
+                    
+                    // ´´½¨±¨¸æÄ¿Â¼
+                    sh "mkdir -p ${reportDir}"
+                    
+                    // Ö´ĞĞ cppcheck ·ÖÎö
+                    // Windows »·¾³Ê¹ÓÃ bat£¬Linux Ê¹ÓÃ sh
+                    bat """
+                        cppcheck ^
+                        --enable=all ^
+                        --xml ^
+                        --xml-version=2 ^
+                        --suppress=missingIncludeSystem ^
+                        --suppress=unusedFunction ^
+                        -i GD32/source/Code_Files/lib ^
+                        -i GD32/source/project/Objects ^
+                        -i GD32/source/project/Listings ^
+                        -i GD32/source/Document ^
+                        --output-file=${reportFile} ^
+                        ${sourcePath} 2>&1 || echo "cppcheck completed with warnings"
+                    """
+                    
+                    // Í¬Ê±Éú³ÉÎÄ±¾¸ñÊ½±¨¸æ£¨±ãÓÚ²é¿´£©
+                    bat """
+                        cppcheck ^
+                        --enable=all ^
+                        --suppress=missingIncludeSystem ^
+                        --suppress=unusedFunction ^
+                        -i GD32/source/Code_Files/lib ^
+                        -i GD32/source/project/Objects ^
+                        -i GD32/source/project/Listings ^
+                        -i GD32/source/Document ^
+                        ${sourcePath} > ${txtReport} 2>&1 || echo "cppcheck completed"
+                    """
+                    
+                    // ÏÔÊ¾±¨¸æÕªÒª
+                    if (fileExists(txtReport)) {
+                        echo "=== cppcheck ¼ì²âÕªÒª ==="
+                        sh "head -50 ${txtReport}"  // Linux
+                        // bat "type ${txtReport}"  // Windows£¬Èç¹ûĞèÒª¿ÉÒÔÈ¡Ïû×¢ÊÍ
+                    }
+                    
+                    echo "cppcheck ·ÖÎöÍê³É£¬±¨¸æÒÑÉú³É: ${reportFile}"
                 }
             }
         }
-        stage('SonarQube ä»£ç åˆ†æ') {
+        
+        stage('ÖÊÁ¿ÃÅ½û¼ì²é') {
             steps {
                 script {
-                    if (env.SONAR_PROJECT_KEY) {
-                        echo "å¼€å§‹SonarQubeä»£ç åˆ†æ..."
-                        sh """
-                            mvn sonar:sonar -P dev \
-                            -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} \
-                            -Dsonar.projectName=${env.SONAR_PROJECT_NAME} \
-                            -Dsonar.host.url=${env.SONAR_HOST_URL} \
-                            -Dsonar.token=${env.SONAR_TOKEN} \
-                            -Dsonar.sources=${env.SONAR_SOURCES} \
-                            -Dsonar.exclusions=${env.SONAR_EXCLUSIONS}
-                        """
-                        echo "SonarQubeåˆ†æå®Œæˆï¼Œç­‰å¾…è´¨é‡é—¨ç¦æ£€æŸ¥..."
+                    def reportFile = 'cppcheck-reports/cppcheck-report.xml'
+                    if (fileExists(reportFile)) {
+                        def reportContent = readFile(reportFile)
+                        
+                        // Í³¼Æ²»Í¬ÑÏÖØ³Ì¶ÈµÄÎÊÌâ
+                        def errorCount = (reportContent =~ /severity="error"/).count
+                        def warningCount = (reportContent =~ /severity="warning"/).count
+                        def styleCount = (reportContent =~ /severity="style"/).count
+                        
+                        echo "=== cppcheck ÖÊÁ¿ÃÅ½û¼ì²é ==="
+                        echo "´íÎóÊıÁ¿: ${errorCount}"
+                        echo "¾¯¸æÊıÁ¿: ${warningCount}"
+                        echo "´úÂë·ç¸ñÎÊÌâ: ${styleCount}"
+                        
+                        // Èç¹û´íÎó³¬¹ıãĞÖµ£¬Ê§°Ü¹¹½¨
+                        def maxErrors = 0  // ²»ÔÊĞíÓĞ´íÎó
+                        if (errorCount > maxErrors) {
+                            error "·¢ÏÖ ${errorCount} ¸ö´íÎó£¬³¬¹ıãĞÖµ ${maxErrors}£¬¹¹½¨Ê§°Ü"
+                        }
+                        
+                        // Èç¹û¾¯¸æ³¬¹ıãĞÖµ£¬¿ÉÒÔ¾¯¸æµ«²»Ê§°Ü£¨¿ÉÑ¡£©
+                        def maxWarnings = 100
+                        if (warningCount > maxWarnings) {
+                            echo "¾¯¸æ: ·¢ÏÖ ${warningCount} ¸ö¾¯¸æ£¬³¬¹ıãĞÖµ ${maxWarnings}£¬½¨ÒéĞŞ¸´"
+                        } else {
+                            echo "ÖÊÁ¿ÃÅ½û¼ì²éÍ¨¹ı£¡"
+                        }
                     } else {
-                        echo "æœªæ‰¾åˆ°SonarQubeé…ç½®ï¼Œè·³è¿‡ä»£ç åˆ†æ"
+                        echo "Î´ÕÒµ½ cppcheck ±¨¸æÎÄ¼ş£¬Ìø¹ıÖÊÁ¿ÃÅ½û¼ì²é"
                     }
                 }
             }
         }
     }
-    stage('è´¨é‡é—¨ç¦æ£€æŸ¥') {
-
-    }
+    
     post {
         always {
-            echo "æµæ°´çº¿æ‰§è¡Œå®Œæˆï¼Œä½¿ç”¨çš„åˆ†æ”¯: ${env.branch}"
-            // æ¸…ç†å·¥ä½œç©ºé—´ï¼ˆå¯é€‰ï¼‰
-            //cleanWs()
+            echo "Á÷Ë®ÏßÖ´ĞĞÍê³É£¬Ê¹ÓÃµÄ·ÖÖ§: ${env.branch}"
+            // ¹éµµ cppcheck ±¨¸æ
+            archiveArtifacts artifacts: 'cppcheck-reports/**', allowEmptyArchive: true
         }
         success {
-            echo "æµæ°´çº¿æ‰§è¡ŒæˆåŠŸï¼"
+            echo "Á÷Ë®ÏßÖ´ĞĞ³É¹¦£¡"
         }
         failure {
-            echo "æµæ°´çº¿æ‰§è¡Œå¤±è´¥ï¼"
+            echo "Á÷Ë®ÏßÖ´ĞĞÊ§°Ü£¡"
         }
     }
 }
-
