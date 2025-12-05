@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "dal_include.h": "c",
+        "yx_power_man.h": "c",
+        "yx_version.h": "c",
+        "bal_gpio_cfg.h": "c",
+        "Dal_Include.H": "cpp"
+    }
+}
