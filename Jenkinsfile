@@ -17,7 +17,7 @@ pipeline {
                 [key: 'project', value: '$.project', expressionType: 'JSONPath'],
                 [key: 'object_attributes', value: '$.object_attributes', expressionType: 'JSONPath']
             ],
-            token: 'yf4-bike', //项目唯一标识，[产品线缩写]-[客户/项目标识]
+            token: 'yf3-bike', //项目唯一标识，[产品线缩写]-[客户/项目标识]
             printContributedVariables: true,
             printPostContent: true
         )
