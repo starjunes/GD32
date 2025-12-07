@@ -24,9 +24,29 @@ pipeline {
         stage('智能分析提取') {
             steps {
                 script {
-                    // 解析 project JSON
-                    def projectJson = readJSON text: "${env.project}"
-                    def ssh_url = projectJson.ssh_url
+                                    // 检查是否有Webhook变量
+                    def hasWebhookData = env.project != null && env.project != 'null' && env.project != ''
+                    
+                    if (!hasWebhookData) {
+                        echo "未检测到Webhook数据，可能是手动触发，使用默认SCM配置"
+                        env.branch = 'master'
+                        checkout scm
+                        return  // 提前返回，跳过后续处理
+                    }
+                    
+                    // 解析 project JSON（仅当有Webhook数据时）
+                    def projectJson = [:]
+                    def ssh_url = ''
+                    try {
+                        projectJson = readJSON text: "${env.project}"
+                        ssh_url = projectJson.ssh_url ?: ''
+                        echo "解析到的SSH URL: ${ssh_url}"
+                    } catch (Exception e) {
+                        echo "解析project JSON失败: ${e.message}，使用默认SCM"
+                        env.branch = 'master'
+                        checkout scm
+                        return
+                    }
 
                     // 初始化分支变量
                     env.branch = ''
@@ -35,7 +55,7 @@ pipeline {
 
                     // 解析 object_attributes JSON
                     def objectAttributesJson = [:]
-                    if (env.object_attributes && env.object_attributes != 'null') {
+                    if (env.object_attributes && env.object_attributes != 'null' && env.object_attributes != '') {
                         try {
                             objectAttributesJson = readJSON text: "${env.object_attributes}"
                             echo "objectAttributesJson: ${objectAttributesJson}"
@@ -45,27 +65,24 @@ pipeline {
                     }
 
                     // 根据事件类型智能提取分支
-                    def objectKind = "${env.object_kind}"
+                    def objectKind = "${env.object_kind}" ?: ''
 
                     if (objectKind == 'push') {
-                        def ref = "${env.ref}"
-                        if (ref) {
+                        def ref = "${env.ref}" ?: ''
+                        if (ref && ref != 'null' && !ref.isEmpty()) {
                             env.branch = ref.replace('refs/heads/', '')
                             echo "Push 事件分支: ${env.branch}"
                         }
                     } else if (objectKind == 'merge_request') {
-                        if (objectAttributesJson) {
+                        if (objectAttributesJson && !objectAttributesJson.isEmpty()) {
                             env.source_branch = objectAttributesJson.source_branch ?: ''
                             env.target_branch = objectAttributesJson.target_branch ?: ''
                             echo "MR 事件源分支: ${env.source_branch}, 目标分支: ${env.target_branch}"
 
-                            // 修正逻辑：使用源分支进行构建
                             if (env.source_branch && !env.source_branch.isEmpty()) {
                                 env.branch = env.source_branch
                                 echo "merge_request 使用源分支构建: ${env.branch}"
                             }
-                        } else {
-                            echo "object_attributes 数据不可用"
                         }
                     }
 
@@ -77,13 +94,18 @@ pipeline {
 
                     echo "最终使用的分支: ${env.branch}"
 
-                    // 执行分支checkout（移除master分支的限制）
-                    checkout scm: [
-                        $class: 'GitSCM',
-                        branches: [[name: "*/${env.branch}"]],
-                        extensions: [[$class: 'LocalBranch']],
-                        userRemoteConfigs: [[url: ssh_url]]
-                    ]
+                    // 执行分支checkout
+                    if (ssh_url && !ssh_url.isEmpty()) {
+                        checkout scm: [
+                            $class: 'GitSCM',
+                            branches: [[name: "*/${env.branch}"]],
+                            extensions: [[$class: 'LocalBranch']],
+                            userRemoteConfigs: [[url: ssh_url]]
+                        ]
+                    } else {
+                        echo "SSH URL为空，使用Pipeline任务配置的SCM"
+                        checkout scm
+                    }
                 }
             }
         }
