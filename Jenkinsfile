@@ -5,10 +5,7 @@ pipeline {
             label 'yf3' //根据部门指定标签，软件一部=yf1 软件二部=yf2 软件三部=yf3
         }
     }
-    tools {
-        // C语言项目不需要JDK，可以移除或保留（不影响）
-        // jdk 'jdk17'
-    }
+
     triggers {//触发器，参数内除了token需要根据项目设置外，其他参数不变
         GenericTrigger(
             genericVariables: [
