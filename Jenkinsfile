@@ -178,7 +178,7 @@ stage('cppcheck 代码质量检测') {
                         -i GD32/source/Document `
                         --output-file=${reportFile} `
                         ${sourcePath} 2>&1 | Tee-Object -FilePath cppcheck-progress.log
-                        if (`$LASTEXITCODE -ne 0) { Write-Host 'cppcheck completed with warnings' }
+                        if (-not `$?) { Write-Host 'cppcheck completed with warnings' }
                         Write-Host 'cppcheck 分析完成'
                     """
                 }
