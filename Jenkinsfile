@@ -29,7 +29,7 @@ pipeline {
                     
                     if (!hasWebhookData) {
                         echo "未检测到Webhook数据，可能是手动触发，使用默认SCM配置"
-                        env.branch = 'master'
+                        env.branch = 'main'
                         checkout scm
                         return  // 提前返回，跳过后续处理
                     }
