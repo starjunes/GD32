@@ -162,7 +162,6 @@ stage('cppcheck 代码质量检测') {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
                     // Windows: 单线程，避免死锁，添加更多抑制选项
                     bat """
-                        @echo off
                         echo 开始 cppcheck 分析...
                         cppcheck ^
                         --enable=warning,performance,portability,style ^
@@ -190,7 +189,7 @@ stage('cppcheck 代码质量检测') {
                     """
                 }
             }
-            
+
             // 从 XML 报告生成文本摘要（不再重新运行 cppcheck）
             if (fileExists(reportFile)) {
                 echo "=== cppcheck 检测摘要 ==="
