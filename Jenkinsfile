@@ -158,28 +158,27 @@ stage('cppcheck 代码质量检测') {
                         echo "cppcheck 分析完成"
                     """
                 }
-           } else {
+            } else {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
-                    // Windows: 使用 PowerShell，添加进度输出和配置限制
-                    powershell """
-                        Write-Host '开始 cppcheck 分析...'
-                        cppcheck `
-                        --enable=warning,performance,portability,style,information `
-                        --xml `
-                        --xml-version=2 `
-                        -j 2 `
-                        --max-configs=10 `
-                        --suppress=missingIncludeSystem `
-                        --suppress=unusedFunction `
-                        --suppress=unmatchedSuppression `
-                        -i GD32/source/Code_Files/lib `
-                        -i GD32/source/project/Objects `
-                        -i GD32/source/project/Listings `
-                        -i GD32/source/Document `
-                        --output-file=${reportFile} `
-                        ${sourcePath} | Tee-Object -FilePath cppcheck-progress.log
-                        if (-not `$?) { Write-Host 'cppcheck completed with warnings' }
-                        Write-Host 'cppcheck 分析完成'
+                    // Windows: 使用批处理，避免 PowerShell 转义问题
+                    bat """
+                        echo 开始 cppcheck 分析...
+                        cppcheck ^
+                        --enable=warning,performance,portability,style,information ^
+                        --xml ^
+                        --xml-version=2 ^
+                        -j 2 ^
+                        --max-configs=10 ^
+                        --suppress=missingIncludeSystem ^
+                        --suppress=unusedFunction ^
+                        --suppress=unmatchedSuppression ^
+                        -i GD32/source/Code_Files/lib ^
+                        -i GD32/source/project/Objects ^
+                        -i GD32/source/project/Listings ^
+                        -i GD32/source/Document ^
+                        --output-file=${reportFile} ^
+                        ${sourcePath}
+                        echo cppcheck 分析完成
                     """
                 }
             }
