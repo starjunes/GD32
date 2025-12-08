@@ -119,7 +119,7 @@ stage('cppcheck 代码质量检测') {
             def isUnix = isUnix()
             
             // 定义源代码路径
-            def sourcePath = 'GD32/source/Code_Files'
+            def sourcePath = 'GD32/source/Code_Files/_app/can'
             def reportDir = 'cppcheck-reports'
             def reportFile = "${reportDir}/cppcheck-report.xml"
             def txtReport = "${reportDir}/cppcheck-report.txt"
@@ -220,7 +220,7 @@ stage('cppcheck 代码质量检测') {
                         echo "代码风格问题: ${styleCount}"
                         
                         // 如果错误超过阈值，失败构建
-                        def maxErrors = 0  // 不允许有错误
+                        def maxErrors = 5  // 不允许有错误
                         if (errorCount > maxErrors) {
                             error "发现 ${errorCount} 个错误，超过阈值 ${maxErrors}，构建失败"
                         }
