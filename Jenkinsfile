@@ -124,13 +124,12 @@ stage('cppcheck 代码质量检测') {
             def reportFile = "${reportDir}/cppcheck-report.xml"
             def txtReport = "${reportDir}/cppcheck-report.txt"
             
-            // 创建报告目录（跨平台）
+            // 创建报告目录（跨平台，优化版本）
             if (isUnix) {
                 sh "mkdir -p ${reportDir}"
             } else {
-                bat """
-                    if not exist "${reportDir}" mkdir "${reportDir}"
-                """
+                // Windows: mkdir 如果目录已存在不会报错，无需检查
+                bat "mkdir ${reportDir} 2>nul"
             }
             
             // 设置超时时间（2小时）
