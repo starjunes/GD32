@@ -124,18 +124,19 @@ stage('cppcheck 代码质量检测') {
             def reportFile = "${reportDir}/cppcheck-report.xml"
             def txtReport = "${reportDir}/cppcheck-report.txt"
             
-            // 创建报告目录（跨平台，使用 PowerShell 优化）
+                        // 创建报告目录（跨平台）
             if (isUnix) {
                 sh "mkdir -p ${reportDir}"
             } else {
-                // Windows: 使用 PowerShell，比批处理快得多
-                powershell "New-Item -ItemType Directory -Force -Path '${reportDir}' -ErrorAction SilentlyContinue | Out-Null"
+                // Windows: 使用批处理创建目录，避免 PowerShell 卡住
+                bat "if not exist ${reportDir} mkdir ${reportDir}"
             }
             
             // 设置超时时间（2小时）
             def timeoutMinutes = 120
             echo "开始 cppcheck 代码质量检测，超时时间：${timeoutMinutes}分钟"
-                   // 执行 cppcheck 分析（跨平台，优化版本）
+            
+            // 执行 cppcheck 分析（跨平台，优化版本）
             if (isUnix) {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
                     sh """
@@ -160,21 +161,33 @@ stage('cppcheck 代码质量检测') {
                 }
             } else {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
-                    // Windows: 添加调试输出
+                    // Windows: 简化版本，先测试基本功能
                     bat """
-                        echo ========================================
-                        echo 开始 cppcheck 分析...
-                        echo 源代码路径: ${sourcePath}
-                        echo ========================================
+                        @echo off
+                        echo [DEBUG] 开始执行 bat 脚本
+                        echo [DEBUG] 当前目录: %CD%
+                        echo [DEBUG] 源代码路径: ${sourcePath}
                         
-                        REM 检查文件
+                        REM 确保目录存在
+                        if not exist "${reportDir}" mkdir "${reportDir}"
+                        echo [DEBUG] 报告目录已创建或已存在
+                        
+                        REM 检查源文件
                         if not exist "${sourcePath}" (
-                            echo 错误: 找不到源文件
+                            echo [ERROR] 找不到源文件: ${sourcePath}
+                            dir /s /b "${sourcePath}" 2>nul || echo 文件确实不存在
+                            exit /b 1
+                        )
+                        echo [DEBUG] 源文件存在
+                        
+                        REM 执行 cppcheck
+                        echo [DEBUG] 开始执行 cppcheck...
+                        cppcheck --version
+                        if errorlevel 1 (
+                            echo [ERROR] cppcheck 命令不可用
                             exit /b 1
                         )
                         
-                        REM 执行 cppcheck，添加超时保护
-                        echo 正在执行 cppcheck，请稍候...
                         cppcheck ^
                         --enable=warning,performance,portability,style ^
                         --xml ^
@@ -191,9 +204,14 @@ stage('cppcheck 代码质量检测') {
                         -i GD32/source/project/Listings ^
                         -i GD32/source/Document ^
                         --output-file=${reportFile} ^
-                        ${sourcePath}
+                        "${sourcePath}"
                         
-                        echo cppcheck 命令执行完成
+                        echo [DEBUG] cppcheck 命令执行完成
+                        if exist "${reportFile}" (
+                            echo [DEBUG] 报告文件已生成
+                        ) else (
+                            echo [WARNING] 报告文件未生成
+                        )
                         exit /b 0
                     """
                 }
