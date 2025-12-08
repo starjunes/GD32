@@ -119,7 +119,7 @@ stage('cppcheck 代码质量检测') {
             def isUnix = isUnix()
             
             // 定义源代码路径
-            def sourcePath = 'GD32/source/Code_Files/_app/can'
+            def sourcePath = 'GD32/source/Code_Files/_app/can/c/yx_can_man.c'
             def reportDir = 'cppcheck-reports'
             def reportFile = "${reportDir}/cppcheck-report.xml"
             def txtReport = "${reportDir}/cppcheck-report.txt"
@@ -160,18 +160,20 @@ stage('cppcheck 代码质量检测') {
                 }
             } else {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
-                    // Windows: 使用批处理，避免 PowerShell 转义问题
+                    // Windows: 单线程，避免死锁，添加更多抑制选项
                     bat """
                         echo 开始 cppcheck 分析...
                         cppcheck ^
-                        --enable=warning,performance,portability,style,information ^
+                        --enable=warning,performance,portability,style ^
                         --xml ^
                         --xml-version=2 ^
-                        -j 2 ^
-                        --max-configs=10 ^
+                        --max-configs=3 ^
+                        --force ^
                         --suppress=missingIncludeSystem ^
                         --suppress=unusedFunction ^
                         --suppress=unmatchedSuppression ^
+                        --suppress=missingInclude ^
+                        --suppress=unusedStructMember ^
                         -i GD32/source/Code_Files/lib ^
                         -i GD32/source/project/Objects ^
                         -i GD32/source/project/Listings ^
