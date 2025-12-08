@@ -111,106 +111,96 @@ pipeline {
         }
 
 stage('cppcheck 代码质量检测') {
-            steps {
-                script {
-                    echo "开始 cppcheck 代码质量检测..."
-                    
-                    // 检测操作系统类型
-                    def isUnix = isUnix()
-                    
-                    // 定义源代码路径
-                    def sourcePath = 'GD32/source/Code_Files'
-                    def reportDir = 'cppcheck-reports'
-                    def reportFile = "${reportDir}/cppcheck-report.xml"
-                    def txtReport = "${reportDir}/cppcheck-report.txt"
-                    
-                    // 创建报告目录（跨平台）
-                    if (isUnix) {
-                        sh "mkdir -p ${reportDir}"
-                    } else {
-                        bat """
-                            if not exist "${reportDir}" mkdir "${reportDir}"
-                        """
-                    }
-                    
-                    // 执行 cppcheck 分析（跨平台）
-                    if (isUnix) {
-                        sh """
-                            cppcheck \\
-                            --enable=all \\
-                            --xml \\
-                            --xml-version=2 \\
-                            --suppress=missingIncludeSystem \\
-                            --suppress=unusedFunction \\
-                            -i GD32/source/Code_Files/lib \\
-                            -i GD32/source/project/Objects \\
-                            -i GD32/source/project/Listings \\
-                            -i GD32/source/Document \\
-                            --output-file=${reportFile} \\
-                            ${sourcePath} 2>&1 || echo "cppcheck completed with warnings"
-                        """
-                    } else {
-                        bat """
-                            cppcheck ^
-                            --enable=all ^
-                            --xml ^
-                            --xml-version=2 ^
-                            --suppress=missingIncludeSystem ^
-                            --suppress=unusedFunction ^
-                            -i GD32/source/Code_Files/lib ^
-                            -i GD32/source/project/Objects ^
-                            -i GD32/source/project/Listings ^
-                            -i GD32/source/Document ^
-                            --output-file=${reportFile} ^
-                            ${sourcePath} 2>&1 || echo "cppcheck completed with warnings"
-                        """
-                    }
-                    
-                    // 同时生成文本格式报告
-                    if (isUnix) {
-                        sh """
-                            cppcheck \\
-                            --enable=all \\
-                            --suppress=missingIncludeSystem \\
-                            --suppress=unusedFunction \\
-                            -i GD32/source/Code_Files/lib \\
-                            -i GD32/source/project/Objects \\
-                            -i GD32/source/project/Listings \\
-                            -i GD32/source/Document \\
-                            ${sourcePath} > ${txtReport} 2>&1 || echo "cppcheck completed"
-                        """
-                    } else {
-                        bat """
-                            cppcheck ^
-                            --enable=all ^
-                            --suppress=missingIncludeSystem ^
-                            --suppress=unusedFunction ^
-                            -i GD32/source/Code_Files/lib ^
-                            -i GD32/source/project/Objects ^
-                            -i GD32/source/project/Listings ^
-                            -i GD32/source/Document ^
-                            ${sourcePath} > ${txtReport} 2>&1 || echo "cppcheck completed"
-                        """
-                    }
-                    
-                    // 显示报告摘要（跨平台）
-                    if (fileExists(txtReport)) {
-                        echo "=== cppcheck 检测摘要 ==="
-                        if (isUnix) {
-                            sh "head -50 ${txtReport}"
-                        } else {
-                            // Windows: 使用 PowerShell 或只读取文件内容
-                            def content = readFile(txtReport)
-                            def lines = content.split('\n')
-                            def preview = lines.take(50).join('\n')
-                            echo preview
-                        }
-                    }
-                    
-                    echo "cppcheck 分析完成，报告已生成: ${reportFile}"
+    steps {
+        script {
+            echo "开始 cppcheck 代码质量检测..."
+            
+            // 检测操作系统类型
+            def isUnix = isUnix()
+            
+            // 定义源代码路径
+            def sourcePath = 'GD32/source/Code_Files'
+            def reportDir = 'cppcheck-reports'
+            def reportFile = "${reportDir}/cppcheck-report.xml"
+            def txtReport = "${reportDir}/cppcheck-report.txt"
+            
+            // 创建报告目录（跨平台）
+            if (isUnix) {
+                sh "mkdir -p ${reportDir}"
+            } else {
+                bat """
+                    if not exist "${reportDir}" mkdir "${reportDir}"
+                """
+            }
+            
+            // 设置超时时间（2小时）
+            def timeoutMinutes = 120
+            
+            // 执行 cppcheck 分析（跨平台，优化版本）
+            if (isUnix) {
+                timeout(time: timeoutMinutes, unit: 'MINUTES') {
+                    sh """
+                        cppcheck \\
+                        --enable=warning,performance,portability,style,information \\
+                        --xml \\
+                        --xml-version=2 \\
+                        -j 4 \\
+                        --suppress=missingIncludeSystem \\
+                        --suppress=unusedFunction \\
+                        -i GD32/source/Code_Files/lib \\
+                        -i GD32/source/project/Objects \\
+                        -i GD32/source/project/Listings \\
+                        -i GD32/source/Document \\
+                        --output-file=${reportFile} \\
+                        ${sourcePath} 2>&1 || echo "cppcheck completed with warnings"
+                    """
+                }
+            } else {
+                timeout(time: timeoutMinutes, unit: 'MINUTES') {
+                    bat """
+                        cppcheck ^
+                        --enable=warning,performance,portability,style,information ^
+                        --xml ^
+                        --xml-version=2 ^
+                        -j 4 ^
+                        --suppress=missingIncludeSystem ^
+                        --suppress=unusedFunction ^
+                        -i GD32/source/Code_Files/lib ^
+                        -i GD32/source/project/Objects ^
+                        -i GD32/source/project/Listings ^
+                        -i GD32/source/Document ^
+                        --output-file=${reportFile} ^
+                        ${sourcePath} 2>&1 || echo "cppcheck completed with warnings"
+                    """
                 }
             }
+            
+            // 从 XML 报告生成文本摘要（不再重新运行 cppcheck）
+            if (fileExists(reportFile)) {
+                echo "=== cppcheck 检测摘要 ==="
+                if (isUnix) {
+                    // 使用 grep 提取关键信息
+                    sh """
+                        echo "检查报告文件: ${reportFile}"
+                        if [ -s ${reportFile} ]; then
+                            grep -c 'severity="error"' ${reportFile} || echo "0"
+                            grep -c 'severity="warning"' ${reportFile} || echo "0"
+                        fi
+                    """
+                } else {
+                    // Windows: 读取 XML 并提取摘要
+                    def content = readFile(reportFile)
+                    def errorCount = (content =~ /severity="error"/).count
+                    def warningCount = (content =~ /severity="warning"/).count
+                    echo "错误数量: ${errorCount}"
+                    echo "警告数量: ${warningCount}"
+                }
+            }
+            
+            echo "cppcheck 分析完成，报告已生成: ${reportFile}"
         }
+    }
+}
         
         stage('质量门禁检查') {
             steps {
