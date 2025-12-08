@@ -135,41 +135,51 @@ stage('cppcheck 代码质量检测') {
             // 设置超时时间（2小时）
             def timeoutMinutes = 120
             echo "开始 cppcheck 代码质量检测，超时时间：${timeoutMinutes}分钟"
-            // 执行 cppcheck 分析（跨平台，优化版本）
+                   // 执行 cppcheck 分析（跨平台，优化版本）
             if (isUnix) {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
                     sh """
+                        echo "开始 cppcheck 分析..."
                         cppcheck \\
                         --enable=warning,performance,portability,style,information \\
                         --xml \\
                         --xml-version=2 \\
-                        -j 4 \\
+                        -j 2 \\
+                        --max-configs=10 \\
                         --suppress=missingIncludeSystem \\
                         --suppress=unusedFunction \\
+                        --suppress=unmatchedSuppression \\
                         -i GD32/source/Code_Files/lib \\
                         -i GD32/source/project/Objects \\
                         -i GD32/source/project/Listings \\
                         -i GD32/source/Document \\
                         --output-file=${reportFile} \\
-                        ${sourcePath} 2>&1 || echo "cppcheck completed with warnings"
+                        ${sourcePath} 2>&1 | tee cppcheck-progress.log || echo "cppcheck completed with warnings"
+                        echo "cppcheck 分析完成"
                     """
                 }
             } else {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
-                    bat """
-                        cppcheck ^
-                        --enable=warning,performance,portability,style,information ^
-                        --xml ^
-                        --xml-version=2 ^
-                        -j 4 ^
-                        --suppress=missingIncludeSystem ^
-                        --suppress=unusedFunction ^
-                        -i GD32/source/Code_Files/lib ^
-                        -i GD32/source/project/Objects ^
-                        -i GD32/source/project/Listings ^
-                        -i GD32/source/Document ^
-                        --output-file=${reportFile} ^
-                        ${sourcePath} 2>&1 || echo "cppcheck completed with warnings"
+                    // Windows: 使用 PowerShell，添加进度输出和配置限制
+                    powershell """
+                        Write-Host '开始 cppcheck 分析...'
+                        cppcheck `
+                        --enable=warning,performance,portability,style,information `
+                        --xml `
+                        --xml-version=2 `
+                        -j 2 `
+                        --max-configs=10 `
+                        --suppress=missingIncludeSystem `
+                        --suppress=unusedFunction `
+                        --suppress=unmatchedSuppression `
+                        -i GD32/source/Code_Files/lib `
+                        -i GD32/source/project/Objects `
+                        -i GD32/source/project/Listings `
+                        -i GD32/source/Document `
+                        --output-file=${reportFile} `
+                        ${sourcePath} 2>&1 | Tee-Object -FilePath cppcheck-progress.log
+                        if (`$LASTEXITCODE -ne 0) { Write-Host 'cppcheck completed with warnings' }
+                        Write-Host 'cppcheck 分析完成'
                     """
                 }
             }
