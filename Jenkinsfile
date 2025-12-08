@@ -158,7 +158,7 @@ stage('cppcheck 代码质量检测') {
                         echo "cppcheck 分析完成"
                     """
                 }
-            } else {
+           } else {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
                     // Windows: 使用 PowerShell，添加进度输出和配置限制
                     powershell """
@@ -177,13 +177,13 @@ stage('cppcheck 代码质量检测') {
                         -i GD32/source/project/Listings `
                         -i GD32/source/Document `
                         --output-file=${reportFile} `
-                        ${sourcePath} 2>&1 | Tee-Object -FilePath cppcheck-progress.log
+                        ${sourcePath} | Tee-Object -FilePath cppcheck-progress.log
                         if (-not `$?) { Write-Host 'cppcheck completed with warnings' }
                         Write-Host 'cppcheck 分析完成'
                     """
                 }
             }
-            
+                
             // 从 XML 报告生成文本摘要（不再重新运行 cppcheck）
             if (fileExists(reportFile)) {
                 echo "=== cppcheck 检测摘要 ==="
