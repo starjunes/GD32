@@ -124,14 +124,6 @@ stage('cppcheck 代码质量检测') {
             def reportFile = "${reportDir}/cppcheck-report.xml"
             def txtReport = "${reportDir}/cppcheck-report.txt"
             
-                        // 创建报告目录（跨平台）
-            if (isUnix) {
-                sh "mkdir -p ${reportDir}"
-            } else {
-                // Windows: 使用批处理创建目录，避免 PowerShell 卡住
-                bat "if not exist ${reportDir} mkdir ${reportDir}"
-            }
-            
             // 设置超时时间（2小时）
             def timeoutMinutes = 120
             echo "开始 cppcheck 代码质量检测，超时时间：${timeoutMinutes}分钟"
@@ -140,6 +132,7 @@ stage('cppcheck 代码质量检测') {
             if (isUnix) {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
                     sh """
+                        mkdir -p ${reportDir}
                         echo "开始 cppcheck 分析..."
                         cppcheck \\
                         --enable=warning,performance,portability,style,information \\
@@ -161,57 +154,15 @@ stage('cppcheck 代码质量检测') {
                 }
             } else {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
-                    // Windows: 简化版本，先测试基本功能
+                    // Windows: 合并所有操作到一个 bat 脚本，避免多次调用 bat 导致卡住
                     bat """
                         @echo off
-                        echo [DEBUG] 开始执行 bat 脚本
-                        echo [DEBUG] 当前目录: %CD%
-                        echo [DEBUG] 源代码路径: ${sourcePath}
-                        
-                        REM 确保目录存在
+                        setlocal
                         if not exist "${reportDir}" mkdir "${reportDir}"
-                        echo [DEBUG] 报告目录已创建或已存在
-                        
-                        REM 检查源文件
-                        if not exist "${sourcePath}" (
-                            echo [ERROR] 找不到源文件: ${sourcePath}
-                            dir /s /b "${sourcePath}" 2>nul || echo 文件确实不存在
-                            exit /b 1
-                        )
-                        echo [DEBUG] 源文件存在
-                        
-                        REM 执行 cppcheck
-                        echo [DEBUG] 开始执行 cppcheck...
-                        cppcheck --version
-                        if errorlevel 1 (
-                            echo [ERROR] cppcheck 命令不可用
-                            exit /b 1
-                        )
-                        
-                        cppcheck ^
-                        --enable=warning,performance,portability,style ^
-                        --xml ^
-                        --xml-version=2 ^
-                        --max-configs=3 ^
-                        --force ^
-                        --suppress=missingIncludeSystem ^
-                        --suppress=unusedFunction ^
-                        --suppress=unmatchedSuppression ^
-                        --suppress=missingInclude ^
-                        --suppress=unusedStructMember ^
-                        -i GD32/source/Code_Files/lib ^
-                        -i GD32/source/project/Objects ^
-                        -i GD32/source/project/Listings ^
-                        -i GD32/source/Document ^
-                        --output-file=${reportFile} ^
-                        "${sourcePath}"
-                        
-                        echo [DEBUG] cppcheck 命令执行完成
-                        if exist "${reportFile}" (
-                            echo [DEBUG] 报告文件已生成
-                        ) else (
-                            echo [WARNING] 报告文件未生成
-                        )
+                        echo 开始 cppcheck 分析...
+                        cppcheck --enable=warning,performance,portability,style --xml --xml-version=2 --max-configs=3 --force --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=unmatchedSuppression --suppress=missingInclude --suppress=unusedStructMember -i GD32/source/Code_Files/lib -i GD32/source/project/Objects -i GD32/source/project/Listings -i GD32/source/Document --output-file=${reportFile} "${sourcePath}"
+                        echo cppcheck 分析完成
+                        endlocal
                         exit /b 0
                     """
                 }
