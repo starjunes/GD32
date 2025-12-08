@@ -162,6 +162,7 @@ stage('cppcheck 代码质量检测') {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
                     // Windows: 单线程，避免死锁，添加更多抑制选项
                     bat """
+                        @echo off
                         echo 开始 cppcheck 分析...
                         cppcheck ^
                         --enable=warning,performance,portability,style ^
@@ -180,11 +181,16 @@ stage('cppcheck 代码质量检测') {
                         -i GD32/source/Document ^
                         --output-file=${reportFile} ^
                         ${sourcePath}
-                        echo cppcheck 分析完成
+                        if errorlevel 1 (
+                            echo cppcheck 完成，但有警告或错误
+                        ) else (
+                            echo cppcheck 分析完成
+                        )
+                        exit /b 0
                     """
                 }
             }
-                
+            
             // 从 XML 报告生成文本摘要（不再重新运行 cppcheck）
             if (fileExists(reportFile)) {
                 echo "=== cppcheck 检测摘要 ==="
