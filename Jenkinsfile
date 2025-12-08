@@ -160,9 +160,21 @@ stage('cppcheck 代码质量检测') {
                 }
             } else {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
-                    // Windows: 单线程，避免死锁，添加更多抑制选项
+                    // Windows: 添加调试输出
                     bat """
+                        echo ========================================
                         echo 开始 cppcheck 分析...
+                        echo 源代码路径: ${sourcePath}
+                        echo ========================================
+                        
+                        REM 检查文件
+                        if not exist "${sourcePath}" (
+                            echo 错误: 找不到源文件
+                            exit /b 1
+                        )
+                        
+                        REM 执行 cppcheck，添加超时保护
+                        echo 正在执行 cppcheck，请稍候...
                         cppcheck ^
                         --enable=warning,performance,portability,style ^
                         --xml ^
@@ -180,16 +192,12 @@ stage('cppcheck 代码质量检测') {
                         -i GD32/source/Document ^
                         --output-file=${reportFile} ^
                         ${sourcePath}
-                        if errorlevel 1 (
-                            echo cppcheck 完成，但有警告或错误
-                        ) else (
-                            echo cppcheck 分析完成
-                        )
+                        
+                        echo cppcheck 命令执行完成
                         exit /b 0
                     """
                 }
             }
-
             // 从 XML 报告生成文本摘要（不再重新运行 cppcheck）
             if (fileExists(reportFile)) {
                 echo "=== cppcheck 检测摘要 ==="
