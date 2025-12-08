@@ -124,17 +124,17 @@ stage('cppcheck 代码质量检测') {
             def reportFile = "${reportDir}/cppcheck-report.xml"
             def txtReport = "${reportDir}/cppcheck-report.txt"
             
-            // 创建报告目录（跨平台，优化版本）
+            // 创建报告目录（跨平台，使用 PowerShell 优化）
             if (isUnix) {
                 sh "mkdir -p ${reportDir}"
             } else {
-                // Windows: mkdir 如果目录已存在不会报错，无需检查
-                bat "mkdir ${reportDir} 2>nul"
+                // Windows: 使用 PowerShell，比批处理快得多
+                powershell "New-Item -ItemType Directory -Force -Path '${reportDir}' -ErrorAction SilentlyContinue | Out-Null"
             }
             
             // 设置超时时间（2小时）
             def timeoutMinutes = 120
-            
+            echo "开始 cppcheck 代码质量检测，超时时间：${timeoutMinutes}分钟"
             // 执行 cppcheck 分析（跨平台，优化版本）
             if (isUnix) {
                 timeout(time: timeoutMinutes, unit: 'MINUTES') {
